@@ -1,0 +1,16 @@
+{
+  "name": "sim-ppt-monorepo",
+  "private": true,
+  "description": "Sistem Informasi Manajemen Pondok Pesantren Terpadu (SIM-PPT) - Monorepo",
+  "scripts": {
+    "dev:nuxt": "cd nuxt && npm run dev",
+    "dev:nest": "cd nestjs && npm run start:dev",
+    "build:nuxt": "cd nuxt && npm run build",
+    "build:nest": "cd nestjs && npm run build",
+    "install:all": "cd nuxt && npm install && cd ../nestjs && npm install",
+    "dev": "concurrently \"npm run dev:nuxt\" \"npm run dev:nest\""
+  },
+  "devDependencies": {
+    "concurrently": "^9.0.0"
+  }
+}

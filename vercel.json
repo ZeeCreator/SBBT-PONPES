@@ -1,0 +1,25 @@
+{
+  "buildCommand": "cd nuxt && npm run build",
+  "outputDirectory": "nuxt/dist",
+  "installCommand": "cd nuxt && npm install",
+  "framework": "nuxtjs",
+  "rewrites": [
+    {
+      "source": "/api/nest/:path*",
+      "destination": "/api/nest/:path*"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/"
+    }
+  ],
+  "functions": {
+    "api/nest/*.ts": {
+      "memory": 512,
+      "maxDuration": 30
+    }
+  },
+  "github": {
+    "silent": true
+  }
+}

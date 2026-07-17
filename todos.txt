@@ -1,0 +1,442 @@
+================================================================
+  SIM-PPT — SISTEM INFORMASI MANAJEMEN PONDOK PESANTREN TERPADU
+  DAFTAR TODO
+================================================================
+
+----------------------------------------------------------------
+🔥 AUTH & SECURITY (8 item)
+----------------------------------------------------------------
+
+[x] 1. Firebase Auth Client-side (Nuxt)
+      - login/logout/register + token management
+      - File: composables/useFirebase.ts
+
+[x] 2. Auth Middleware/Route Guard Nuxt
+      - Proteksi halaman berdasarkan role + super_admin bypass
+      - File: middleware/auth.global.ts
+
+[x] 3. Auth Guard Backend (NestJS)
+      - Gunakan RolesGuard, hapus duplikasi verifyAuth/verifyAdminRole
+      - File: common/roles.guard.ts + semua controller
+
+[x] 4. DTO + Validasi Backend
+      - Buat class DTO dengan class-validator utk semua endpoint
+      - File: src/*/dto/*.ts
+
+[x] 5. Fix bug kesantrian.service.ts
+      - Tambahkan import * as admin dari firebase-admin
+      - File: src/kesantrian/kesantrian.service.ts
+
+[x] 6. Endpoint Register User
+      - POST /api/auth/register
+      - File: src/auth/auth.controller.ts, auth.service.ts
+
+[x] 7. Login Flow
+      - Integrasi signInWithEmailAndPassword di frontend + quick demo login
+      - File: pages/auth/login.vue
+
+[x] 8. Role-based Navigation
+      - Redirect sesuai role, disable akses halaman tidak sesuai
+      - File: pages/auth/login.vue, middleware/auth.global.ts
+      - Role-specific sidebar/layout: super-admin, ustadz, alumni, walisantri, santri
+
+----------------------------------------------------------------
+🏫 MASTER DATA PONDOK (6 item)
+----------------------------------------------------------------
+
+[ ] 9. Manajemen Kelas & Tingkatan
+      - CRUD kelas/tingkatan (7A, 8B, 11 IPA 1, dll) + wali kelas
+      - Collection: classes
+
+[x] 10. Manajemen Kamar/Gedung
+      - CRUD gedung, kamar, kapasitas, pembina kamar (musyrif/musyrifah)
+      - Mapping kamar per gedung, tipe kamar (VIP/reguler)
+      - Collection: dormitories, rooms
+      - [FIX] Normalize rooms dari object → array di API
+
+[ ] 11. Manajemen Tahun Ajaran & Semester
+      - Setting tahun ajaran aktif, semester ganjil/genap
+      - Kalender akademik pesantren (libur pondok, ujian, dll)
+      - Collection: academic_years
+
+[x] 12. Manajemen Guru/Ustadz/Pengajar
+      - Data guru, CRUD via NestJS + halaman settings/teachers.vue
+      - Collection: teachers (RTDB)
+
+[x] 13. Manajemen Pelajaran/Mapel
+      - Kurikulum terpadu via akademik service (CRUD subjects)
+      - Collection: curriculum (RTDB)
+
+[ ] 14. Manajemen Periode & Tahun Ajaran
+      - Setting periode aktif untuk penentuan SPP, target hafalan, dll
+      - Collection: periods
+
+----------------------------------------------------------------
+📚 AKADEMIK KHAS PESANTREN (10 item)
+----------------------------------------------------------------
+
+[x] 15. Jadwal Pelajaran
+      - CRUD jadwal per kelas per hari
+      - Bentrok detection, jadwal bergantian (mingguan)
+      - Collection: schedules
+
+[x] 16. Rekap Nilai per Semester
+      - CRUD nilai via akademik service + halaman akademik/grading.vue
+      - Collection: students/{id}/grades (RTDB)
+
+[x] 17. Rapor Digital + Cetak PDF
+      - Format rapor pesantren: akademik + tahfidz + sikap
+      - TTD digital wali kelas, kepala pondok
+      - Export PDF
+
+[ ] 18. Tahfidzul Qur'an — Setoran Hafalan Baru (Ziyadah)
+      - Input setoran: surah, ayat, juz, halaman
+      - Verifikasi musyrif/musyrifah (status: lancar, perlu ulang)
+      - Target juz per semester, progress bar
+      - Collection: students/{id}/tahfidz
+
+[ ] 19. Tahfidz — Murojaah (Mengulang Hafalan)
+      - Setoran murojaah harian (juz tertentu)
+      - Tracking jumlah halaman yang dimurojaah per hari/minggu
+      - Collection: students/{id}/murojaah
+
+[ ] 20. Tahsin/Tilawah — Perbaikan Bacaan Quran
+      - Evaluasi bacaan: makhraj, tajwid, kelancaran
+      - Level tahsin (dasar, menengah, lanjut)
+      - Collection: students/{id}/tahsin
+
+[ ] 21. Kitab Kuning — Bandongan & Sorogan
+      - Bandongan: kitab yang dikaji, halaman, keterangan kyai
+      - Sorogan: setoran baca kitab individu ke kyai/ustadz
+      - Pelacakan kemajuan (jilid/halaman)
+      - Collection: students/{id}/sorogan, kajian/{id}/bandongan
+
+[ ] 22. Nadhom & Imriti/Alfiyah — Hafalan Nadhom
+      - Hafalan nadhom nahwu-shorof (Alfiyah, Imriti, dll)
+      - Bait ke-, status hafalan, syarah
+      - Collection: students/{id}/nadhom
+
+[ ] 23. Belajar Bahasa Arab & Inggris
+      - Pelacakan kemampuan (Mufrodat, Qowaid, Hiwar)
+      - Tes kosakata, percakapan harian
+      - Collection: students/{id}/language
+
+[ ] 24. Jadwal Imam Sholat & Muadzin
+      - Rotasi jadwal imam sholat 5 waktu + muadzin
+      - Khusus santri yang sudah khatam Quran (imam)
+      - Collection: imam_schedules
+
+----------------------------------------------------------------
+👥 KESANTRIAN & PEMBINAAN (12 item)
+----------------------------------------------------------------
+
+[ ] 25. Mutasi Kamar & Kelas
+      - Pindah kamar/kelas, riwayat mutasi santri
+      - Approve pembina/wali kelas
+      - Collection: students/{id}/mutations
+
+[ ] 26. Izin Santri (Keluar Pondok)
+      - Izin pulang (liburan), izin dokter (sakit), izin khusus
+      - Flow approval: wali kamar -> wali kelas -> TU
+      - Tracking jam keluar-masuk, batas waktu
+      - Collection: permits
+
+[x] 27. Pelanggaran Tata Tertib Pondok
+      - CRUD pelanggaran via kesantrian service (dual-write: students/{id}/violations + violations/)
+      - Collection: students/{id}/violations, violations (RTDB)
+
+[ ] 28. Reward & Santri Teladan
+      - Poin reward: prestasi, kebersihan, ibadah
+      - Santri teladan bulanan/tahunan
+      - Collection: rewards
+
+[ ] 29. Buku Laporan Harian Santri (Mutaaba'ah)
+      - Laporan harian: sholat, puasa sunnah, tilawah, murojaah
+      - Ditandatangani musyrif, dilihat wali santri via portal
+      - Collection: students/{id}/daily_reports
+
+[ ] 30. Monitoring Akhlak & Sikap
+      - Penilaian sikap harian: disiplin, tanggung jawab, sopan santun
+      - Laporan perkembangan akhlak per semester
+      - Collection: students/{id}/attitude
+
+[ ] 31. Pembagian Halaqah & Kelompok Belajar
+      - Kelompok halaqah tahfidz, kelompok sorogan
+      - Pembagian berdasarkan level kemampuan
+      - Collection: halaqah
+
+[ ] 32. Pengabdian/Khidmah Santri Senior
+      - Tugas khidmah: kebersihan, keamanan, koperasi, dapur
+      - Pembagian shift, pelacakan jam khidmah
+      - Collection: khidmah
+
+[ ] 33. Jadwal Piket Kebersihan
+      - Jadwal piket harian kamar, halaman, MCK, kelas
+      - Cek kebersihan oleh musyrif
+      - Collection: cleaning_schedules
+
+[ ] 34. Parkir & Inventaris Barang Santri
+      - Data barang bawaan santri (HP, laptop, dll)
+      - Pelacakan nomor seri, kondisi
+      - Collection: student_inventory
+
+[ ] 35. Laundry Management
+      - Jadwal laundry per kamar
+      - Tracking setrika, pengambilan
+      - Collection: laundry
+
+[ ] 36. Akses & Penggunaan HP/Internet
+      - Jadwal penggunaan HP, pelanggaran HP
+      - Whitelist/blacklist aplikasi
+      - Collection: device_policy
+
+----------------------------------------------------------------
+🕌 IBADAH & AMALIYAH (6 item)
+----------------------------------------------------------------
+
+[ ] 37. Rekap Kehadiran Sholat Berjamaah
+      - 5 waktu: Subuh, Dzuhur, Ashar, Maghrib, Isya
+      - Status: jamaah, sendirian, absen (tanpa uzur), uzur
+      - Rekap % kehadiran jamaah per bulan
+      - Collection: prayer_attendance
+
+[ ] 38. Rekap Puasa Sunnah
+      - Puasa Senin-Kamis, Ayyamul Bidh, Daud
+      - Pelacakan konsistensi
+      - Collection: fasting_tracking
+
+[ ] 39. Qiyamul Lail & Tahajjud
+      - Kehadiran sholat malam
+      - Pelacakan konsistensi bangun malam
+      - Collection: tahajjud_tracking
+
+[ ] 40. Dzikir & Wirid Harian
+      - Setoran wirid (ratib, hizib, yasin)
+      - Status bacaan harian
+      - Collection: daily_wirid
+
+[ ] 41. Infaq & Shodaqoh Harian
+      - Catatan infaq harian santri
+      - Pengelolaan kotak amal
+      - Collection: daily_infaq
+
+[ ] 42. Setoran Zakat Fitrah & Zakat Mal
+      - Pencatatan pembayaran zakat
+      - Data mustahiq
+      - Collection: zakat
+
+----------------------------------------------------------------
+🎭 EKSTRAKURIKULER KHAS PESANTREN (5 item)
+----------------------------------------------------------------
+
+[ ] 43. Hadroh & Seni Islami
+      - Jadwal latihan, anggota grup
+      - Event pentas
+      - Collection: hadroh
+
+[ ] 44. Qiroah & Kaligrafi
+      - Pelatihan qiroah (lagu) dan kaligrafi
+      - Lomba, sertifikasi
+      - Collection: arts
+
+[ ] 45. Pramuka / Pencak Silat
+      - Jadwal latihan, anggota
+      - Tingkatan/sabuk, prestasi
+      - Collection: extracurricular
+
+[ ] 46. Pidato / Muhadhoroh / Khitobah
+      - Latihan pidato 3 bahasa (Arab, Inggris, Indonesia)
+      - Jadwal muhadhoroh mingguan
+      - Collection: public_speaking
+
+[ ] 47. Jurnalistik & Mading
+      - Tim redaksi mading pondok
+      - Buletin/majalah dinding
+      - Collection: media
+
+----------------------------------------------------------------
+💳 KEUANGAN PONDOK (6 item)
+----------------------------------------------------------------
+
+[ ] 52. Konfigurasi SPP & Biaya
+      - SPP per kelas/tingkat
+      - Biaya tambahan: bangunan, buku, kegiatan, seragam
+      - Kategori santri: reguler, yatim, beasiswa
+      - Collection: spp_config
+
+[x] 53. Auto-generate Invoice SPP
+      - CRUD invoice + payment via keuangan service + halaman spp-payment.vue
+      - Collection: invoices (RTDB)
+
+[ ] 54. Beasiswa & Diskon SPP
+      - Tipe: yatim, tahfidz (per juz), prestasi akademik
+      - Persentase diskon, syarat & ketentuan
+      - Collection: scholarships
+
+[ ] 55. Pembayaran Non-SPP
+      - Uang gedung, daftar ulang, kegiatan, wisuda
+      - Koperasi, laundry, health clinic
+      - Collection: misc_payments
+
+[x] 56. Syahriyah / Honor Guru & Karyawan
+      - Penggajian bulanan guru, musyrif, staf
+      - Potongan (pinjaman, dll)
+      - Collection: salaries
+
+[x] 57. Laporan Keuangan Terpadu
+      - Rekap pemasukan per kategori per bulan/tahun
+      - Rekap pengeluaran operasional
+      - Piutang SPP, grafik keuangan
+      - Neraca & laba rugi sederhana
+
+----------------------------------------------------------------
+🔄 PENERIMAAN & PSB (3 item)
+----------------------------------------------------------------
+
+[ ] 58. Pendaftaran Santri Baru Online (PPDB)
+      - Form pendaftaran online (biodata, rapor, prestasi)
+      - Upload dokumen (KK, akta, foto, ijazah)
+      - Tes baca tulis Quran online
+      - Collection: registrations
+
+[ ] 59. Tes & Seleksi Masuk
+      - Tes akademik (matematika, bahasa Indonesia)
+      - Tes baca tulis Quran & hafalan
+      - Tes psikologi & wawancara
+      - Collection: admissions_tests
+
+[ ] 60. Pengumuman & Daftar Ulang
+      - Pengumuman hasil seleksi
+      - Pembayaran daftar ulang (infaq pendidikan, seragam, buku)
+      - Pembagian kamar & kelas untuk santri baru
+      - Collection: admissions_results
+
+----------------------------------------------------------------
+🎓 ALUMNI & SILLATURRAHIM (3 item)
+----------------------------------------------------------------
+
+[ ] 61. Alumni Tracking
+      - Data alumni, tahun lulus, jurusan
+      - Status: kuliah (univ + jurusan), kerja, pondok lanjutan
+      - Collection: alumni
+
+[ ] 62. Forum Alumni & Koneksi
+      - Event reuni, halal bihalal
+      - Bursa kerja & lowongan
+      - Donasi alumni (infaq pembangunan)
+      - Collection: alumni_events
+
+[ ] 63. Wisuda Tahfidz & Kelulusan
+      - Manajemen acara wisuda
+      - Sertifikat tahfidz (jumlah juz)
+      - Ijazah pondok
+      - Collection: graduations
+
+----------------------------------------------------------------
+📱 PORTAL APLIKASI (6 item)
+----------------------------------------------------------------
+
+[ ] 64. Portal Wali Santri — Dashboard
+      - Lihat rapor, absensi, pelanggaran
+      - Riwayat pembayaran SPP
+      - Buku mutaaba'ah harian
+      - Laporan perkembangan akhlak
+
+[ ] 65. Portal Santri — Dashboard
+      - Jadwal harian, jadwal piket
+      - Progress tahfidz & target
+      - Pengajuan izin online
+      - Rekap poin pelanggaran
+
+[ ] 66. Portal Guru/Ustadz
+      - Input nilai & absen siswa
+      - Verifikasi setoran hafalan
+      - Jadwal mengajar
+
+[ ] 67. Portal Musyrif/Musyrifah
+      - Laporan harian santri (mutaaba'ah)
+      - Monitoring sholat, piket, pelanggaran
+      - Approval izin santri
+
+[ ] 69. Inventaris Asrama & Barang
+      - Inventaris kamar (kasur, lemari, dll)
+      - Inventaris sekolah (meja, kursi, papan tulis)
+      - Peminjaman & pengembalian
+      - Collection: inventory
+
+----------------------------------------------------------------
+🔔 NOTIFIKASI & KOMUNIKASI (3 item)
+----------------------------------------------------------------
+
+[ ] 70. Notifikasi Push (WhatsApp/Email)
+      - Pengingat SPP jatuh tempo
+      - Info pelanggaran santri ke wali
+      - Pengumuman libur & kegiatan
+      - Integrasi WhatsApp Gateway
+
+[ ] 71. Buku Penghubung Digital
+      - Komunikasi pondok <> wali santri
+      - Catatan guru tentang santri
+      - Collection: communication_log
+
+[ ] 72. Pengumuman & Siaran
+      - Broadcast pengumuman ke semua wali
+      - Siaran kegiatan pondok
+      - Collection: announcements
+
+----------------------------------------------------------------
+📋 LAPORAN & CETAK (6 item)
+----------------------------------------------------------------
+
+[x] 73. Rapor Lengkap Pesantren (PDF)
+      - Nilai akademik + tahfidz + kitab kuning
+      - Penilaian sikap & akhlak
+      - Rekap kehadiran & pelanggaran
+      - TTD: wali kelas, kepala pondok
+
+[ ] 74. Transkrip Hafalan Quran
+      - Daftar surah & juz yang sudah dihafal
+      - Sertifikat capaian juz
+
+[ ] 75. Laporan Kehadiran Sholat
+      - Rekap bulanan per santri
+      - Rata-rata kehadiran berjamaah per kelas
+
+[ ] 76. Laporan Pelanggaran Bulanan
+      - Rekap per santri per kelas
+      - Status SP1/SP2/SP3
+
+[ ] 77. Laporan Keuangan Bulanan
+      - Pemasukan & pengeluaran
+      - Piutang SPP
+      - Saldo kas
+
+[ ] 78. Laporan Perkembangan Santri
+      - Kompilasi: akademik, tahfidz, sikap, kehadiran
+      - Grafik perkembangan per semester
+
+----------------------------------------------------------------
+🔧 LAIN-LAIN (6 item)
+----------------------------------------------------------------
+
+[x] 79. Logout & Session Management
+      - Bersihkan token, redirect ke login
+
+[x] 80. Firebase Realtime Database
+      - Tambahkan getDatabase() di useFirebase.ts untuk RTDB
+
+[ ] 81. Error Handling Global Backend
+      - Exception filter global untuk response error konsisten
+
+[ ] 83. Backup & Restore Database
+      - Export Firestore harian/mingguan
+      - Download backup via dashboard
+
+[ ] 84. Log Aktivitas (Audit Trail)
+      - Catat semua aktivitas CRUD oleh user
+      - Siapa, apa, kapan, collection apa
+      - Collection: activity_logs
+
+================================================================
+  Total: 82 item
+================================================================

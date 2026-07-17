@@ -1,0 +1,58 @@
+Product Requirements Document (PRD)
+Sistem Informasi Manajemen Pondok Pesantren Terpadu (SIM-PPT)
+Atribut Detail Nama Proyek Sistem Informasi Manajemen Pondok Pesantren Terpadu (SIM-PPT) Fase Tahap 1 — Pengembangan Inti (API & Web Base) Arsitektur Serverless Backend & NoSQL Cloud Database Status Dokumen Draft v1.0
+1. Ringkasan Eksekutif
+SIM-PPT adalah platform manajemen digital terpadu untuk lingkungan pondok pesantren. Sistem ini dibangun di atas infrastruktur Vercel untuk eksekusi antarmuka dan backend API yang cepat, dengan Firebase sebagai pusat data (NoSQL), manajemen autentikasi, dan sinkronisasi real-time.
+Kombinasi ini menghasilkan aplikasi yang:
+- Sangat skalabel
+- Aman dari serangan level infrastruktur
+- Efisien secara biaya operasional
+2. Tujuan Proyek
+# Tujuan Deskripsi 1 Aksesibilitas Real-time Memberikan pembaruan instan kepada wali santri terkait data kehadiran, pelanggaran, dan status pembayaran 2 Keandalan Infrastruktur Menghilangkan beban pemeliharaan server tradisional dengan pendekatan serverless-native 3 Keamanan Maksimal Mengamankan data sensitif pesantren melalui Firebase Security Rules dan validasi backend berlapis
+3. Tumpukan Teknologi (Tech Stack)
+3.1 Frontend & Backend API
+- Nuxt.js — ideal untuk server-side rendering dan API route handlers di Vercel
+3.2 Database & Storage
+Komponen Fungsi Firebase Cloud Firestore Penyimpanan data terstruktur (data santri, nilai, tagihan) Firebase Storage Menyimpan pasfoto santri, bukti transfer manual, dan dokumen
+3.3 Autentikasi
+- Firebase Authentication dengan implementasi Custom Claims untuk manajemen peran pengguna (RBAC)
+3.4 UI/UX & Styling
+- Tailwind CSS
+- Pendekatan desain: clean, minimalis, elegan
+- Sentuhan Glassmorphism ringan pada komponen dashboard utama
+- Pengawasan ketat terhadap elemen visual berlebihan agar performa peramban tetap ringan
+3.5 Integrasi & Otomatisasi
+Layanan Fungsi Midtrans API Gerbang pembayaran (Virtual Account, QRIS) untuk SPP Puppeteer Generate laporan rapor & kuitansi SPP otomatis (PDF resolusi tinggi) pada serverless function
+4. Hak Akses & Peran Pengguna (RBAC via Firebase Custom Claims)
+Berbeda dengan database SQL, peran pengguna disematkan langsung ke dalam token Firebase menggunakan Custom Claims melalui Firebase Admin SDK di Vercel.
+Peran Hak Akses Super Admin Akses penuh ke dashboard utama dan Firebase Console Bendahara Akses ke collection payments dan invoices Kesantrian Akses write ke collection disciplinary_records Wali Santri Akses read-only, dikunci via Firestore Rules (hanya bisa membaca dokumen jika studentId cocok dengan data anak mereka)
+5. Kebutuhan Fungsional (Fitur Inti)
+A. Modul Autentikasi
+- Pengguna login menggunakan email/nomor HP via Firebase Auth di sisi client
+- Klien mengirimkan ID Token Firebase ke Vercel API
+- Vercel API memverifikasi token menggunakan Firebase Admin SDK sebelum memproses permintaan sensitif
+B. Modul Akademik & Kesantrian
+- Struktur Data NoSQL: Collection students memiliki sub-collection grades (nilai) dan violations (pelanggaran)
+- Notifikasi Instan: Memanfaatkan listener bawaan Firestore agar aplikasi web pengasuh asrama langsung diperbarui secara real-time ketika ada santri yang tercatat melakukan pelanggaran
+C. Modul Keuangan & Integrasi Midtrans
+Alur proses:
+- Bendahara men-generate tagihan di sistem → membuat dokumen berstatus pending di Firestore
+- Wali santri melakukan checkout → sistem memanggil Midtrans Snap API
+- Webhook Midtrans: saat pembayaran berhasil, Midtrans memanggil endpoint Vercel API /api/midtrans-webhook
+- Vercel API memverifikasi signature key Midtrans, lalu memperbarui status dokumen di Firestore menjadi paid menggunakan Firebase Admin SDK (melewati batasan client-side)
+- Orang tua dapat mengunduh kuitansi PDF yang di-render secara headless oleh Puppeteer di Vercel
+6. Kebutuhan Non-Fungsional (Keamanan Siber Khusus Firebase)
+6.1 Firestore Security Rules (Krusial)
+6.2 Validasi Input API
+6.3 Manajemen Kredensial
+7. Arsitektur Komunikasi Sistem
+8. Ringkasan Diagram Alur Data (Deskriptif)
+[Wali Santri / Admin] 
+        │
+        ├── Read ringan ──────► Firebase Firestore (Client SDK, diamankan Firestore Rules)
+        │
+        └── Aksi sensitif ───► Vercel API (/server/api/...) 
+                                       │
+                                       ├─► Firebase Admin SDK (write privileged)
+                                       ├─► Midtrans Snap API (pembayaran)
+                                       └─► Puppeteer (generate PDF rapor/kuitansi)
