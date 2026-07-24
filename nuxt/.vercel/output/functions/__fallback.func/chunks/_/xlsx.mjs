@@ -1,13 +1,5 @@
-import * as fs from 'fs';
+import { m as getDefaultExportFromNamespaceIfNotNamed, n as getDefaultExportFromCjs, o as require$$1 } from './nitro.mjs';
 import * as stream from 'stream';
-
-function getDefaultExportFromCjs (x) {
-	return x && x.__esModule && Object.prototype.hasOwnProperty.call(x, 'default') ? x['default'] : x;
-}
-
-function getDefaultExportFromNamespaceIfNotNamed (n) {
-	return n && Object.prototype.hasOwnProperty.call(n, 'default') && Object.keys(n).length === 1 ? n['default'] : n;
-}
 
 function commonjsRequire(path) {
 	throw new Error('Could not dynamically require "' + path + '". Please configure the dynamicRequireTargets or/and ignoreDynamicRequires option of @rollup/plugin-commonjs appropriately for this require call to work.');
@@ -1530,8 +1522,6 @@ function requireCpexcel () {
 	} (cpexcel$1));
 	return cpexcel$1.exports;
 }
-
-const require$$1 = /*@__PURE__*/getDefaultExportFromNamespaceIfNotNamed(fs);
 
 const require$$2 = /*@__PURE__*/getDefaultExportFromNamespaceIfNotNamed(stream);
 

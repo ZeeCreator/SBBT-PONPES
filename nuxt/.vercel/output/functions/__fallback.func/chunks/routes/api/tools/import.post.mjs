@@ -1,4 +1,4 @@
-import { d as defineEventHandler, r as readBody, c as createError } from '../../../_/nitro.mjs';
+import { d as defineEventHandler, r as readBody, e as createError } from '../../../_/nitro.mjs';
 import { X as XLSX } from '../../../_/xlsx.mjs';
 import { a as rtdbAdd } from '../../../_/firebase.mjs';
 import { a as generateNIS } from '../../../_/id-generator.mjs';
@@ -9,11 +9,21 @@ import 'node:buffer';
 import 'node:fs';
 import 'node:path';
 import 'node:crypto';
-import 'firebase-admin/app';
-import 'firebase-admin/auth';
-import 'firebase-admin/database';
-import 'jose';
 import 'fs';
+import 'google-auth-library';
+import 'fast-deep-equal';
+import 'http';
+import 'https';
+import 'http2';
+import 'url';
+import 'events';
+import '@fastify/busboy';
+import 'zlib';
+import 'jsonwebtoken';
+import 'jwks-rsa';
+import '@firebase/database-compat/standalone';
+import 'path';
+import 'jose';
 import 'stream';
 
 const import_post = defineEventHandler(async (event) => {

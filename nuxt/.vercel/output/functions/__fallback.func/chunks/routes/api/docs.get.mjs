@@ -1,4 +1,4 @@
-import process from 'node:process';globalThis._importMeta_=globalThis._importMeta_||{url:"file:///_entry.js",env:process.env};import { d as defineEventHandler, i as setHeader, c as createError } from '../../_/nitro.mjs';
+import process from 'node:process';globalThis._importMeta_=globalThis._importMeta_||{url:"file:///_entry.js",env:process.env};import { d as defineEventHandler, k as setHeader, e as createError } from '../../_/nitro.mjs';
 import { readFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -8,9 +8,20 @@ import 'node:events';
 import 'node:buffer';
 import 'node:fs';
 import 'node:crypto';
-import 'firebase-admin/app';
-import 'firebase-admin/auth';
-import 'firebase-admin/database';
+import 'fs';
+import 'google-auth-library';
+import 'fast-deep-equal';
+import 'http';
+import 'https';
+import 'http2';
+import 'url';
+import 'events';
+import '@fastify/busboy';
+import 'zlib';
+import 'jsonwebtoken';
+import 'jwks-rsa';
+import '@firebase/database-compat/standalone';
+import 'path';
 import 'jose';
 
 const docs_get = defineEventHandler(async (event) => {

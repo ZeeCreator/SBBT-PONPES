@@ -1,4 +1,4 @@
-import { c as createError } from './nitro.mjs';
+import { e as createError } from './nitro.mjs';
 import { createSign } from 'crypto';
 
 const SCOPES = ["https://www.googleapis.com/auth/drive.file"];

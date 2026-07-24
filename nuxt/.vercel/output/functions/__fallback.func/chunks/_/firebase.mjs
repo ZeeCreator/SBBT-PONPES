@@ -1,6 +1,4 @@
-import { c as createError } from './nitro.mjs';
-import { getDatabase } from 'firebase-admin/database';
-import { getAuth } from 'firebase-admin/auth';
+import { a as getDatabase, e as createError, h as getAuth } from './nitro.mjs';
 
 async function verifyFirebaseToken(authHeader) {
   if (!authHeader || !authHeader.startsWith("Bearer ")) {

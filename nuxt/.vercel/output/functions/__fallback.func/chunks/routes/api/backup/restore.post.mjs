@@ -1,4 +1,4 @@
-import { d as defineEventHandler, r as readBody, c as createError } from '../../../_/nitro.mjs';
+import { d as defineEventHandler, r as readBody, e as createError } from '../../../_/nitro.mjs';
 import { l as logActivity } from '../../../_/firebase.mjs';
 import { a as restoreRTDB } from '../../../_/backup.mjs';
 import 'node:http';
@@ -8,12 +8,21 @@ import 'node:buffer';
 import 'node:fs';
 import 'node:path';
 import 'node:crypto';
-import 'firebase-admin/app';
-import 'firebase-admin/auth';
-import 'firebase-admin/database';
-import 'jose';
 import 'fs';
+import 'google-auth-library';
+import 'fast-deep-equal';
+import 'http';
+import 'https';
+import 'http2';
+import 'url';
+import 'events';
+import '@fastify/busboy';
+import 'zlib';
+import 'jsonwebtoken';
+import 'jwks-rsa';
+import '@firebase/database-compat/standalone';
 import 'path';
+import 'jose';
 
 const restore_post = defineEventHandler(async (event) => {
   const body = await readBody(event);

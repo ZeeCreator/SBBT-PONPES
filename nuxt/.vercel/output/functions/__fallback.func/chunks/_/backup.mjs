@@ -1,4 +1,4 @@
-import { getDatabase } from 'firebase-admin/database';
+import { a as getDatabase } from './nitro.mjs';
 import { existsSync, rmSync, readFileSync, writeFileSync, readdirSync, mkdirSync } from 'fs';
 import { join } from 'path';
 

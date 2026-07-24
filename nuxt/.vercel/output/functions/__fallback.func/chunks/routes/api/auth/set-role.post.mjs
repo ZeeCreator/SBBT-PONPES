@@ -1,5 +1,4 @@
-import { d as defineEventHandler, r as readBody } from '../../../_/nitro.mjs';
-import { getDatabase } from 'firebase-admin/database';
+import { d as defineEventHandler, r as readBody, a as getDatabase } from '../../../_/nitro.mjs';
 import { v as verifyFirebaseToken } from '../../../_/firebase.mjs';
 import 'node:http';
 import 'node:https';
@@ -8,8 +7,20 @@ import 'node:buffer';
 import 'node:fs';
 import 'node:path';
 import 'node:crypto';
-import 'firebase-admin/app';
-import 'firebase-admin/auth';
+import 'fs';
+import 'google-auth-library';
+import 'fast-deep-equal';
+import 'http';
+import 'https';
+import 'http2';
+import 'url';
+import 'events';
+import '@fastify/busboy';
+import 'zlib';
+import 'jsonwebtoken';
+import 'jwks-rsa';
+import '@firebase/database-compat/standalone';
+import 'path';
 import 'jose';
 
 const setRole_post = defineEventHandler(async (event) => {
