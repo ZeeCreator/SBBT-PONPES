@@ -1,13 +1,4 @@
 {
-  "buildCommand": "cd nuxt && npm run build",
-  "outputDirectory": "nuxt/.output/public",
-  "installCommand": "cd nuxt && npm install",
-  "rewrites": [
-    {
-      "source": "/(.*)",
-      "destination": "/"
-    }
-  ],
   "github": {
     "silent": true
   }
