@@ -10,16 +10,16 @@ export default defineNitroPlugin(() => {
 
     if (serviceAccountBase64) {
       try {
+        const serviceAccount = JSON.parse(
+          Buffer.from(serviceAccountBase64, 'base64').toString('utf-8')
+        )
         firebaseConfig = {
-          credential: cert(
-            JSON.parse(
-              Buffer.from(serviceAccountBase64, 'base64').toString('utf-8'),
-            ),
-          ),
+          credential: cert(serviceAccount),
           databaseURL,
         }
-      } catch {
-        console.warn('Failed to parse FIREBASE_SERVICE_ACCOUNT_KEY, using default credentials')
+      } catch (e) {
+        console.error('Failed to parse FIREBASE_SERVICE_ACCOUNT_KEY:', e.message)
+        // Fallback to application default credentials (will work only in GC environments)
         firebaseConfig = { databaseURL }
       }
     } else {

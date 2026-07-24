@@ -1,8 +1,8 @@
 <template>
   <div class="px-gutter max-w-container-max mx-auto" style="padding-top: 6rem; padding-bottom: 3rem;">
     <div class="mb-stack-lg">
-      <h2 class="font-display text-headline-lg text-primary">Mutasi Kamar, Kelas, Boyong & Halaqoh</h2>
-      <p class="text-on-surface-variant text-body-md">Kelola permintaan mutasi/pindah kamar, kelas, boyong (pulang), dan pindah halaqoh santri.</p>
+      <h2 class="font-display text-headline-lg text-primary">Mutasi Kamar, Kelas, Boyong, Halaqoh & Pindah Pondok</h2>
+      <p class="text-on-surface-variant text-body-md">Kelola permintaan mutasi/pindah kamar, kelas, boyong (pulang), pindah halaqoh, dan pindah pondok santri.</p>
     </div>
     <div v-if="errorS" class="mb-stack-lg p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 text-label-md">{{ errorS }}</div>
     <div v-if="loading" class="flex items-center justify-center py-12">
@@ -25,13 +25,14 @@
               <span class="material-symbols-outlined text-on-surface-variant">search</span>
               <input v-model="filterSearch" class="bg-surface-container-low border-none rounded-lg text-label-md py-1.5 px-3 focus:ring-primary" placeholder="Cari santri..." />
             </div>
-            <select v-model="filterTipe" class="bg-surface-container-low border-none rounded-lg text-label-md py-1.5 px-3 focus:ring-primary">
-              <option value="">Semua Tipe</option>
-              <option value="Kamar">Kamar</option>
-              <option value="Kelas">Kelas</option>
-              <option value="Boyong">Boyong</option>
-              <option value="Halaqoh">Halaqoh</option>
-            </select>
+<select v-model="filterTipe" class="bg-surface-container-low border-none rounded-lg text-label-md py-1.5 px-3 focus:ring-primary">
+                <option value="">Semua Tipe</option>
+                <option value="Kamar">Kamar</option>
+                <option value="Kelas">Kelas</option>
+                <option value="Boyong">Boyong</option>
+                <option value="Halaqoh">Halaqoh</option>
+                <option value="Pindah Pondok Al-Fatah Pusat">Pindah Pondok Al-Fatah Pusat</option>
+              </select>
             <select v-model="filterStatus" class="bg-surface-container-low border-none rounded-lg text-label-md py-1.5 px-3 focus:ring-primary">
               <option value="">Semua Status</option>
               <option value="pending">Pending</option>
@@ -70,6 +71,7 @@
                   <button v-if="item.status === 'pending'" class="text-green-600 hover:text-green-800 mr-2 transition-colors" @click="approve(item.id)"><span class="material-symbols-outlined">check_circle</span></button>
                   <button v-if="item.status === 'pending'" class="text-red-600 hover:text-red-800 mr-2 transition-colors" @click="reject(item.id)"><span class="material-symbols-outlined">cancel</span></button>
                   <button v-if="item.status === 'disetujui' && item.tipe === 'Boyong'" class="text-blue-600 hover:text-blue-800 mr-2 transition-colors" @click="printSuratBoyong(item)" title="Cetak Surat Boyong"><span class="material-symbols-outlined">print</span></button>
+                    <button v-if="item.status === 'disetujui' && item.tipe === 'Pindah Pondok Al-Fatah Pusat'" class="text-blue-600 hover:text-blue-800 mr-2 transition-colors" @click="printSuratPindah(item)" title="Cetak Surat Pindah"><span class="material-symbols-outlined">print</span></button>
               <button class="text-error hover:text-red-700 transition-colors" @click="deleteMutasi(item.id)"><span class="material-symbols-outlined">delete</span></button>
                 </td>
               </tr>
@@ -104,6 +106,7 @@
                 <option value="Kelas">Kelas</option>
                 <option value="Boyong">Boyong (Pulang)</option>
                 <option value="Halaqoh">Halaqoh</option>
+                <option value="Pindah Pondok Al-Fatah Pusat">Pindah Pondok Al-Fatah Pusat</option>
               </select>
             </div>
 
@@ -151,6 +154,19 @@
               <div class="space-y-1">
                 <label class="text-label-md text-on-surface-variant">Keterangan</label>
                 <textarea v-model="form.keterangan" class="w-full bg-surface-container-low border-none rounded-lg text-body-md focus:ring-primary p-3 outline-none min-h-[60px]" placeholder="Alasan pindah halaqoh..."></textarea>
+              </div>
+            </template>
+
+<template v-if="form.tipe === 'Pindah Pondok Al-Fatah Pusat'">
+              <div class="grid grid-cols-2 gap-stack-md">
+                <div class="space-y-1">
+                  <label class="text-label-md text-on-surface-variant">Dari</label>
+                  <input v-model="form.dari" class="w-full bg-surface-container-low border-none rounded-lg text-body-md focus:ring-primary p-3 outline-none" placeholder="Pondok Al-Fatah Panekan" />
+                </div>
+                <div class="space-y-1">
+                  <label class="text-label-md text-on-surface-variant">Ke</label>
+                  <input v-model="form.ke" class="w-full bg-surface-container-low border-none rounded-lg text-body-md focus:ring-primary p-3 outline-none" placeholder="Pondok Al-Fatah Pusat" />
+                </div>
               </div>
             </template>
 
@@ -223,7 +239,8 @@ function tipeBadge(tipe: string) {
     'Kamar': 'bg-blue-100 text-blue-700',
     'Kelas': 'bg-purple-100 text-purple-700',
     'Boyong': 'bg-orange-100 text-orange-700',
-    'Halaqoh': 'bg-teal-100 text-teal-700'
+    'Halaqoh': 'bg-teal-100 text-teal-700',
+    'Pindah Pondok Al-Fatah Pusat': 'bg-rose-100 text-rose-700'
   }
   return map[tipe] || 'bg-surface-container text-on-surface-variant'
 }
@@ -263,6 +280,13 @@ function openAddModal() {
   form.date = new Date().toISOString().split('T')[0]
   showModal.value = true
 }
+
+watch(() => form.tipe, (val) => {
+  if (val === 'Pindah Pondok Al-Fatah Pusat') {
+    if (!form.dari) form.dari = 'Pondok Al-Fatah Panekan'
+    if (!form.ke) form.ke = 'Pondok Al-Fatah Pusat'
+  }
+})
 
 async function fetchStudents() {
   try {
@@ -372,6 +396,76 @@ function printSuratBoyong(item: MutasiItem) {
 
 <div class="ttd">
   <div><div class="jabatan">Kepala Pondok,</div><div class="nama">_____________________</div></div>
+  <div><div class="jabatan">Santri,</div><div class="nama">_____________________</div></div>
+</div>
+</body></html>
+`)
+  win.document.close()
+  setTimeout(() => win.print(), 500)
+}
+
+function printSuratPindah(item: MutasiItem) {
+  const stud = students.value.find(s => s.id === (item as any).studentId || s.name === item.santri)
+  const win = window.open('', '_blank')
+  if (!win) return
+  win.document.write(`
+<html><head><title>Surat Pindah - ${item.santri}</title>
+<style>
+  @page { size: A4; margin: 15mm 20mm; }
+  body { font-family: 'Times New Roman', Times, serif; font-size: 12pt; color: #000; margin: 0; padding: 0; }
+  .kop { text-align: center; border-bottom: 2px solid #333; padding-bottom: 10px; margin-bottom: 20px; }
+  .kop .logo { max-height: 60px; vertical-align: middle; }
+  .kop .kop-title { font-size: 15pt; font-weight: bold; }
+  .kop .kop-alamat { font-size: 9pt; }
+  h2 { text-align: center; font-size: 14pt; margin: 16px 0; text-decoration: underline; }
+  .no-surat { text-align: center; font-size: 10pt; margin-bottom: 16px; }
+  .content { line-height: 1.8; text-align: justify; }
+  table.data { width: 100%; border-collapse: collapse; margin: 12px 0; }
+  table.data td { padding: 4px 8px; font-size: 11pt; vertical-align: top; }
+  table.data .label { width: 120px; }
+  .ttd { margin-top: 40px; display: flex; justify-content: space-around; }
+  .ttd div { text-align: center; width: 180px; }
+  .ttd .jabatan { font-size: 10pt; margin-bottom: 60px; }
+  .ttd .nama { font-size: 11pt; font-weight: bold; text-decoration: underline; }
+</style></head><body>
+<div class="kop">
+  <table style="width:100%;"><tr>
+    <td style="width:70px;text-align:center;">
+      <img src="/image/logo.png" class="logo" style="max-height:55px;" onerror="this.style.display='none'" />
+    </td>
+    <td style="text-align:center;">
+      <div class="kop-title">YAYASAN PONDOK PESANTREN<br>AL FATAH PANEKAN</div>
+      <div class="kop-alamat">Turi, Panekan, Kabupaten Magetan, Jawa Timur 63352</div>
+    </td>
+  </tr></table>
+</div>
+
+<h2>SURAT PINDAH PONDOK</h2>
+<div class="no-surat">No: ${Math.floor(Math.random() * 1000).toString().padStart(3, '0')}/SPPB/AL-FATAH/${new Date().getMonth() + 1}/${new Date().getFullYear()}</div>
+
+<div class="content">
+  <p>Yang bertanda tangan di bawah ini, Kepala Pondok Pesantren Al Fatah Panekan, menerangkan bahwa:</p>
+</div>
+
+<table class="data">
+  <tr><td class="label">Nama Santri</td><td>: ${item.santri}</td></tr>
+  ${stud?.nis ? `<tr><td>NIS</td><td>: ${stud.nis}</td></tr>` : ''}
+  ${stud?.class ? `<tr><td>Kelas</td><td>: ${stud.class}</td></tr>` : ''}
+  ${stud?.tempat_lahir ? `<tr><td>Tempat, Tgl Lahir</td><td>: ${stud.tempat_lahir}${stud?.tanggal_lahir ? ', ' + stud.tanggal_lahir : ''}</td></tr>` : ''}
+  ${stud?.alamat ? `<tr><td>Alamat</td><td>: ${stud.alamat}</td></tr>` : ''}
+  ${stud?.nama_wali ? `<tr><td>Nama Wali</td><td>: ${stud.nama_wali}</td></tr>` : ''}
+  ${stud?.no_hp_wali ? `<tr><td>No. HP Wali</td><td>: ${stud.no_hp_wali}</td></tr>` : ''}
+  ${item.dari ? `<tr><td>Dari Pondok</td><td>: ${item.dari}</td></tr>` : ''}
+  ${item.ke ? `<tr><td>Ke Pondok</td><td>: ${item.ke}</td></tr>` : ''}
+  <tr><td>Tanggal Pindah</td><td>: ${item.date}</td></tr>
+</table>
+
+<div class="content">
+  <p>Benar bahwa santri tersebut di atas adalah santri kami yang bermaksud untuk mengikuti Program Pondok Pesantren Al Fatah Pusat. Sehubungan dengan hal tersebut, maka yang bersangkutan dipindahkan dari Pondok Pesantren Al Fatah Panekan ke Pondok Pesantren Al Fatah Pusat. Demikian surat ini dibuat untuk dipergunakan sebagaimana mestinya.</p>
+</div>
+
+<div class="ttd">
+  <div><div class="jabatan">Pengurus Pondok,</div><div class="nama">_____________________</div></div>
   <div><div class="jabatan">Santri,</div><div class="nama">_____________________</div></div>
 </div>
 </body></html>
