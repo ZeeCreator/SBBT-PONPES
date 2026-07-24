@@ -1,6 +1,6 @@
 {
   "buildCommand": "cd nuxt && npm run build",
-  "outputDirectory": "nuxt/dist",
+  "outputDirectory": "nuxt/.output/public",
   "installCommand": "cd nuxt && npm install",
   "framework": "nuxtjs",
   "rewrites": [
