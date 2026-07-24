@@ -1,4 +1,14 @@
 {
+  "buildCommand": "npm run build",
+  "outputDirectory": ".output/public",
+  "installCommand": "npm install",
+  "framework": "nuxtjs",
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/"
+    }
+  ],
   "github": {
     "silent": true
   }

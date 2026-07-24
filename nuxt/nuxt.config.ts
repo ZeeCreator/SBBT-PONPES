@@ -10,9 +10,6 @@ export default defineNuxtConfig({
   experimental: {
     appManifest: false,
   },
-  nitro: {
-    preset: 'vercel',
-  },
   runtimeConfig: {
     geminiApiKey: '',
     openrouterApiKey: '',
