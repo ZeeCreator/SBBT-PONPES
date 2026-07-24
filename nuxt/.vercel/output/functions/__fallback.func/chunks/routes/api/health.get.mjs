@@ -1,0 +1,44 @@
+import { d as defineEventHandler } from '../../_/nitro.mjs';
+import { getDatabase } from 'firebase-admin/database';
+import { getAuth } from 'firebase-admin/auth';
+import 'node:http';
+import 'node:https';
+import 'node:events';
+import 'node:buffer';
+import 'node:fs';
+import 'node:path';
+import 'node:crypto';
+import 'firebase-admin/app';
+import 'jose';
+
+const health_get = defineEventHandler(async () => {
+  const results = {};
+  let allOk = true;
+  try {
+    const db = getDatabase();
+    const t0 = Date.now();
+    await db.ref(".info/connected").once("value");
+    results.rtdb = { status: "ok", latency: Date.now() - t0 + "ms" };
+  } catch (e) {
+    results.rtdb = { status: "error", message: e.message };
+    allOk = false;
+  }
+  try {
+    const auth = getAuth();
+    const t0 = Date.now();
+    await auth.listUsers(1);
+    results.auth = { status: "ok", latency: Date.now() - t0 + "ms" };
+  } catch (e) {
+    results.auth = { status: "error", message: e.message };
+    allOk = false;
+  }
+  return {
+    status: allOk ? "healthy" : "degraded",
+    uptime: process.uptime(),
+    timestamp: (/* @__PURE__ */ new Date()).toISOString(),
+    services: results
+  };
+});
+
+export { health_get as default };
+//# sourceMappingURL=health.get.mjs.map
