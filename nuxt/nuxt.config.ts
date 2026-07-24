@@ -12,6 +12,9 @@ export default defineNuxtConfig({
   },
   nitro: {
     preset: 'vercel',
+    externals: {
+      trace: false
+    },
   },
   runtimeConfig: {
     geminiApiKey: '',
