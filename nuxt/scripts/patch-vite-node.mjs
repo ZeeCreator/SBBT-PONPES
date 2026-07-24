@@ -80,7 +80,3 @@ try {
   console.log('× Failed to patch vite-node: ' + e.message)
   process.exit(0)
 }
-      break
-    }
-  }
-}
