@@ -25,7 +25,6 @@ const menus: Record<string, RoleConfig> = {
       { label: 'Absensi', icon: 'calendar_month', to: '/attendance' },
       { label: 'Ibadah', icon: 'mosque', to: '/ibadah/prayer-attendance' },
       { label: 'Guru', icon: 'badge', to: '/settings/teachers' },
-      { label: 'Keuangan', icon: 'payments', to: '/keuangan/spp-payment' },
       { label: 'Kesehatan', icon: 'medical_services', to: '/kesehatan/medical-records' },
       { label: 'Ekstrakurikuler', icon: 'sports_kabaddi', to: '/extracurricular' },
       { label: 'PSB/PPDB', icon: 'app_registration', to: '/psb/registrations' },
@@ -46,8 +45,6 @@ const menus: Record<string, RoleConfig> = {
     variant: 'admin',
     menu: [
       { label: 'Dashboard', icon: 'dashboard', to: '/super-admin/dashboard' },
-      { label: 'Tagihan SPP', icon: 'payments', to: '/keuangan/spp-payment' },
-      { label: 'Riwayat Bayar', icon: 'receipt_long', to: '/keuangan/spp-payment' },
       { label: 'Santri', icon: 'group', to: '/kesantrian/students' },
       { label: 'Laporan', icon: 'description', to: '/laporan' },
     ],
@@ -91,7 +88,6 @@ const menus: Record<string, RoleConfig> = {
     menu: [
       { label: 'Dashboard', icon: 'dashboard', to: '/wali-santri/dashboard' },
       { label: 'Data Anak', icon: 'badge', to: '/student/dashboard' },
-      { label: 'Keuangan', icon: 'payments', to: '/keuangan/wali-santri' },
       { label: 'Akademik', icon: 'auto_stories', to: '/akademik/menu' },
       { label: 'Nilai', icon: 'assignment', to: '/akademik/grading' },
       { label: 'Absensi', icon: 'calendar_month', to: '/attendance' },

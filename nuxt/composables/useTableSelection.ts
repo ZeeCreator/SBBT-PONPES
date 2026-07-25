@@ -1,6 +1,14 @@
-export function useTableSelection<T extends { id: string | number }>(getItems: () => T[]) {
+import type { Ref, ComputedRef } from 'vue'
+
+export function useTableSelection<T extends { id: string | number }>(getItems: () => (T[] | Ref<T[]> | ComputedRef<T[]>)) {
   const selected = ref<(string | number)[]>([])
-  const items = computed(getItems)
+  const items = computed(() => {
+    const result = getItems()
+    if (result && typeof result === 'object' && 'value' in result) {
+      return (result as Ref<T[]>).value
+    }
+    return result as T[]
+  })
 
   const allSelected = computed(() =>
     items.value.length > 0 && selected.value.length === items.value.length
