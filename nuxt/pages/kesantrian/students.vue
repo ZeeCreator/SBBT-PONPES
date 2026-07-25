@@ -236,7 +236,7 @@
               <span class="material-symbols-outlined">close</span>
             </button>
           </div>
-          <form class="p-gutter space-y-stack-md max-h-[70vh] overflow-y-auto" @submit.prevent="saveStudent">
+          <form novalidate class="p-gutter space-y-stack-md max-h-[70vh] overflow-y-auto" @submit.prevent="saveStudent">
             <div class="flex items-center gap-4 mb-2">
               <div class="relative group cursor-pointer" @click="triggerPhotoUpload">
                 <div v-if="form.photo" class="w-[100px] h-[100px] rounded-full overflow-hidden shadow-md border-2 border-primary-fixed">
@@ -269,11 +269,11 @@
 
             <div class="space-y-1">
               <label class="text-label-md text-on-surface-variant">Kelas <span class="text-error">*</span></label>
-              <select v-if="classes.length > 0" v-model="form.classId" required class="w-full bg-surface-container-low border-none rounded-lg text-body-md focus:ring-primary p-3 outline-none">
+              <select v-if="classes.length > 0" v-model="form.classId" class="w-full bg-surface-container-low border-none rounded-lg text-body-md focus:ring-primary p-3 outline-none">
                 <option value="">-- Pilih Kelas --</option>
                 <option v-for="cls in classes" :key="cls.id" :value="cls.id">{{ cls.name }} ({{ cls.level || '' }}{{ cls.group || '' }})</option>
               </select>
-              <input v-else v-model="form.className" type="text" required class="w-full bg-surface-container-low border-none rounded-lg text-body-md focus:ring-primary p-3 outline-none" placeholder="Ketik nama kelas, contoh: Kelas 10 - Al-Azhar" />
+              <input v-else v-model="form.className" type="text" class="w-full bg-surface-container-low border-none rounded-lg text-body-md focus:ring-primary p-3 outline-none" placeholder="Ketik nama kelas, contoh: Kelas 10 - Al-Azhar" />
             </div>
 
             <div class="grid grid-cols-2 gap-stack-md">
@@ -774,7 +774,9 @@ async function saveStudent() {
     error.value = 'Nama santri harus diisi'
     return
   }
-  if (!form.classId && !form.className) {
+  const classIdVal = form.classId != null ? String(form.classId).trim() : ''
+  const classNameVal = form.className != null ? String(form.className).trim() : ''
+  if (!classIdVal && !classNameVal) {
     error.value = 'Kelas harus diisi'
     return
   }
