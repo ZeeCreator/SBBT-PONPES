@@ -162,7 +162,7 @@
 
 <script setup lang="ts">
 import { useTableSelection } from '~/composables/useTableSelection'
-const { selected, allSelected, toggleAll, toggleOne, isSelected, clearSelection, selectedCount } = useTableSelection(subjects)
+const { selected, allSelected, toggleAll, toggleOne, isSelected, clearSelection, selectedCount } = useTableSelection(() => subjects)
 definePageMeta({ layout: 'super-admin', requiredRole: 'super_admin' })
 
 const teachers = ref<any[]>([])

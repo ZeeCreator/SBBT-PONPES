@@ -108,7 +108,7 @@
 
 <script setup lang="ts">
 import { useTableSelection } from '~/composables/useTableSelection'
-const { selected, allSelected, toggleAll, toggleOne, isSelected, clearSelection, selectedCount } = useTableSelection(filteredRecords)
+const { selected, allSelected, toggleAll, toggleOne, isSelected, clearSelection, selectedCount } = useTableSelection(() => filteredRecords)
 definePageMeta({ layout: 'super-admin', requiredRole: 'super_admin' })
 
 const loading = ref(true)

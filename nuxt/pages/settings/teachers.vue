@@ -172,7 +172,7 @@
 
 <script setup lang="ts">
 import { useTableSelection } from '~/composables/useTableSelection'
-const { selected, allSelected, toggleAll, toggleOne, isSelected, clearSelection, selectedCount } = useTableSelection(filteredTeachers)
+const { selected, allSelected, toggleAll, toggleOne, isSelected, clearSelection, selectedCount } = useTableSelection(() => filteredTeachers)
 definePageMeta({ layout: 'super-admin', requiredRole: 'super_admin' })
 
 const teachers = ref<any[]>([])

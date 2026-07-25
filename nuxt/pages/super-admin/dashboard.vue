@@ -196,7 +196,7 @@
 
 <script setup lang="ts">
 import { useTableSelection } from '~/composables/useTableSelection'
-const { selected, allSelected, toggleAll, toggleOne, isSelected, clearSelection, selectedCount } = useTableSelection(classes)
+const { selected, allSelected, toggleAll, toggleOne, isSelected, clearSelection, selectedCount } = useTableSelection(() => classes)
 import { onMounted, onUnmounted } from 'vue'
 definePageMeta({ layout: 'super-admin', requiredRole: 'super_admin' })
 

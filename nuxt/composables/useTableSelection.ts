@@ -1,5 +1,6 @@
-export function useTableSelection<T extends { id: string | number }>(items: ComputedRef<T[]>) {
+export function useTableSelection<T extends { id: string | number }>(getItems: () => T[]) {
   const selected = ref<(string | number)[]>([])
+  const items = computed(getItems)
 
   const allSelected = computed(() =>
     items.value.length > 0 && selected.value.length === items.value.length

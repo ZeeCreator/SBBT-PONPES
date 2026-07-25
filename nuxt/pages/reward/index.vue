@@ -150,7 +150,7 @@
 
 <script setup lang="ts">
 import { useTableSelection } from '~/composables/useTableSelection'
-const { selected, allSelected, toggleAll, toggleOne, isSelected, clearSelection, selectedCount } = useTableSelection(filteredRewards)
+const { selected, allSelected, toggleAll, toggleOne, isSelected, clearSelection, selectedCount } = useTableSelection(() => filteredRewards)
 definePageMeta({ layout: 'super-admin', requiredRole: 'super_admin' })
 
 interface RewardItem {

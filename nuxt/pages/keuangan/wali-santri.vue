@@ -194,7 +194,7 @@
 
 <script setup lang="ts">
 import { useTableSelection } from '~/composables/useTableSelection'
-const { selected, allSelected, toggleAll, toggleOne, isSelected, clearSelection, selectedCount } = useTableSelection(paymentHistory)
+const { selected, allSelected, toggleAll, toggleOne, isSelected, clearSelection, selectedCount } = useTableSelection(() => paymentHistory)
 definePageMeta({ layout: 'wali-santri', requiredRole: 'wali_santri' })
 
 interface Bill {

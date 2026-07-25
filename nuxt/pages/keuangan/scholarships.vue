@@ -164,7 +164,7 @@
 
 <script setup lang="ts">
 import { useTableSelection } from '~/composables/useTableSelection'
-const { selected, allSelected, toggleAll, toggleOne, isSelected, clearSelection, selectedCount } = useTableSelection(scholarships)
+const { selected, allSelected, toggleAll, toggleOne, isSelected, clearSelection, selectedCount } = useTableSelection(() => scholarships)
 definePageMeta({ layout: 'super-admin', requiredRole: 'super_admin' })
 
 interface Scholarship {

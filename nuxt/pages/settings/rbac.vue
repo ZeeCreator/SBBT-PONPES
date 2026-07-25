@@ -219,7 +219,7 @@ service cloud.firestore {
 
 <script setup lang="ts">
 import { useTableSelection } from '~/composables/useTableSelection'
-const { selected, allSelected, toggleAll, toggleOne, isSelected, clearSelection, selectedCount } = useTableSelection(fbUsers)
+const { selected, allSelected, toggleAll, toggleOne, isSelected, clearSelection, selectedCount } = useTableSelection(() => fbUsers)
 definePageMeta({ layout: 'super-admin', requiredRole: 'super_admin' })
 
 const activeTab = ref('roles')
