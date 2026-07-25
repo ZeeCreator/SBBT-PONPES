@@ -43,6 +43,7 @@
         <table class="w-full text-left">
           <thead class="bg-surface-container-low">
             <tr>
+              <th class="px-4 py-4 text-label-md text-on-surface-variant w-10"><input type="checkbox" :checked="allSelected" @change="toggleAll" class="w-4 h-4 rounded border-outline-variant text-primary focus:ring-primary" /></th>
               <th class="px-6 py-4 text-label-md text-on-surface-variant">Santri</th>
               <th class="px-6 py-4 text-label-md text-on-surface-variant">Jenis</th>
               <th class="px-6 py-4 text-label-md text-on-surface-variant">Level</th>
@@ -54,6 +55,7 @@
           </thead>
           <tbody class="divide-y divide-outline-variant/10">
             <tr v-for="p in filteredItems" :key="p.id" class="hover:bg-primary-fixed/5 transition-colors">
+              <td class="px-4 py-4"><input type="checkbox" :checked="isSelected(p.id)" @change="toggleOne(p.id)" class="w-4 h-4 rounded border-outline-variant text-primary focus:ring-primary" /></td>
               <td class="px-6 py-4 text-label-md font-medium text-on-surface">{{ p.santri }}</td>
               <td class="px-6 py-4">
                 <span :class="['px-2 py-1 rounded text-label-sm font-bold', p.jenis === 'Qiroah' ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700']">{{ p.jenis }}</span>
@@ -78,7 +80,7 @@
               </td>
             </tr>
             <tr v-if="filteredItems.length === 0">
-              <td colspan="7" class="px-6 py-12 text-center text-on-surface-variant text-label-md">Tidak ada peserta ditemukan</td>
+              <td colspan="99"  class="px-6 py-12 text-center text-on-surface-variant text-label-md">Tidak ada peserta ditemukan</td>
             </tr>
           </tbody>
         </table>
@@ -163,6 +165,8 @@
 </template>
 
 <script setup lang="ts">
+import { useTableSelection } from '~/composables/useTableSelection'
+const { selected, allSelected, toggleAll, toggleOne, isSelected, clearSelection, selectedCount } = useTableSelection(filteredItems)
 definePageMeta({ layout: 'super-admin', requiredRole: 'super_admin' })
 
 const loading = ref(true)

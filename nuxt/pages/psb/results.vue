@@ -44,6 +44,7 @@
         <table class="w-full text-left border-collapse">
           <thead class="bg-surface-container-low">
             <tr>
+              <th class="px-4 py-4 text-label-md text-on-surface-variant w-10"><input type="checkbox" :checked="allSelected" @change="toggleAll" class="w-4 h-4 rounded border-outline-variant text-primary focus:ring-primary" /></th>
               <th class="px-6 py-4 text-label-md text-on-surface-variant">Nama</th>
               <th class="px-6 py-4 text-label-md text-on-surface-variant">Status</th>
               <th class="px-6 py-4 text-label-md text-on-surface-variant">Kelas</th>
@@ -53,6 +54,7 @@
           </thead>
           <tbody class="divide-y divide-surface-variant/30">
             <tr v-for="r in filteredResults" :key="r.id" class="hover:bg-primary-container/5 transition-colors">
+              <td class="px-4 py-4"><input type="checkbox" :checked="isSelected(r.id)" @change="toggleOne(r.id)" class="w-4 h-4 rounded border-outline-variant text-primary focus:ring-primary" /></td>
               <td class="px-6 py-4">
                 <div class="flex items-center gap-3">
                   <div class="w-9 h-9 rounded-full bg-primary-fixed-dim text-primary flex items-center justify-center font-bold">{{ r.initials }}</div>
@@ -80,6 +82,8 @@
 </template>
 
 <script setup lang="ts">
+import { useTableSelection } from '~/composables/useTableSelection'
+const { selected, allSelected, toggleAll, toggleOne, isSelected, clearSelection, selectedCount } = useTableSelection(filteredResults)
 definePageMeta({ layout: 'super-admin', requiredRole: 'super_admin' })
 
 const loading = ref(true)

@@ -38,6 +38,7 @@
         <table class="w-full text-left">
           <thead class="bg-surface-container-low">
             <tr>
+              <th class="px-4 py-4 text-label-md text-on-surface-variant w-10"><input type="checkbox" :checked="allSelected" @change="toggleAll" class="w-4 h-4 rounded border-outline-variant text-primary focus:ring-primary" /></th>
               <th class="px-6 py-4 text-label-md text-on-surface-variant">Nama Grup</th>
               <th class="px-6 py-4 text-label-md text-on-surface-variant">Anggota</th>
               <th class="px-6 py-4 text-label-md text-on-surface-variant">Jadwal Latihan</th>
@@ -48,6 +49,7 @@
           </thead>
           <tbody class="divide-y divide-outline-variant/10">
               <tr v-for="grup in filteredItems" :key="grup.id" class="hover:bg-primary-fixed/5 transition-colors">
+              <td class="px-4 py-4"><input type="checkbox" :checked="isSelected(grup.id)" @change="toggleOne(grup.id)" class="w-4 h-4 rounded border-outline-variant text-primary focus:ring-primary" /></td>
               <td class="px-6 py-4 text-label-md font-medium text-on-surface">{{ grup.nama }}</td>
               <td class="px-6 py-4 text-label-md">{{ grup.anggota }} orang</td>
               <td class="px-6 py-4 text-label-md text-on-surface-variant">{{ grup.jadwal }}</td>
@@ -67,7 +69,7 @@
               </td>
             </tr>
             <tr v-if="filteredItems.length === 0">
-              <td colspan="6" class="px-6 py-12 text-center text-on-surface-variant text-label-md">Tidak ada grup ditemukan</td>
+              <td colspan="99"  class="px-6 py-12 text-center text-on-surface-variant text-label-md">Tidak ada grup ditemukan</td>
             </tr>
           </tbody>
         </table>
@@ -136,6 +138,8 @@
 </template>
 
 <script setup lang="ts">
+import { useTableSelection } from '~/composables/useTableSelection'
+const { selected, allSelected, toggleAll, toggleOne, isSelected, clearSelection, selectedCount } = useTableSelection(filteredItems)
 definePageMeta({ layout: 'super-admin', requiredRole: 'super_admin' })
 
 const loading = ref(true)

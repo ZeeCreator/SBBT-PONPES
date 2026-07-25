@@ -35,6 +35,7 @@
         <table class="w-full text-left">
           <thead class="bg-surface-container-low">
             <tr>
+              <th class="px-4 py-4 text-label-md text-on-surface-variant w-10"><input type="checkbox" :checked="allSelected" @change="toggleAll" class="w-4 h-4 rounded border-outline-variant text-primary focus:ring-primary" /></th>
               <th class="px-4 py-3 text-label-sm text-on-surface-variant">Nama</th>
               <th class="px-4 py-3 text-label-sm text-on-surface-variant">Email</th>
               <th class="px-4 py-3 text-label-sm text-on-surface-variant">Spesialisasi</th>
@@ -45,6 +46,7 @@
           </thead>
           <tbody class="divide-y divide-outline-variant/10">
             <tr v-for="teacher in filteredTeachers" :key="teacher.id" class="hover:bg-primary-fixed/5 transition-colors">
+              <td class="px-4 py-4"><input type="checkbox" :checked="isSelected(teacher.id)" @change="toggleOne(teacher.id)" class="w-4 h-4 rounded border-outline-variant text-primary focus:ring-primary" /></td>
               <td class="px-4 py-3">
                 <div class="flex items-center gap-3">
                   <div class="w-9 h-9 rounded-full bg-primary-fixed flex items-center justify-center text-primary text-label-sm font-bold">
@@ -169,6 +171,8 @@
 </template>
 
 <script setup lang="ts">
+import { useTableSelection } from '~/composables/useTableSelection'
+const { selected, allSelected, toggleAll, toggleOne, isSelected, clearSelection, selectedCount } = useTableSelection(filteredTeachers)
 definePageMeta({ layout: 'super-admin', requiredRole: 'super_admin' })
 
 const teachers = ref<any[]>([])

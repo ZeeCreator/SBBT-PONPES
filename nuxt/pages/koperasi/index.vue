@@ -39,6 +39,7 @@
             <table class="w-full text-left">
               <thead class="bg-surface-container-low">
                 <tr>
+              <th class="px-4 py-4 text-label-md text-on-surface-variant w-10"><input type="checkbox" :checked="allSelected" @change="toggleAll" class="w-4 h-4 rounded border-outline-variant text-primary focus:ring-primary" /></th>
                   <th class="px-4 py-3 text-label-sm text-on-surface-variant">Nama Barang</th>
                   <th class="px-4 py-3 text-label-sm text-on-surface-variant">Harga</th>
                   <th class="px-4 py-3 text-label-sm text-on-surface-variant">Stok</th>
@@ -48,13 +49,14 @@
               </thead>
               <tbody class="divide-y divide-outline-variant/10">
                 <tr v-for="item in filteredStok" :key="item.id" class="hover:bg-primary-fixed/5 transition-colors">
+              <td class="px-4 py-4"><input type="checkbox" :checked="isSelected(item.id)" @change="toggleOne(item.id)" class="w-4 h-4 rounded border-outline-variant text-primary focus:ring-primary" /></td>
                   <td class="px-4 py-3 text-label-md font-medium">{{ item.nama }}</td>
                   <td class="px-4 py-3 text-label-md text-primary font-bold">Rp {{ item.harga.toLocaleString() }}</td>
                   <td class="px-4 py-3"><span :class="['px-2.5 py-0.5 text-[11px] font-bold rounded-full', item.stok > 5 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700']">{{ item.stok }}</span></td>
                   <td class="px-4 py-3 text-label-sm text-on-surface-variant">{{ item.terjual }}</td>
                   <td class="px-4 py-3 text-center"><button class="text-error hover:text-red-700 transition-colors" @click="deleteBarang(item.id)"><span class="material-symbols-outlined">delete</span></button></td>
                 </tr>
-                <tr v-if="filteredStok.length === 0"><td colspan="5" class="px-4 py-8 text-center text-on-surface-variant text-label-md">Tidak ada data</td></tr>
+                <tr v-if="filteredStok.length === 0"><td colspan="99"  class="px-4 py-8 text-center text-on-surface-variant text-label-md">Tidak ada data</td></tr>
               </tbody>
             </table>
           </div>
@@ -81,6 +83,7 @@
             <table class="w-full text-left">
               <thead class="bg-surface-container-low">
                 <tr>
+              <th class="px-4 py-4 text-label-md text-on-surface-variant w-10"><input type="checkbox" :checked="allSelected" @change="toggleAll" class="w-4 h-4 rounded border-outline-variant text-primary focus:ring-primary" /></th>
                   <th class="px-4 py-3 text-label-sm text-on-surface-variant">Santri</th>
                   <th class="px-4 py-3 text-label-sm text-on-surface-variant">Barang</th>
                   <th class="px-4 py-3 text-label-sm text-on-surface-variant">Jumlah</th>
@@ -91,6 +94,7 @@
               </thead>
               <tbody class="divide-y divide-outline-variant/10">
                 <tr v-for="item in filteredTransaksi" :key="item.id" class="hover:bg-primary-fixed/5 transition-colors">
+              <td class="px-4 py-4"><input type="checkbox" :checked="isSelected(item.id)" @change="toggleOne(item.id)" class="w-4 h-4 rounded border-outline-variant text-primary focus:ring-primary" /></td>
                   <td class="px-4 py-3 text-label-md font-medium">{{ item.santri }}</td>
                   <td class="px-4 py-3 text-label-sm text-on-surface-variant">{{ item.barang }}</td>
                   <td class="px-4 py-3 text-label-sm text-on-surface-variant">{{ item.jumlah }}</td>
@@ -98,7 +102,7 @@
                   <td class="px-4 py-3 text-label-sm text-on-surface-variant">{{ item.date }}</td>
                   <td class="px-4 py-3 text-center"><button class="text-error hover:text-red-700 transition-colors" @click="deleteTransaksi(item.id)"><span class="material-symbols-outlined">delete</span></button></td>
                 </tr>
-                <tr v-if="filteredTransaksi.length === 0"><td colspan="6" class="px-4 py-8 text-center text-on-surface-variant text-label-md">Tidak ada data</td></tr>
+                <tr v-if="filteredTransaksi.length === 0"><td colspan="99"  class="px-4 py-8 text-center text-on-surface-variant text-label-md">Tidak ada data</td></tr>
               </tbody>
             </table>
           </div>
@@ -169,6 +173,8 @@
 </template>
 
 <script setup lang="ts">
+import { useTableSelection } from '~/composables/useTableSelection'
+const { selected, allSelected, toggleAll, toggleOne, isSelected, clearSelection, selectedCount } = useTableSelection(filteredStok)
 definePageMeta({ layout: 'super-admin', requiredRole: 'super_admin' })
 
 interface BarangItem {

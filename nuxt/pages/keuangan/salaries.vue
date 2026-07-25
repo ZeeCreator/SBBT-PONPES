@@ -38,6 +38,7 @@
             <table class="w-full text-left">
               <thead class="bg-surface-container-low">
                 <tr>
+              <th class="px-4 py-4 text-label-md text-on-surface-variant w-10"><input type="checkbox" :checked="allSelected" @change="toggleAll" class="w-4 h-4 rounded border-outline-variant text-primary focus:ring-primary" /></th>
                   <th class="px-6 py-4 text-label-md text-on-surface-variant">Nama</th>
                   <th class="px-6 py-4 text-label-md text-on-surface-variant">Jabatan</th>
                   <th class="px-6 py-4 text-label-md text-on-surface-variant">Gaji Pokok</th>
@@ -50,6 +51,7 @@
               </thead>
               <tbody class="divide-y divide-outline-variant/10">
                 <tr v-for="item in filteredSalaries" :key="item.id" class="hover:bg-primary-fixed/5 transition-colors">
+              <td class="px-4 py-4"><input type="checkbox" :checked="isSelected(item.id)" @change="toggleOne(item.id)" class="w-4 h-4 rounded border-outline-variant text-primary focus:ring-primary" /></td>
                   <td class="px-6 py-4">
                     <div class="flex items-center gap-3">
                       <div class="w-9 h-9 rounded-full bg-primary-fixed-dim text-primary flex items-center justify-center text-label-md font-bold">{{ item.initials }}</div>
@@ -76,7 +78,7 @@
                   </td>
                 </tr>
                 <tr v-if="filteredSalaries.length === 0">
-                  <td colspan="8" class="px-6 py-12 text-center text-on-surface-variant text-label-md">Belum ada data penggajian untuk bulan ini.</td>
+                  <td colspan="99"  class="px-6 py-12 text-center text-on-surface-variant text-label-md">Belum ada data penggajian untuk bulan ini.</td>
                 </tr>
               </tbody>
             </table>
@@ -165,6 +167,8 @@
 </template>
 
 <script setup lang="ts">
+import { useTableSelection } from '~/composables/useTableSelection'
+const { selected, allSelected, toggleAll, toggleOne, isSelected, clearSelection, selectedCount } = useTableSelection(filteredSalaries)
 definePageMeta({ layout: 'super-admin', requiredRole: 'super_admin' })
 
 const teachers = ref<any[]>([])

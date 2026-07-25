@@ -29,6 +29,7 @@
         <table class="w-full text-left">
           <thead class="bg-surface-container-low">
             <tr>
+              <th class="px-4 py-4 text-label-md text-on-surface-variant w-10"><input type="checkbox" :checked="allSelected" @change="toggleAll" class="w-4 h-4 rounded border-outline-variant text-primary focus:ring-primary" /></th>
               <th class="px-6 py-4 text-label-md text-on-surface-variant">Nama Periode</th>
               <th class="px-6 py-4 text-label-md text-on-surface-variant">Mulai</th>
               <th class="px-6 py-4 text-label-md text-on-surface-variant">Selesai</th>
@@ -38,6 +39,7 @@
           </thead>
           <tbody class="divide-y divide-outline-variant/10">
             <tr v-for="item in items" :key="item.id" class="hover:bg-primary-fixed/5 transition-colors">
+              <td class="px-4 py-4"><input type="checkbox" :checked="isSelected(item.id)" @change="toggleOne(item.id)" class="w-4 h-4 rounded border-outline-variant text-primary focus:ring-primary" /></td>
               <td class="px-6 py-4 text-label-md text-on-surface font-medium">{{ item.name }}</td>
               <td class="px-6 py-4 text-label-sm text-on-surface-variant">{{ item.startDate }}</td>
               <td class="px-6 py-4 text-label-sm text-on-surface-variant">{{ item.endDate }}</td>
@@ -58,7 +60,7 @@
               </td>
             </tr>
             <tr v-if="items.length === 0">
-              <td colspan="5" class="px-6 py-12 text-center text-on-surface-variant text-label-md">Belum ada data periode. Klik "Tambah Periode" untuk menambahkan.</td>
+              <td colspan="99"  class="px-6 py-12 text-center text-on-surface-variant text-label-md">Belum ada data periode. Klik "Tambah Periode" untuk menambahkan.</td>
             </tr>
           </tbody>
         </table>
@@ -124,6 +126,8 @@
 </template>
 
 <script setup lang="ts">
+import { useTableSelection } from '~/composables/useTableSelection'
+const { selected, allSelected, toggleAll, toggleOne, isSelected, clearSelection, selectedCount } = useTableSelection(items)
 definePageMeta({ layout: 'super-admin', requiredRole: 'super_admin' })
 
 interface Period {

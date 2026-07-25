@@ -39,6 +39,7 @@
             <table class="w-full text-left">
               <thead class="bg-surface-container-low">
                 <tr>
+              <th class="px-4 py-4 text-label-md text-on-surface-variant w-10"><input type="checkbox" :checked="allSelected" @change="toggleAll" class="w-4 h-4 rounded border-outline-variant text-primary focus:ring-primary" /></th>
                   <th class="px-4 py-3 text-label-sm text-on-surface-variant">Judul</th>
                   <th class="px-4 py-3 text-label-sm text-on-surface-variant">Jenis</th>
                   <th class="px-4 py-3 text-label-sm text-on-surface-variant">Target</th>
@@ -49,6 +50,7 @@
               </thead>
               <tbody class="divide-y divide-outline-variant/10">
                 <tr v-for="item in filteredPush" :key="item.id" class="hover:bg-primary-fixed/5 transition-colors">
+              <td class="px-4 py-4"><input type="checkbox" :checked="isSelected(item.id)" @change="toggleOne(item.id)" class="w-4 h-4 rounded border-outline-variant text-primary focus:ring-primary" /></td>
                   <td class="px-4 py-3 text-label-md font-medium">{{ item.title }}</td>
                   <td class="px-4 py-3"><span :class="['px-2.5 py-0.5 text-[11px] font-bold rounded-full', jenisClass(item.jenis)]">{{ item.jenis }}</span></td>
                   <td class="px-4 py-3 text-label-sm text-on-surface-variant">{{ item.target }}</td>
@@ -56,7 +58,7 @@
                   <td class="px-4 py-3"><span :class="['px-2.5 py-0.5 text-[11px] font-bold rounded-full', statusClass(item.status)]">{{ item.status }}</span></td>
                   <td class="px-4 py-3 text-center"><button class="text-error hover:text-red-700 transition-colors" @click="deleteNotif(item.id)"><span class="material-symbols-outlined">delete</span></button></td>
                 </tr>
-                <tr v-if="filteredPush.length === 0"><td colspan="6" class="px-4 py-8 text-center text-on-surface-variant text-label-md">Tidak ada data</td></tr>
+                <tr v-if="filteredPush.length === 0"><td colspan="99"  class="px-4 py-8 text-center text-on-surface-variant text-label-md">Tidak ada data</td></tr>
               </tbody>
             </table>
           </div>
@@ -84,6 +86,7 @@
             <table class="w-full text-left">
               <thead class="bg-surface-container-low">
                 <tr>
+              <th class="px-4 py-4 text-label-md text-on-surface-variant w-10"><input type="checkbox" :checked="allSelected" @change="toggleAll" class="w-4 h-4 rounded border-outline-variant text-primary focus:ring-primary" /></th>
                   <th class="px-4 py-3 text-label-sm text-on-surface-variant">Santri</th>
                   <th class="px-4 py-3 text-label-sm text-on-surface-variant">Pengirim</th>
                   <th class="px-4 py-3 text-label-sm text-on-surface-variant">Pesan</th>
@@ -94,6 +97,7 @@
               </thead>
               <tbody class="divide-y divide-outline-variant/10">
                 <tr v-for="item in filteredBuku" :key="item.id" class="hover:bg-primary-fixed/5 transition-colors">
+              <td class="px-4 py-4"><input type="checkbox" :checked="isSelected(item.id)" @change="toggleOne(item.id)" class="w-4 h-4 rounded border-outline-variant text-primary focus:ring-primary" /></td>
                   <td class="px-4 py-3 text-label-md font-medium">{{ item.santri }}</td>
                   <td class="px-4 py-3 text-label-sm text-on-surface-variant">{{ item.pengirim }}</td>
                   <td class="px-4 py-3 text-label-sm text-on-surface-variant max-w-[200px] truncate">{{ item.pesan }}</td>
@@ -101,7 +105,7 @@
                   <td class="px-4 py-3"><span :class="['px-2.5 py-0.5 text-[11px] font-bold rounded-full', item.status === 'dibaca' ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700']">{{ item.status }}</span></td>
                   <td class="px-4 py-3 text-center"><button class="text-error hover:text-red-700 transition-colors" @click="deleteNotif(item.id)"><span class="material-symbols-outlined">delete</span></button></td>
                 </tr>
-                <tr v-if="filteredBuku.length === 0"><td colspan="6" class="px-4 py-8 text-center text-on-surface-variant text-label-md">Tidak ada data</td></tr>
+                <tr v-if="filteredBuku.length === 0"><td colspan="99"  class="px-4 py-8 text-center text-on-surface-variant text-label-md">Tidak ada data</td></tr>
               </tbody>
             </table>
           </div>
@@ -122,6 +126,7 @@
             <table class="w-full text-left">
               <thead class="bg-surface-container-low">
                 <tr>
+              <th class="px-4 py-4 text-label-md text-on-surface-variant w-10"><input type="checkbox" :checked="allSelected" @change="toggleAll" class="w-4 h-4 rounded border-outline-variant text-primary focus:ring-primary" /></th>
                   <th class="px-4 py-3 text-label-sm text-on-surface-variant">Judul</th>
                   <th class="px-4 py-3 text-label-sm text-on-surface-variant">Isi</th>
                   <th class="px-4 py-3 text-label-sm text-on-surface-variant">Tanggal</th>
@@ -132,6 +137,7 @@
               </thead>
               <tbody class="divide-y divide-outline-variant/10">
                 <tr v-for="item in filteredPengumuman" :key="item.id" class="hover:bg-primary-fixed/5 transition-colors">
+              <td class="px-4 py-4"><input type="checkbox" :checked="isSelected(item.id)" @change="toggleOne(item.id)" class="w-4 h-4 rounded border-outline-variant text-primary focus:ring-primary" /></td>
                   <td class="px-4 py-3 text-label-md font-medium">{{ item.title }}</td>
                   <td class="px-4 py-3 text-label-sm text-on-surface-variant max-w-[250px] truncate">{{ item.isi }}</td>
                   <td class="px-4 py-3 text-label-sm text-on-surface-variant">{{ item.date }}</td>
@@ -139,7 +145,7 @@
                   <td class="px-4 py-3"><span :class="['px-2.5 py-0.5 text-[11px] font-bold rounded-full', item.status === 'terkirim' ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700']">{{ item.status }}</span></td>
                   <td class="px-4 py-3 text-center"><button class="text-error hover:text-red-700 transition-colors" @click="deleteNotif(item.id)"><span class="material-symbols-outlined">delete</span></button></td>
                 </tr>
-                <tr v-if="filteredPengumuman.length === 0"><td colspan="6" class="px-4 py-8 text-center text-on-surface-variant text-label-md">Tidak ada data</td></tr>
+                <tr v-if="filteredPengumuman.length === 0"><td colspan="99"  class="px-4 py-8 text-center text-on-surface-variant text-label-md">Tidak ada data</td></tr>
               </tbody>
             </table>
           </div>
@@ -208,6 +214,8 @@
 </template>
 
 <script setup lang="ts">
+import { useTableSelection } from '~/composables/useTableSelection'
+const { selected, allSelected, toggleAll, toggleOne, isSelected, clearSelection, selectedCount } = useTableSelection(filteredPush)
 definePageMeta({ layout: 'super-admin', requiredRole: 'super_admin' })
 
 interface NotifItem {

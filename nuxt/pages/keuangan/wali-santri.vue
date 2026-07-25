@@ -85,6 +85,7 @@
                 <table class="w-full text-left">
                   <thead class="bg-surface-container-low">
                     <tr>
+              <th class="px-4 py-4 text-label-md text-on-surface-variant w-10"><input type="checkbox" :checked="allSelected" @change="toggleAll" class="w-4 h-4 rounded border-outline-variant text-primary focus:ring-primary" /></th>
                       <th class="px-4 py-3 text-label-md text-on-surface-variant">Pembayaran</th>
                       <th class="px-4 py-3 text-label-md text-on-surface-variant">Tanggal</th>
                       <th class="px-4 py-3 text-label-md text-on-surface-variant">Metode</th>
@@ -95,6 +96,7 @@
                   </thead>
                   <tbody class="divide-y divide-outline-variant/10">
                     <tr v-for="tx in paymentHistory" :key="tx.id" class="hover:bg-primary-fixed/5 transition-colors">
+              <td class="px-4 py-4"><input type="checkbox" :checked="isSelected(tx.id)" @change="toggleOne(tx.id)" class="w-4 h-4 rounded border-outline-variant text-primary focus:ring-primary" /></td>
                       <td class="px-4 py-3 text-label-md text-on-surface font-medium">{{ tx.label }}</td>
                       <td class="px-4 py-3 text-label-sm text-on-surface-variant">{{ tx.date }}</td>
                       <td class="px-4 py-3 text-label-sm text-on-surface-variant">{{ tx.method }}</td>
@@ -191,6 +193,8 @@
 </template>
 
 <script setup lang="ts">
+import { useTableSelection } from '~/composables/useTableSelection'
+const { selected, allSelected, toggleAll, toggleOne, isSelected, clearSelection, selectedCount } = useTableSelection(paymentHistory)
 definePageMeta({ layout: 'wali-santri', requiredRole: 'wali_santri' })
 
 interface Bill {

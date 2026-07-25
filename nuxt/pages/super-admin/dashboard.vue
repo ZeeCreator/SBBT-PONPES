@@ -165,6 +165,7 @@
             </thead>
             <tbody class="divide-y divide-outline-variant/10">
               <tr v-for="cls in classes" :key="cls.name" class="hover:bg-primary-fixed/5 transition-colors">
+              <td class="px-4 py-4"><input type="checkbox" :checked="isSelected(cls.id)" @change="toggleOne(cls.id)" class="w-4 h-4 rounded border-outline-variant text-primary focus:ring-primary" /></td>
                 <td class="py-4 text-label-md">{{ cls.name }}</td>
                 <td class="py-4"><span class="bg-primary-fixed text-on-primary-fixed px-2 py-1 rounded text-label-sm font-bold">{{ cls.avgGrade }}</span></td>
                 <td class="py-4 text-label-md">{{ cls.attendance }}</td>
@@ -181,7 +182,7 @@
                 </td>
               </tr>
               <tr v-if="classes.length === 0">
-                <td colspan="5" class="py-8 text-center text-on-surface-variant text-label-md">
+                <td colspan="99"  class="py-8 text-center text-on-surface-variant text-label-md">
                   Belum ada data. <NuxtLink to="/kesantrian/students" class="text-primary underline">Tambah santri</NuxtLink> untuk memulai.
                 </td>
               </tr>
@@ -194,6 +195,8 @@
 </template>
 
 <script setup lang="ts">
+import { useTableSelection } from '~/composables/useTableSelection'
+const { selected, allSelected, toggleAll, toggleOne, isSelected, clearSelection, selectedCount } = useTableSelection(classes)
 import { onMounted, onUnmounted } from 'vue'
 definePageMeta({ layout: 'super-admin', requiredRole: 'super_admin' })
 

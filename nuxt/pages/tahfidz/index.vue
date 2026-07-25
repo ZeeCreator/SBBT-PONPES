@@ -44,6 +44,7 @@
           <table class="w-full text-left">
             <thead class="bg-surface-container-low">
               <tr>
+              <th class="px-4 py-4 text-label-md text-on-surface-variant w-10"><input type="checkbox" :checked="allSelected" @change="toggleAll" class="w-4 h-4 rounded border-outline-variant text-primary focus:ring-primary" /></th>
                 <th class="px-6 py-4 text-label-md text-on-surface-variant">Santri</th>
                 <th v-if="activeTab === 'ziyadah'" class="px-6 py-4 text-label-md text-on-surface-variant">Surah</th>
                 <th v-if="activeTab === 'ziyadah'" class="px-6 py-4 text-label-md text-on-surface-variant">Ayat</th>
@@ -56,6 +57,7 @@
             </thead>
             <tbody class="divide-y divide-outline-variant/10">
               <tr v-for="item in filteredRecords" :key="item.id" class="hover:bg-primary-fixed/5 transition-colors">
+              <td class="px-4 py-4"><input type="checkbox" :checked="isSelected(item.id)" @change="toggleOne(item.id)" class="w-4 h-4 rounded border-outline-variant text-primary focus:ring-primary" /></td>
                 <td class="px-6 py-4 text-label-md font-medium">{{ item.santri }}</td>
                 <td v-if="activeTab === 'ziyadah'" class="px-6 py-4 text-label-md">{{ item.surah || '-' }}</td>
                 <td v-if="activeTab === 'ziyadah'" class="px-6 py-4 text-label-sm text-on-surface-variant">{{ item.ayat || '-' }}</td>
@@ -140,6 +142,8 @@
 </template>
 
 <script setup lang="ts">
+import { useTableSelection } from '~/composables/useTableSelection'
+const { selected, allSelected, toggleAll, toggleOne, isSelected, clearSelection, selectedCount } = useTableSelection(filteredRecords)
 definePageMeta({ layout: 'super-admin', requiredRole: 'super_admin' })
 
 interface TahfidzRecord {

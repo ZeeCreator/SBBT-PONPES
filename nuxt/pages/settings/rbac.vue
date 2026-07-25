@@ -65,6 +65,7 @@
             <table class="w-full text-left">
               <thead class="bg-surface-container-low">
                 <tr>
+              <th class="px-4 py-4 text-label-md text-on-surface-variant w-10"><input type="checkbox" :checked="allSelected" @change="toggleAll" class="w-4 h-4 rounded border-outline-variant text-primary focus:ring-primary" /></th>
                   <th class="px-4 py-3 text-label-sm text-on-surface-variant">User</th>
                   <th class="px-4 py-3 text-label-sm text-on-surface-variant">Email</th>
                   <th class="px-4 py-3 text-label-sm text-on-surface-variant">Role</th>
@@ -74,6 +75,7 @@
               </thead>
               <tbody class="divide-y divide-outline-variant/10">
                 <tr v-for="user in fbUsers" :key="user.uid" class="hover:bg-primary-fixed/5 transition-colors">
+              <td class="px-4 py-4"><input type="checkbox" :checked="isSelected(user.id)" @change="toggleOne(user.id)" class="w-4 h-4 rounded border-outline-variant text-primary focus:ring-primary" /></td>
                   <td class="px-4 py-3 text-label-md font-medium">{{ user.displayName || '-' }}</td>
                   <td class="px-4 py-3 text-label-sm text-on-surface-variant">{{ user.email }}</td>
                   <td class="px-4 py-3">
@@ -216,6 +218,8 @@ service cloud.firestore {
 </template>
 
 <script setup lang="ts">
+import { useTableSelection } from '~/composables/useTableSelection'
+const { selected, allSelected, toggleAll, toggleOne, isSelected, clearSelection, selectedCount } = useTableSelection(fbUsers)
 definePageMeta({ layout: 'super-admin', requiredRole: 'super_admin' })
 
 const activeTab = ref('roles')

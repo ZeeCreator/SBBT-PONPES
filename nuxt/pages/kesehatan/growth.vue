@@ -35,6 +35,7 @@
         <table class="w-full text-left">
           <thead class="bg-surface-container-low">
             <tr>
+              <th class="px-4 py-4 text-label-md text-on-surface-variant w-10"><input type="checkbox" :checked="allSelected" @change="toggleAll" class="w-4 h-4 rounded border-outline-variant text-primary focus:ring-primary" /></th>
               <th class="px-4 py-3 text-label-sm text-on-surface-variant">Santri</th>
               <th class="px-4 py-3 text-label-sm text-on-surface-variant">Tanggal</th>
               <th class="px-4 py-3 text-label-sm text-on-surface-variant">TB (cm)</th>
@@ -46,6 +47,7 @@
           </thead>
           <tbody class="divide-y divide-outline-variant/10">
             <tr v-for="record in filteredRecords" :key="record.id" class="hover:bg-primary-fixed/5 transition-colors">
+              <td class="px-4 py-4"><input type="checkbox" :checked="isSelected(record.id)" @change="toggleOne(record.id)" class="w-4 h-4 rounded border-outline-variant text-primary focus:ring-primary" /></td>
               <td class="px-4 py-3 text-label-md font-medium">{{ record.name }}</td>
               <td class="px-4 py-3 text-label-sm text-on-surface-variant">{{ record.date }}</td>
               <td class="px-4 py-3 text-label-sm">{{ record.height }}</td>
@@ -61,7 +63,7 @@
               </td>
             </tr>
             <tr v-if="filteredRecords.length === 0">
-              <td colspan="7" class="px-4 py-8 text-center text-on-surface-variant text-label-md">Tidak ada data</td>
+              <td colspan="99"  class="px-4 py-8 text-center text-on-surface-variant text-label-md">Tidak ada data</td>
             </tr>
           </tbody>
         </table>
@@ -114,6 +116,8 @@
 </template>
 
 <script setup lang="ts">
+import { useTableSelection } from '~/composables/useTableSelection'
+const { selected, allSelected, toggleAll, toggleOne, isSelected, clearSelection, selectedCount } = useTableSelection(filteredRecords)
 definePageMeta({ layout: 'super-admin', requiredRole: 'super_admin' })
 
 const loading = ref(true)

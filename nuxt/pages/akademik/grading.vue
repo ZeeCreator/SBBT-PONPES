@@ -58,6 +58,7 @@
             <table class="w-full text-left">
               <thead class="bg-surface-container-low">
                 <tr>
+              <th class="px-4 py-4 text-label-md text-on-surface-variant w-10"><input type="checkbox" :checked="allSelected" @change="toggleAll" class="w-4 h-4 rounded border-outline-variant text-primary focus:ring-primary" /></th>
                   <th class="px-3 py-3 text-label-sm text-on-surface-variant whitespace-nowrap sticky left-0 bg-surface-container-low z-10">Santri</th>
                   <th v-for="s in subjects" :key="s.id" class="px-3 py-3 text-label-sm text-on-surface-variant whitespace-nowrap text-center">{{ s.name }}</th>
                   <th class="px-3 py-3 text-label-sm text-on-surface-variant whitespace-nowrap text-center">Rata-rata</th>
@@ -70,6 +71,7 @@
                   <td :colspan="subjects.length + 4" class="px-4 py-8 text-center text-on-surface-variant text-label-md">Belum ada data santri. Pilih kelas terlebih dahulu.</td>
                 </tr>
                 <tr v-for="row in studentRows" :key="row.id" class="hover:bg-primary-fixed/5 transition-colors">
+              <td class="px-4 py-4"><input type="checkbox" :checked="isSelected(row.id)" @change="toggleOne(row.id)" class="w-4 h-4 rounded border-outline-variant text-primary focus:ring-primary" /></td>
                   <td class="px-3 py-2 text-label-md font-medium sticky left-0 bg-surface z-10">{{ row.name }}</td>
                   <td v-for="s in subjects" :key="s.id" class="px-2 py-2 text-center cursor-pointer" @click="openEditGrade(row, s.name)">
                     <span v-if="row.scores[s.name] !== undefined && row.scores[s.name] !== null"
@@ -179,6 +181,8 @@
 </template>
 
 <script setup lang="ts">
+import { useTableSelection } from '~/composables/useTableSelection'
+const { selected, allSelected, toggleAll, toggleOne, isSelected, clearSelection, selectedCount } = useTableSelection(studentRows)
 definePageMeta({ layout: 'super-admin', requiredRole: 'super_admin' })
 
 const loading = ref(true)
@@ -420,6 +424,7 @@ async function printRekap() {
 <table class="data">
   <thead>
     <tr>
+              <th class="px-4 py-4 text-label-md text-on-surface-variant w-10"><input type="checkbox" :checked="allSelected" @change="toggleAll" class="w-4 h-4 rounded border-outline-variant text-primary focus:ring-primary" /></th>
       <th style="width:32px;">No</th>
       <th style="width:140px;">Nama Santri</th>
       ${headerCells}
@@ -505,6 +510,7 @@ async function printNilaiSantri() {
 <table class="data">
   <thead>
     <tr>
+              <th class="px-4 py-4 text-label-md text-on-surface-variant w-10"><input type="checkbox" :checked="allSelected" @change="toggleAll" class="w-4 h-4 rounded border-outline-variant text-primary focus:ring-primary" /></th>
       <th style="width:32px;">No</th>
       <th style="width:160px;">Mata Pelajaran</th>
       <th style="width:70px;">Nilai</th>
@@ -519,7 +525,7 @@ async function printNilaiSantri() {
       <td style="font-weight:bold;">${g.score}</td>
       <td class="left">${g.score >= 75 ? 'LULUS' : 'REMEDIAL'}</td>
     </tr>`).join('')}
-    ${studentGradeEntries.length === 0 ? '<tr><td colspan="4" style="text-align:center;">Belum ada nilai</td></tr>' : ''}
+    ${studentGradeEntries.length === 0 ? '<tr><td  "  style="text-align:center;">Belum ada nilai</td></tr>' : ''}
   </tbody>
 </table>
 

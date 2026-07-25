@@ -36,6 +36,7 @@
             <table class="w-full text-left">
               <thead class="bg-surface-container-low">
                 <tr>
+              <th class="px-4 py-4 text-label-md text-on-surface-variant w-10"><input type="checkbox" :checked="allSelected" @change="toggleAll" class="w-4 h-4 rounded border-outline-variant text-primary focus:ring-primary" /></th>
                   <th class="px-4 py-3 text-label-sm text-on-surface-variant">Kamar</th>
                   <th class="px-4 py-3 text-label-sm text-on-surface-variant">Kasur</th>
                   <th class="px-4 py-3 text-label-sm text-on-surface-variant">Lemari</th>
@@ -46,6 +47,7 @@
               </thead>
               <tbody class="divide-y divide-outline-variant/10">
                 <tr v-for="item in filteredKamar" :key="item.id" class="hover:bg-primary-fixed/5 transition-colors">
+              <td class="px-4 py-4"><input type="checkbox" :checked="isSelected(item.id)" @change="toggleOne(item.id)" class="w-4 h-4 rounded border-outline-variant text-primary focus:ring-primary" /></td>
                   <td class="px-4 py-3 text-label-md font-medium">{{ item.kamar }}</td>
                   <td class="px-4 py-3 text-label-sm text-on-surface-variant">{{ item.kasur }}</td>
                   <td class="px-4 py-3 text-label-sm text-on-surface-variant">{{ item.lemari }}</td>
@@ -53,7 +55,7 @@
                   <td class="px-4 py-3 text-label-sm text-on-surface-variant">{{ item.kursi }}</td>
                   <td class="px-4 py-3"><span :class="['px-2.5 py-0.5 text-[11px] font-bold rounded-full', item.status === 'Baik' ? 'bg-green-100 text-green-700' : item.status === 'Rusak' ? 'bg-red-100 text-red-700' : 'bg-amber-100 text-amber-700']">{{ item.status }}</span></td>
                 </tr>
-                <tr v-if="filteredKamar.length === 0"><td colspan="6" class="px-4 py-8 text-center text-on-surface-variant text-label-md">Tidak ada data</td></tr>
+                <tr v-if="filteredKamar.length === 0"><td colspan="99"  class="px-4 py-8 text-center text-on-surface-variant text-label-md">Tidak ada data</td></tr>
               </tbody>
             </table>
           </div>
@@ -74,6 +76,7 @@
             <table class="w-full text-left">
               <thead class="bg-surface-container-low">
                 <tr>
+              <th class="px-4 py-4 text-label-md text-on-surface-variant w-10"><input type="checkbox" :checked="allSelected" @change="toggleAll" class="w-4 h-4 rounded border-outline-variant text-primary focus:ring-primary" /></th>
                   <th class="px-4 py-3 text-label-sm text-on-surface-variant">Barang</th>
                   <th class="px-4 py-3 text-label-sm text-on-surface-variant">Jumlah</th>
                   <th class="px-4 py-3 text-label-sm text-on-surface-variant">Kondisi</th>
@@ -84,6 +87,7 @@
               </thead>
               <tbody class="divide-y divide-outline-variant/10">
                 <tr v-for="item in filteredSekolah" :key="item.id" class="hover:bg-primary-fixed/5 transition-colors">
+              <td class="px-4 py-4"><input type="checkbox" :checked="isSelected(item.id)" @change="toggleOne(item.id)" class="w-4 h-4 rounded border-outline-variant text-primary focus:ring-primary" /></td>
                   <td class="px-4 py-3 text-label-md font-medium">{{ item.barang }}</td>
                   <td class="px-4 py-3 text-label-sm text-on-surface-variant">{{ item.jumlah }}</td>
                   <td class="px-4 py-3"><span :class="['px-2.5 py-0.5 text-[11px] font-bold rounded-full', kondisiClass(item.kondisi)]">{{ item.kondisi }}</span></td>
@@ -91,7 +95,7 @@
                   <td class="px-4 py-3"><span :class="['px-2.5 py-0.5 text-[11px] font-bold rounded-full', item.status === 'Tersedia' ? 'bg-green-100 text-green-700' : item.status === 'Dipinjam' ? 'bg-blue-100 text-blue-700' : 'bg-red-100 text-red-700']">{{ item.status }}</span></td>
                   <td class="px-4 py-3 text-center"><button class="text-error hover:text-red-700 transition-colors" @click="deleteBarang(item.id)"><span class="material-symbols-outlined">delete</span></button></td>
                 </tr>
-                <tr v-if="filteredSekolah.length === 0"><td colspan="6" class="px-4 py-8 text-center text-on-surface-variant text-label-md">Tidak ada data</td></tr>
+                <tr v-if="filteredSekolah.length === 0"><td colspan="99"  class="px-4 py-8 text-center text-on-surface-variant text-label-md">Tidak ada data</td></tr>
               </tbody>
             </table>
           </div>
@@ -119,6 +123,7 @@
             <table class="w-full text-left">
               <thead class="bg-surface-container-low">
                 <tr>
+              <th class="px-4 py-4 text-label-md text-on-surface-variant w-10"><input type="checkbox" :checked="allSelected" @change="toggleAll" class="w-4 h-4 rounded border-outline-variant text-primary focus:ring-primary" /></th>
                   <th class="px-4 py-3 text-label-sm text-on-surface-variant">Peminjam</th>
                   <th class="px-4 py-3 text-label-sm text-on-surface-variant">Barang</th>
                   <th class="px-4 py-3 text-label-sm text-on-surface-variant">Tanggal Pinjam</th>
@@ -129,6 +134,7 @@
               </thead>
               <tbody class="divide-y divide-outline-variant/10">
                 <tr v-for="item in filteredPinjam" :key="item.id" class="hover:bg-primary-fixed/5 transition-colors">
+              <td class="px-4 py-4"><input type="checkbox" :checked="isSelected(item.id)" @change="toggleOne(item.id)" class="w-4 h-4 rounded border-outline-variant text-primary focus:ring-primary" /></td>
                   <td class="px-4 py-3 text-label-md font-medium">{{ item.peminjam }}</td>
                   <td class="px-4 py-3 text-label-sm text-on-surface-variant">{{ item.barang }}</td>
                   <td class="px-4 py-3 text-label-sm text-on-surface-variant">{{ item.tglPinjam }}</td>
@@ -139,7 +145,7 @@
                     <button class="text-error hover:text-red-700 transition-colors" @click="deletePinjam(item.id)"><span class="material-symbols-outlined">delete</span></button>
                   </td>
                 </tr>
-                <tr v-if="filteredPinjam.length === 0"><td colspan="6" class="px-4 py-8 text-center text-on-surface-variant text-label-md">Tidak ada data</td></tr>
+                <tr v-if="filteredPinjam.length === 0"><td colspan="99"  class="px-4 py-8 text-center text-on-surface-variant text-label-md">Tidak ada data</td></tr>
               </tbody>
             </table>
           </div>
@@ -215,6 +221,8 @@
 </template>
 
 <script setup lang="ts">
+import { useTableSelection } from '~/composables/useTableSelection'
+const { selected, allSelected, toggleAll, toggleOne, isSelected, clearSelection, selectedCount } = useTableSelection(filteredKamar)
 definePageMeta({ layout: 'super-admin', requiredRole: 'super_admin' })
 
 interface KamarItem {
