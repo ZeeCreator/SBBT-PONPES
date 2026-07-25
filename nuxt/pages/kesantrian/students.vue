@@ -524,7 +524,7 @@ const classList = computed(() => classes.value)
 
 const filteredStudents = computed(() => {
   let result = students.value
-  if (filterClass.value) result = result.filter(s => s.class === filterClass.value)
+  if (filterClass.value) result = result.filter(s => (s.class || '').toLowerCase() === filterClass.value.toLowerCase())
   if (filterDormitory.value) result = result.filter(s => s.dormitoryName === filterDormitory.value)
   if (filterStatus.value) result = result.filter(s => s.status === filterStatus.value)
   if (searchQuery.value) {

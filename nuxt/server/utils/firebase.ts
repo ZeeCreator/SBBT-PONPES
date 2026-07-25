@@ -38,7 +38,10 @@ export async function rtdbGetList(path: string): Promise<any[]> {
   const db = getDatabase()
   const snap = await db.ref(path).once('value')
   const data = snap.val() || {}
-  return Object.entries(data).map(([id, val]) => ({ id, ...(val as object) }))
+  return Object.entries(data).map(([firebaseKey, val]) => {
+    const { id: _storedId, ...rest } = (val as object) as any
+    return { id: firebaseKey, ...rest }
+  })
 }
 
 export async function rtdbGetById(path: string, id: string): Promise<any | null> {
@@ -51,8 +54,9 @@ export async function rtdbGetById(path: string, id: string): Promise<any | null>
 export async function rtdbAdd(path: string, data: any): Promise<{ id: string } & any> {
   const db = getDatabase()
   const id = generateId()
-  await db.ref(`${path}/${id}`).set(data)
-  return { id, ...data }
+  const { id: _storedId, ...clean } = data
+  await db.ref(`${path}/${id}`).set(clean)
+  return { id, ...clean }
 }
 
 export async function rtdbAddWithId(path: string, id: string, data: any): Promise<{ id: string } & any> {
@@ -63,7 +67,8 @@ export async function rtdbAddWithId(path: string, id: string, data: any): Promis
 
 export async function rtdbUpdate(path: string, id: string, data: any): Promise<void> {
   const db = getDatabase()
-  await db.ref(`${path}/${id}`).update(data)
+  const { id: _storedId, ...clean } = data
+  await db.ref(`${path}/${id}`).update(clean)
 }
 
 export async function rtdbRemove(path: string, id: string): Promise<void> {

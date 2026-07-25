@@ -215,7 +215,6 @@ const stats = computed(() => {
 })
 
 const defaultForm = () => ({
-  id: 0,
   name: '',
   gender: '',
   supervisor: '',
@@ -254,11 +253,10 @@ async function fetchTeachers() {
 async function saveItem() {
   if (!form.name || !form.gender || !form.supervisor) return
   try {
+    const { rooms, id, ...rest } = form as any
     if (isEditing.value) {
-      const { rooms, ...rest } = form
-      await $fetch(`/api/master-data/dormitories/${form.id}`, { method: 'PUT', body: rest })
+      await $fetch(`/api/master-data/dormitories/${id}`, { method: 'PUT', body: rest })
     } else {
-      const { rooms, ...rest } = form
       await $fetch('/api/master-data/dormitories', { method: 'POST', body: rest })
     }
     showModal.value = false

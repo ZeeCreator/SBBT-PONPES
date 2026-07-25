@@ -162,7 +162,6 @@ const stats = computed(() => [
 ])
 
 const defaultForm = () => ({
-  id: 0,
   name: '',
   startDate: '',
   endDate: '',
@@ -187,10 +186,11 @@ async function fetchData() {
 async function saveItem() {
   if (!form.name || !form.startDate || !form.endDate) return
   try {
+    const { id, ...payload } = form as any
     if (isEditing.value) {
-      await $fetch(`/api/master-data/periods/${form.id}`, { method: 'PUT', body: { ...form } })
+      await $fetch(`/api/master-data/periods/${id}`, { method: 'PUT', body: payload })
     } else {
-      await $fetch('/api/master-data/periods', { method: 'POST', body: { ...form } })
+      await $fetch('/api/master-data/periods', { method: 'POST', body: payload })
     }
     showModal.value = false
     await fetchData()
@@ -201,9 +201,10 @@ async function saveItem() {
 
 async function toggleActive(item: Period) {
   try {
+    const { id, ...payload } = item
     await $fetch(`/api/master-data/periods/${item.id}`, {
       method: 'PUT',
-      body: { ...item, isActive: !item.isActive }
+      body: { ...payload, isActive: !item.isActive }
     })
     await fetchData()
   } catch (e: any) {

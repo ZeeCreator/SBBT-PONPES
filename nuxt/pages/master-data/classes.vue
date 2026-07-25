@@ -178,7 +178,6 @@ const stats = computed(() => {
 })
 
 const defaultForm = () => ({
-  id: 0,
   name: '',
   level: '',
   group: '',
@@ -203,10 +202,11 @@ async function fetchData() {
 async function saveItem() {
   if (!form.name || !form.level || !form.group) return
   try {
+    const { id, ...payload } = form as any
     if (isEditing.value) {
-      await $fetch(`/api/master-data/classes/${form.id}`, { method: 'PUT', body: { ...form } })
+      await $fetch(`/api/master-data/classes/${id}`, { method: 'PUT', body: payload })
     } else {
-      await $fetch('/api/master-data/classes', { method: 'POST', body: { ...form } })
+      await $fetch('/api/master-data/classes', { method: 'POST', body: payload })
     }
     showModal.value = false
     await fetchData()
