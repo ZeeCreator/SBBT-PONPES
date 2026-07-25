@@ -11,7 +11,7 @@
       <div class="glass-card rounded-2xl p-8 shadow-xl">
         <h2 class="font-display text-headline-md text-primary mb-2">Masuk</h2>
         <p class="text-on-surface-variant text-label-md mb-8">Silakan masuk menggunakan akun Anda.</p>
-          <form @submit.prevent="handleLogin" class="space-y-5">
+          <form novalidate @submit.prevent="handleLogin" class="space-y-5">
             <div v-if="error" class="p-3 rounded-lg bg-error-container text-on-error-container text-label-sm flex items-center gap-2">
               <span class="material-symbols-outlined text-sm">error</span>
               {{ error }}
