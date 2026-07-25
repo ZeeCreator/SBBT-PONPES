@@ -77,7 +77,7 @@ const submitting = ref(false)
 
 const roleRoutes: Record<string, string> = {
   super_admin: '/super-admin/dashboard',
-  bendahara: '/keuangan/spp-payment',
+  bendahara: '/super-admin/dashboard',
   kesantrian: '/kesantrian/students',
   ustadz: '/akademik/grading',
   wali_santri: '/wali-santri/dashboard',

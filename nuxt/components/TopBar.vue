@@ -233,7 +233,7 @@ const quickApps = [
   { label: 'Santri', icon: 'group', to: '/kesantrian/students', bg: '#e8f0fe', color: '#1a6bff' },
   { label: 'Absensi', icon: 'calendar_month', to: '/attendance', bg: '#e6f7e6', color: '#2e7d32' },
   { label: 'Akademik', icon: 'school', to: '/akademik/menu', bg: '#fce4ec', color: '#c62828' },
-  { label: 'Keuangan', icon: 'payments', to: '/keuangan/spp-payment', bg: '#fff3e0', color: '#e65100' },
+  { label: 'Keuangan', icon: 'payments', to: '/keuangan/spp-config', bg: '#fff3e0', color: '#e65100' },
   { label: 'Izin', icon: 'passport', to: '/izin', bg: '#f3e5f5', color: '#6a1b9a' },
   { label: 'Developer', icon: 'code', to: '/developer', bg: '#e8eaf6', color: '#283593' },
 ]

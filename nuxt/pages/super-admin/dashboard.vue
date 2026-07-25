@@ -46,7 +46,7 @@
             <p class="text-label-sm text-on-surface-variant/70 italic">1:{{ stats.ratioGuru }} Rasio Guru:Santri</p>
           </GlassCard>
         </NuxtLink>
-        <NuxtLink to="/keuangan/spp-payment" class="block">
+        <NuxtLink to="/keuangan/spp-config" class="block">
           <GlassCard hover borderColor="border-primary-fixed-dim">
             <div class="flex justify-between items-start mb-4">
               <div class="bg-primary-fixed-dim/30 p-2 rounded-lg text-primary">
@@ -118,11 +118,11 @@
                   <p class="text-[10px] opacity-70">Onboard santri baru ke sistem</p>
                 </div>
               </NuxtLink>
-              <NuxtLink to="/keuangan/spp-payment" class="flex items-center gap-3 w-full p-4 bg-white border border-primary text-primary rounded-xl hover:bg-primary-fixed/10 transition-all active:scale-95 text-left">
-                <span class="material-symbols-outlined">payments</span>
+              <NuxtLink to="/keuangan/invoices" class="flex items-center gap-3 w-full p-4 bg-white border border-primary text-primary rounded-xl hover:bg-primary-fixed/10 transition-all active:scale-95 text-left">
+                <span class="material-symbols-outlined">receipt_long</span>
                 <div>
-                  <p class="text-label-md">Kelola Pembayaran SPP</p>
-                  <p class="text-[10px] text-on-surface-variant">Buat tagihan & proses pembayaran</p>
+                  <p class="text-label-md">Kelola Invoice</p>
+                  <p class="text-[10px] text-on-surface-variant">Buat & kelola tagihan pembayaran</p>
                 </div>
               </NuxtLink>
               <NuxtLink to="/settings/rbac" class="flex items-center gap-3 w-full p-4 bg-white border border-outline-variant text-on-background rounded-xl hover:bg-surface-container-low transition-all active:scale-95 text-left">

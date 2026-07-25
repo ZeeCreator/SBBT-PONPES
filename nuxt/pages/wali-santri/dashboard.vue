@@ -69,8 +69,8 @@
             <h2 class="font-display text-display-lg">Rp 1.250.000</h2>
             <p class="text-on-primary-fixed-variant text-label-md bg-white/10 w-fit px-3 py-1 rounded-full mt-2">Due on Oct 10, 2024</p>
           </div>
-          <NuxtLink to="/keuangan/spp-payment" class="relative z-10 bg-secondary-container text-on-secondary-fixed font-bold px-8 py-4 rounded-xl flex items-center gap-3 hover:scale-105 active:scale-95 transition-transform shadow-xl shadow-secondary-container/30">
-            Pay via Midtrans
+          <NuxtLink to="/keuangan/invoices" class="relative z-10 bg-secondary-container text-on-secondary-fixed font-bold px-8 py-4 rounded-xl flex items-center gap-3 hover:scale-105 active:scale-95 transition-transform shadow-xl shadow-secondary-container/30">
+            Lihat Tagihan
             <span class="material-symbols-outlined">arrow_forward</span>
           </NuxtLink>
         </div>
