@@ -32,6 +32,14 @@
               <input v-model="filterKamar" class="bg-surface-container-low border-none rounded-lg text-label-md py-1.5 px-3 focus:ring-primary" placeholder="Cari kamar..." />
             </div>
           </div>
+          <BulkActionBar :selected-count="selectedCount" @clear="clearSelection">
+            <template #actions>
+              <button class="flex items-center gap-1 px-3 py-1.5 bg-error text-on-error rounded-lg text-label-sm hover:brightness-110 transition-all" @click="bulkDelete">
+                <span class="material-symbols-outlined text-sm">delete</span> Hapus
+              </button>
+            </template>
+          </BulkActionBar>
+
           <div class="overflow-x-auto">
             <table class="w-full text-left">
               <thead class="bg-surface-container-low">
@@ -364,6 +372,17 @@ async function deletePinjam(id: number) {
   if (!confirm('Yakin ingin menghapus data peminjaman ini?')) return
   try { await $fetch(`/api/inventaris/loans/${id}`, { method: 'DELETE' }); await fetchData() }
   catch (e: any) { errorS.value = e.message || 'Gagal menghapus' }
+}
+
+async function bulkDelete() {
+  if (!confirm(`Yakin ingin menghapus ${selectedCount} data?`)) return
+  try {
+    await Promise.all(selected.value.map(id => $fetch(`/api/inventaris/${id}`, { method: 'DELETE' })))
+    clearSelection()
+    await fetchData()
+  } catch (e: any) {
+    errorS.value = e.message || 'Gagal menghapus'
+  }
 }
 
 onMounted(() => fetchData())

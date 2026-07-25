@@ -25,8 +25,15 @@
 
       <div v-if="loading" class="p-8 text-center text-on-surface-variant text-label-md">Memuat data...</div>
       <div v-else-if="error" class="p-8 text-center text-red-500 text-label-md">{{ error }}</div>
-
-      <div v-else class="overflow-x-auto">
+      <div v-else>
+      <BulkActionBar :selected-count="selectedCount" @clear="clearSelection">
+        <template #actions>
+          <button class="flex items-center gap-1 px-3 py-1.5 bg-error text-on-error rounded-lg text-label-sm hover:brightness-110 transition-all" @click="bulkDelete">
+            <span class="material-symbols-outlined text-sm">delete</span> Hapus
+          </button>
+        </template>
+      </BulkActionBar>
+      <div class="overflow-x-auto">
         <table class="w-full text-left">
           <thead class="bg-surface-container-low">
             <tr>
@@ -65,6 +72,7 @@
             </tr>
           </tbody>
         </table>
+      </div>
       </div>
     </div>
 
@@ -238,6 +246,17 @@ function closeModal() {
 function confirmDelete(item: ClassItem) {
   deleteTarget.value = item
   showDeleteModal.value = true
+}
+
+async function bulkDelete() {
+  if (!confirm(`Yakin ingin menghapus ${selectedCount} data?`)) return
+  try {
+    await Promise.all(selected.value.map(id => $fetch(`/api/master-data/classes/${id}`, { method: 'DELETE' })))
+    clearSelection()
+    await fetchData()
+  } catch (e: any) {
+    error.value = e.message || 'Gagal menghapus'
+  }
 }
 
 onMounted(() => {

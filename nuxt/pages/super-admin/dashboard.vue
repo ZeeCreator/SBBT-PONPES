@@ -152,6 +152,13 @@
           <h4 class="font-display text-title-lg text-primary">Indeks Performa Akademik</h4>
           <NuxtLink to="/akademik/curriculum" class="text-label-sm text-primary hover:underline">Kelola Kurikulum</NuxtLink>
         </div>
+      <BulkActionBar :selected-count="selectedCount" @clear="clearSelection">
+        <template #actions>
+          <button class="flex items-center gap-1 px-3 py-1.5 bg-error text-on-error rounded-lg text-label-sm hover:brightness-110 transition-all" @click="bulkDelete">
+            <span class="material-symbols-outlined text-sm">delete</span> Hapus
+          </button>
+        </template>
+      </BulkActionBar>
         <div class="overflow-x-auto">
           <table class="w-full text-left">
             <thead>
@@ -271,6 +278,17 @@ let pollTimer: ReturnType<typeof setInterval> | null = null
 onMounted(() => {
   pollTimer = setInterval(() => fetchData(false), 30_000)
 })
+async function bulkDelete() {
+  if (!confirm(`Yakin ingin menghapus ${selectedCount} data?`)) return
+  try {
+    await Promise.all(selected.value.map(id => $fetch(`/api/classes/${id}`, { method: 'DELETE' })))
+    clearSelection()
+    await fetchData()
+  } catch (e: any) {
+    error.value = e.message || 'Gagal menghapus'
+  }
+}
+
 onUnmounted(() => {
   if (pollTimer) clearInterval(pollTimer)
 })

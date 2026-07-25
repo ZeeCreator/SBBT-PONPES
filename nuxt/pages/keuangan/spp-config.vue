@@ -40,6 +40,14 @@
               <span class="material-symbols-outlined text-sm">add</span> Tambah Konfigurasi
             </button>
           </div>
+          <BulkActionBar :selected-count="selectedCount" @clear="clearSelection">
+            <template #actions>
+              <button class="flex items-center gap-1 px-3 py-1.5 bg-error text-on-error rounded-lg text-label-sm hover:brightness-110 transition-all" @click="bulkDelete">
+                <span class="material-symbols-outlined text-sm">delete</span> Hapus
+              </button>
+            </template>
+          </BulkActionBar>
+
           <div class="overflow-x-auto">
             <table class="w-full text-left">
               <thead class="bg-surface-container-low">
@@ -300,6 +308,17 @@ async function doDelete() {
       showDeleteModal.value = false
       deleteTarget.value = null
     } catch (e: any) { errorS.value = e.message || 'Gagal menghapus' }
+  }
+}
+
+async function bulkDelete() {
+  if (!confirm(`Yakin ingin menghapus ${selectedCount} data?`)) return
+  try {
+    await Promise.all(selected.value.map(id => $fetch(`/api/keuangan/spp-config/${id}`, { method: 'DELETE' })))
+    clearSelection()
+    await fetchData()
+  } catch (e: any) {
+    errorS.value = e.message || 'Gagal menghapus'
   }
 }
 

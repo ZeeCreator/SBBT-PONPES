@@ -38,6 +38,13 @@
           <span class="material-symbols-outlined text-sm">add</span> Tambah Kegiatan
         </button>
       </div>
+      <BulkActionBar :selected-count="selectedCount" @clear="clearSelection">
+        <template #actions>
+          <button class="flex items-center gap-1 px-3 py-1.5 bg-error text-on-error rounded-lg text-label-sm hover:brightness-110 transition-all" @click="bulkDelete">
+            <span class="material-symbols-outlined text-sm">delete</span> Hapus
+          </button>
+        </template>
+      </BulkActionBar>
       <div class="overflow-x-auto">
         <table class="w-full text-left">
           <thead class="bg-surface-container-low">
@@ -235,6 +242,17 @@ async function deleteItem(id: string) {
   if (!confirm('Yakin ingin menghapus?')) return
   try {
     await $fetch(`/api/kesehatan/sanitation/${id}`, { method: 'DELETE' }); await fetchData()
+  } catch (e: any) {
+    error.value = e.message || 'Gagal menghapus'
+  }
+}
+
+async function bulkDelete() {
+  if (!confirm(`Yakin ingin menghapus ${selectedCount} data?`)) return
+  try {
+    await Promise.all(selected.value.map(id => $fetch(`/api/kesehatan/sanitation/${id}`, { method: 'DELETE' })))
+    clearSelection()
+    await fetchData()
   } catch (e: any) {
     error.value = e.message || 'Gagal menghapus'
   }

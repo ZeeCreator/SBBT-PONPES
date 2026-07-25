@@ -39,6 +39,13 @@
           <span class="material-symbols-outlined text-sm">add</span> Tambah Peserta
         </button>
       </div>
+      <BulkActionBar :selected-count="selectedCount" @clear="clearSelection">
+        <template #actions>
+          <button class="flex items-center gap-1 px-3 py-1.5 bg-error text-on-error rounded-lg text-label-sm hover:brightness-110 transition-all" @click="bulkDelete">
+            <span class="material-symbols-outlined text-sm">delete</span> Hapus
+          </button>
+        </template>
+      </BulkActionBar>
       <div class="overflow-x-auto">
         <table class="w-full text-left">
           <thead class="bg-surface-container-low">
@@ -276,6 +283,17 @@ const stats = computed(() => {
     { label: 'Pelatih', icon: 'coach', iconColor: 'text-tertiary', valueColor: 'text-on-background', value: String(pelatihSet.size), subtext: 'Bersertifikat' },
   ]
 })
+
+async function bulkDelete() {
+  if (!confirm(`Yakin ingin menghapus ${selectedCount} data?`)) return
+  try {
+    await Promise.all(selected.value.map(id => $fetch(`/api/extracurricular/arts/${id}`, { method: 'DELETE' })))
+    clearSelection()
+    await fetchData()
+  } catch (e: any) {
+    error.value = e.message || 'Gagal menghapus'
+  }
+}
 
 onMounted(() => { fetchData(); fetchStudents(); fetchTeachers() })
 </script>

@@ -31,10 +31,17 @@
               <span class="material-symbols-outlined text-on-surface-variant">search</span>
               <input v-model="filterPush" class="bg-surface-container-low border-none rounded-lg text-label-md py-1.5 px-3 focus:ring-primary" placeholder="Cari notifikasi..." />
             </div>
-            <button class="flex items-center gap-2 px-6 py-2.5 bg-primary text-on-primary rounded-lg text-label-md shadow-md hover:brightness-110 active:scale-95 transition-all" @click="openAddModal('push')">
+              <button class="flex items-center gap-2 px-6 py-2.5 bg-primary text-on-primary rounded-lg text-label-md shadow-md hover:brightness-110 active:scale-95 transition-all" @click="openAddModal('push')">
               <span class="material-symbols-outlined text-sm">add</span> Kirim Notifikasi
             </button>
           </div>
+          <BulkActionBar :selected-count="selectedCount" @clear="clearSelection">
+            <template #actions>
+              <button class="flex items-center gap-1 px-3 py-1.5 bg-error text-on-error rounded-lg text-label-sm hover:brightness-110 transition-all" @click="bulkDelete">
+                <span class="material-symbols-outlined text-sm">delete</span> Hapus
+              </button>
+            </template>
+          </BulkActionBar>
           <div class="overflow-x-auto">
             <table class="w-full text-left">
               <thead class="bg-surface-container-low">
@@ -337,6 +344,17 @@ async function deleteNotif(id: number) {
     await $fetch(`/api/notifikasi/${id}`, { method: 'DELETE' })
     await fetchData()
   } catch (e: any) { errorS.value = e.message || 'Gagal menghapus' }
+}
+
+async function bulkDelete() {
+  if (!confirm(`Yakin ingin menghapus ${selectedCount} data?`)) return
+  try {
+    await Promise.all(selected.value.map(id => $fetch(`/api/notifikasi/${id}`, { method: 'DELETE' })))
+    clearSelection()
+    await fetchData()
+  } catch (e: any) {
+    errorS.value = e.message || 'Gagal menghapus'
+  }
 }
 
 onMounted(() => fetchData())

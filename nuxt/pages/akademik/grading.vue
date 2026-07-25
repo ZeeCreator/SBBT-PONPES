@@ -54,6 +54,14 @@
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-gutter mb-stack-lg">
         <div class="lg:col-span-2 glass-card rounded-xl p-6 shadow-sm overflow-hidden">
           <h3 class="font-display text-title-lg text-primary mb-4">Daftar Nilai</h3>
+          <BulkActionBar :selected-count="selectedCount" @clear="clearSelection">
+            <template #actions>
+              <button class="flex items-center gap-1 px-3 py-1.5 bg-error text-on-error rounded-lg text-label-sm hover:brightness-110 transition-all" @click="bulkDelete">
+                <span class="material-symbols-outlined text-sm">delete</span> Hapus
+              </button>
+            </template>
+          </BulkActionBar>
+
           <div class="overflow-x-auto">
             <table class="w-full text-left">
               <thead class="bg-surface-container-low">
@@ -603,6 +611,21 @@ async function fetchData() {
     error.value = e.message || 'Gagal memuat data'
   } finally {
     loading.value = false
+  }
+}
+
+async function bulkDelete() {
+  if (!confirm(`Yakin ingin menghapus ${selectedCount} data?`)) return
+  try {
+    const allGradeIds = selected.value.flatMap((studentId: string) => {
+      const row = studentRows.value.find(r => r.id === studentId)
+      return row ? Object.values(row.gradeIds).filter(Boolean) : []
+    })
+    await Promise.all(allGradeIds.map((id: string) => $fetch(`/api/akademik/grades/${id}`, { method: 'DELETE' })))
+    clearSelection()
+    await fetchData()
+  } catch (e: any) {
+    error.value = e.message || 'Gagal menghapus'
   }
 }
 

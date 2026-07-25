@@ -61,6 +61,13 @@
               <span class="material-symbols-outlined text-sm">person_add</span> Add User
             </button>
           </div>
+          <BulkActionBar :selected-count="selectedCount" @clear="clearSelection">
+            <template #actions>
+              <button class="flex items-center gap-1 px-3 py-1.5 bg-error text-on-error rounded-lg text-label-sm hover:brightness-110 transition-all" @click="bulkDelete">
+                <span class="material-symbols-outlined text-sm">delete</span> Hapus
+              </button>
+            </template>
+          </BulkActionBar>
           <div class="overflow-x-auto">
             <table class="w-full text-left">
               <thead class="bg-surface-container-low">
@@ -318,6 +325,19 @@ async function handleAddUser() {
     addError.value = e.message || 'Network error'
   } finally {
     addingUser.value = false
+  }
+}
+
+async function bulkDelete() {
+  if (!confirm(`Yakin ingin menghapus ${selectedCount} data?`)) return
+  try {
+    const { getIdToken } = useAuth()
+    const token = await getIdToken()
+    await Promise.all(selected.value.map(id => fetch(`/api/auth/users/${id}`, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } })))
+    clearSelection()
+    await fetchUsers()
+  } catch (e: any) {
+    addError.value = e.message || 'Gagal menghapus'
   }
 }
 

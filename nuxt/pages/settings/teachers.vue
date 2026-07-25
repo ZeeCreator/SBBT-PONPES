@@ -31,6 +31,13 @@
           <option value="resigned">Resigned</option>
         </select>
       </div>
+      <BulkActionBar :selected-count="selectedCount" @clear="clearSelection">
+        <template #actions>
+          <button class="flex items-center gap-1 px-3 py-1.5 bg-error text-on-error rounded-lg text-label-sm hover:brightness-110 transition-all" @click="bulkDelete">
+            <span class="material-symbols-outlined text-sm">delete</span> Hapus
+          </button>
+        </template>
+      </BulkActionBar>
       <div class="overflow-x-auto">
         <table class="w-full text-left">
           <thead class="bg-surface-container-low">
@@ -304,6 +311,22 @@ async function doDelete() {
       deleteTarget.value = null
       await fetchTeachers()
     }
+  } catch (e: any) {
+    deleteError.value = e.message || 'Gagal menghapus'
+  }
+}
+
+async function bulkDelete() {
+  if (!confirm(`Yakin ingin menghapus ${selectedCount} data?`)) return
+  try {
+    const { getIdToken } = useAuth()
+    const token = await getIdToken()
+    await Promise.all(selected.value.map(id => fetch(`/api/guru/${id}`, {
+      method: 'DELETE',
+      headers: { Authorization: `Bearer ${token}` },
+    })))
+    clearSelection()
+    await fetchTeachers()
   } catch (e: any) {
     deleteError.value = e.message || 'Gagal menghapus'
   }
