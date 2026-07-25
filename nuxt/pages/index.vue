@@ -32,24 +32,6 @@
               </div>
               <span class="material-symbols-outlined text-lg opacity-60 group-hover:translate-x-0.5 transition-transform">arrow_forward</span>
             </NuxtLink>
-
-            <NuxtLink to="/wali-santri/dashboard" class="flex items-center gap-4 w-full p-4 rounded-2xl bg-primary-fixed/20 text-on-primary-container hover:bg-primary-fixed/30 transition-all group border border-primary-fixed/20">
-              <span class="material-symbols-outlined text-2xl text-primary">family_history</span>
-              <div class="text-left flex-1">
-                <p class="font-bold text-label-md">Wali Santri</p>
-                <p class="text-[11px] text-on-surface-variant">Portal Orang Tua</p>
-              </div>
-              <span class="material-symbols-outlined text-lg text-on-surface-variant group-hover:translate-x-0.5 transition-transform">arrow_forward</span>
-            </NuxtLink>
-
-            <NuxtLink to="/student/dashboard" class="flex items-center gap-4 w-full p-4 rounded-2xl bg-secondary-fixed/20 text-on-secondary-container hover:bg-secondary-fixed/30 transition-all group border border-secondary-fixed/20">
-              <span class="material-symbols-outlined text-2xl text-secondary">school</span>
-              <div class="text-left flex-1">
-                <p class="font-bold text-label-md">Santri</p>
-                <p class="text-[11px] text-on-surface-variant">Portal Santri</p>
-              </div>
-              <span class="material-symbols-outlined text-lg text-on-surface-variant group-hover:translate-x-0.5 transition-transform">arrow_forward</span>
-            </NuxtLink>
           </div>
         </div>
       </div>
