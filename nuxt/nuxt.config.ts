@@ -12,9 +12,6 @@ export default defineNuxtConfig({
   },
   nitro: {
     preset: 'vercel',
-    externals: {
-      inline: ['firebase-admin'],
-    },
   },
   runtimeConfig: {
     geminiApiKey: '',

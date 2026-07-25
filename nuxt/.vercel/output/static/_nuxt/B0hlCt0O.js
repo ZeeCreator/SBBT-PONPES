@@ -1,1 +1,0 @@
-import{f as t,$ as o,c as r,z as s,o as n}from"./DXr9HCwO.js";const d=t({__name:"dashboard",async setup(c){let e,a;return[e,a]=o(()=>s("/wali-santri/dashboard",{replace:!0})),await e,a(),(_,i)=>(n(),r("div"))}});export{d as default};
