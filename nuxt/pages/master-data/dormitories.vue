@@ -136,7 +136,7 @@
                 <div class="flex items-center gap-3">
                   <input type="checkbox" :checked="selectedRooms.includes(room)" @change="toggleRoom(room)" class="w-4 h-4 rounded border-outline-variant text-primary focus:ring-primary" />
                   <span class="material-symbols-outlined text-primary text-sm">meeting_room</span>
-                  <span class="text-label-md text-on-surface">{{ room }}</span>
+                  <span class="text-label-md text-on-surface">{{ room.name || room }}</span>
                 </div>
                 <button class="p-1 rounded-lg hover:bg-red-50 text-red-500 transition-colors" @click="removeRoom(room)">
                   <span class="material-symbols-outlined text-sm">close</span>
@@ -201,7 +201,7 @@ const deleteTarget = ref<Dormitory | null>(null)
 const showRoomModal = ref(false)
 const roomDormitory = ref<Dormitory | null>(null)
 const newRoomName = ref('')
-const selectedRooms = ref<string[]>([])
+const selectedRooms = ref<any[]>([])
 
 const stats = computed(() => {
   const totalUnits = items.value.length
@@ -274,6 +274,7 @@ async function addRoom() {
       body: { name: newRoomName.value.trim() }
     })
     newRoomName.value = ''
+    selectedRooms.value = []
     await fetchData()
     roomDormitory.value = items.value.find(d => d.id === roomDormitory.value!.id) || roomDormitory.value
   } catch (e: any) {
@@ -281,22 +282,23 @@ async function addRoom() {
   }
 }
 
-async function removeRoom(roomName: string) {
+async function removeRoom(room: any) {
   if (!roomDormitory.value) return
-  if (!confirm(`Yakin ingin menghapus kamar "${roomName}"?`)) return
+  const name = room.name || room
+  if (!confirm(`Yakin ingin menghapus kamar "${name}"?`)) return
   try {
-    await $fetch(`/api/master-data/dormitories/${roomDormitory.value.id}/rooms/${encodeURIComponent(roomName)}`, {
+    await $fetch(`/api/master-data/dormitories/${roomDormitory.value.id}/rooms/${room.id || encodeURIComponent(name)}`, {
       method: 'DELETE'
     })
+    selectedRooms.value = []
     await fetchData()
     roomDormitory.value = items.value.find(d => d.id === roomDormitory.value!.id) || roomDormitory.value
-    selectedRooms.value = selectedRooms.value.filter(r => r !== roomName)
   } catch (e: any) {
     error.value = e.message || 'Gagal menghapus kamar'
   }
 }
 
-function toggleRoom(room: string) {
+function toggleRoom(room: any) {
   if (selectedRooms.value.includes(room)) {
     selectedRooms.value = selectedRooms.value.filter(r => r !== room)
   } else {
@@ -318,7 +320,7 @@ async function removeSelectedRooms() {
   if (!confirm(`Yakin ingin menghapus ${selectedRooms.value.length} kamar terpilih?`)) return
   try {
     await Promise.all(selectedRooms.value.map(room =>
-      $fetch(`/api/master-data/dormitories/${roomDormitory.value!.id}/rooms/${encodeURIComponent(room)}`, {
+      $fetch(`/api/master-data/dormitories/${roomDormitory.value!.id}/rooms/${room.id || encodeURIComponent(room)}`, {
         method: 'DELETE'
       })
     ))
