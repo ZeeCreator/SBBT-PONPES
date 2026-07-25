@@ -103,9 +103,10 @@ async function handleLogin() {
     }
 
     await refreshRole()
-    const route = roleRoutes[role.value || '']
-    if (route) navigateTo(route)
-    else navigateTo('/wali-santri/dashboard')
+    const route = roleRoutes[role.value || ''] || '/wali-santri/dashboard'
+    submitting.value = false
+    await navigateTo(route)
+    return
   } catch (e: any) {
     console.error('Login error:', e)
     if (e.response?.status === 404) {
@@ -120,10 +121,11 @@ async function handleLogin() {
       error.value = 'Konfigurasi Firebase tidak valid. Restart server dan coba lagi.'
     } else if (e.code === 'auth/network-request-failed') {
       error.value = 'Koneksi internet bermasalah'
+    } else if (e.name === 'TimeoutError' || e.status === 408) {
+      error.value = 'Waktu habis. Periksa koneksi Anda.'
     } else {
       error.value = e.data?.statusMessage || e.message || 'Gagal masuk. Silakan coba lagi.'
     }
-  } finally {
     submitting.value = false
   }
 }

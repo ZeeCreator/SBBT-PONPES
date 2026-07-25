@@ -69,70 +69,79 @@ export function useAuth() {
   }
 
   async function login(email: string, password: string) {
-    // Call server endpoint to get session cookie + verify credentials
-    const res = await $fetch<{ uid: string; role: string; name: string; idToken: string }>('/api/auth/login', {
-      method: 'POST',
-      body: { email, password },
-    })
-
-    // Sign in with Firebase client SDK using the returned ID token
-    // We use signInWithCustomToken with a workaround: import the ID token directly
-    // Actually, on success the server already set the session cookie.
-    // For Firebase SDK: we need the user signed in. The idToken can be used with signInWithCustomToken
-    // but idToken != customToken. So we use the existing signInWithEmailAndPassword on the client too.
-    // The server endpoint is primarily for setting the session cookie.
-    if (auth.currentUser?.email !== email) {
-      const cred = await signInWithEmailAndPassword(auth, email, password)
-      user.value = cred.user
-    }
-    authCookie.value = true
-    role.value = res.role || null
-
+    const ctrl = new AbortController()
+    const timer = setTimeout(() => ctrl.abort(), 15000)
     try {
-      fetch('/api/activity-logs', {
+      const res = await $fetch<{ uid: string; role: string; name: string; idToken: string }>('/api/auth/login', {
+        signal: ctrl.signal,
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          action: 'Login Sistem',
-          description: `${res.name || email}`,
-          icon: 'login',
-          color: '#1a6bff',
-          userName: res.name || email,
-        }),
+        body: { email, password },
       })
-    } catch {}
-    return auth.currentUser
+      clearTimeout(timer)
+
+      if (auth.currentUser?.email !== email) {
+        const cred = await signInWithEmailAndPassword(auth, email, password)
+        user.value = cred.user
+      }
+      authCookie.value = true
+      role.value = res.role || null
+
+      try {
+        fetch('/api/activity-logs', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: 'Login Sistem',
+            description: `${res.name || email}`,
+            icon: 'login',
+            color: '#1a6bff',
+            userName: res.name || email,
+          }),
+        })
+      } catch {}
+      return auth.currentUser
+    } catch (e: any) {
+      clearTimeout(timer)
+      throw e
+    }
   }
 
   async function loginWithNis(nis: string) {
-    const res = await $fetch<{ uid: string; role: string; customToken: string; name: string; nis: string; email: string }>('/api/auth/nis-login', {
-      method: 'POST',
-      body: { nis },
-    })
-    // Session cookie is set by the server automatically
-
-    // Sign in with Firebase client SDK using custom token
-    if (res.customToken) {
-      const cred = await signInWithCustomToken(auth, res.customToken)
-      user.value = cred.user
-    }
-    authCookie.value = true
-    role.value = res.role || 'wali_santri'
-
+    const ctrl = new AbortController()
+    const timer = setTimeout(() => ctrl.abort(), 15000)
     try {
-      fetch('/api/activity-logs', {
+      const res = await $fetch<{ uid: string; role: string; customToken: string; name: string; nis: string; email: string }>('/api/auth/nis-login', {
+        signal: ctrl.signal,
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          action: 'Login NIS',
-          description: `${res.name} (NIS: ${nis})`,
-          icon: 'login',
-          color: '#16a34a',
-          userName: res.name || nis,
-        }),
+        body: { nis },
       })
-    } catch {}
-    return auth.currentUser
+      clearTimeout(timer)
+
+      if (res.customToken) {
+        const cred = await signInWithCustomToken(auth, res.customToken)
+        user.value = cred.user
+      }
+      authCookie.value = true
+      role.value = res.role || 'wali_santri'
+
+      try {
+        fetch('/api/activity-logs', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: 'Login NIS',
+            description: `${res.name} (NIS: ${nis})`,
+            icon: 'login',
+            color: '#16a34a',
+            userName: res.name || nis,
+          }),
+        })
+      } catch {}
+      return auth.currentUser
+    } catch (e: any) {
+      clearTimeout(timer)
+      throw e
+    }
   }
 
   async function refreshRole() {
