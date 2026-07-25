@@ -255,9 +255,11 @@ async function saveItem() {
   if (!form.name || !form.gender || !form.supervisor) return
   try {
     if (isEditing.value) {
-      await $fetch(`/api/master-data/dormitories/${form.id}`, { method: 'PUT', body: { ...form } })
+      const { rooms, ...rest } = form
+      await $fetch(`/api/master-data/dormitories/${form.id}`, { method: 'PUT', body: rest })
     } else {
-      await $fetch('/api/master-data/dormitories', { method: 'POST', body: { ...form } })
+      const { rooms, ...rest } = form
+      await $fetch('/api/master-data/dormitories', { method: 'POST', body: rest })
     }
     showModal.value = false
     await fetchData()
