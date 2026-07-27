@@ -1,6 +1,5 @@
 {
   "framework": "nuxtjs",
-  "rootDirectory": "nuxt",
   "github": {
     "silent": true
   }
