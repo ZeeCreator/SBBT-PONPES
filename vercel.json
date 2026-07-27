@@ -2,7 +2,7 @@
   "framework": "nuxtjs",
   "installCommand": "cd nuxt && npm install",
   "buildCommand": "cd nuxt && npx nuxi build",
-  "outputDirectory": ".vercel/output",
+  "outputDirectory": "nuxt/.vercel/output",
   "github": {
     "silent": true
   }
