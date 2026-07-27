@@ -26,7 +26,7 @@ export default defineEventHandler(async (event) => {
     if (!month.records || !Array.isArray(month.records)) continue
 
     for (const record of month.records) {
-      if (q.studentId && record.studentId !== q.studentId) continue
+      if (q.studentId && record.studentId !== q.studentId && record.nis !== q.studentId) continue
 
       if (!recapMap[record.studentId]) {
         recapMap[record.studentId] = {
