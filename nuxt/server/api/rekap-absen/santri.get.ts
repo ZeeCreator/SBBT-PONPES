@@ -1,11 +1,11 @@
 import { rtdbGetList } from '~/server/utils/firebase'
 
 export default defineEventHandler(async (event) => {
-  const key = event.headers.get('x-api-key') || event.headers.get('authorization')
+  const q = getQuery(event)
+  const key = q.key || event.headers.get('x-api-key') || event.headers.get('authorization')
   if (key !== 'AlfathByZR') {
     throw createError({ statusCode: 401, statusMessage: 'Unauthorized' })
   }
-  const q = getQuery(event)
 
   const allMonths = await rtdbGetList('attendance_monthly')
 
