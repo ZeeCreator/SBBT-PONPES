@@ -2,11 +2,6 @@ import { getDatabase } from 'firebase-admin/database'
 
 export default defineEventHandler(async (event) => {
   const { nis } = getRouterParams(event)
-  const q = getQuery(event)
-  const key = q.key || event.headers.get('x-api-key') || event.headers.get('authorization')
-  if (key !== 'AlfathByZR') {
-    throw createError({ statusCode: 401, statusMessage: 'Unauthorized' })
-  }
   const db = getDatabase()
 
   const snap = await db.ref('students').once('value')
