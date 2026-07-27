@@ -1,4 +1,6 @@
 {
+  "framework": "nuxtjs",
+  "buildCommand": "npx nuxi build",
   "crons": [
     {
       "path": "/api/uptime/check",
