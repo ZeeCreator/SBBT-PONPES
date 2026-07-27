@@ -1,4 +1,5 @@
 {
+  "installCommand": "cd nuxt && npm install",
   "buildCommand": "cd nuxt && npx nuxi build",
   "github": {
     "silent": true
