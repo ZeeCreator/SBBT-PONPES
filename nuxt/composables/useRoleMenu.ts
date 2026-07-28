@@ -33,6 +33,7 @@ const menus: Record<string, RoleConfig> = {
       { label: 'Mutasi', icon: 'swap_horiz', to: '/mutasi' },
       { label: 'Inventaris', icon: 'inventory_2', to: '/inventaris' },
       { label: 'Import/Export', icon: 'file_present', to: '/tools/import-export' },
+      { label: 'WA Gateway', icon: 'chat', to: '/wa-gateway' },
       { label: 'Notifikasi', icon: 'notifications', to: '/notifikasi' },
       { label: 'Laporan', icon: 'description', to: '/laporan' },
       { label: 'Wali Santri', icon: 'family_history', to: '/wali-santri/register' },
@@ -46,6 +47,7 @@ const menus: Record<string, RoleConfig> = {
     menu: [
       { label: 'Dashboard', icon: 'dashboard', to: '/super-admin/dashboard' },
       { label: 'Santri', icon: 'group', to: '/kesantrian/students' },
+      { label: 'WA Gateway', icon: 'chat', to: '/wa-gateway' },
       { label: 'Laporan', icon: 'description', to: '/laporan' },
     ],
   },

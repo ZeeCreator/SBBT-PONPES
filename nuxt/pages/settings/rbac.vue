@@ -251,9 +251,9 @@ const tabs = [
 
 const roles = [
   { name: 'Super Admin', description: 'Full system access', icon: 'admin_panel_settings', bg: 'bg-primary-fixed', iconColor: 'text-primary', status: 'Active',
-    permissions: ['Read all collections', 'Write all collections', 'Manage users', 'Firebase console', 'System config'] },
+    permissions: ['Read all collections', 'Write all collections', 'Manage users', 'Firebase console', 'System config', 'WA Gateway'] },
   { name: 'Bendahara', description: 'Financial management', icon: 'payments', bg: 'bg-secondary-fixed', iconColor: 'text-secondary', status: 'Active',
-    permissions: ['Read payments', 'Write payments', 'Read invoices', 'Write invoices', 'Midtrans integration'] },
+    permissions: ['Read payments', 'Write payments', 'Read invoices', 'Write invoices', 'Midtrans integration', 'WA Gateway'] },
   { name: 'Kesantrian', description: 'Student & discipline', icon: 'gavel', bg: 'bg-error-container', iconColor: 'text-error', status: 'Active',
     permissions: ['Read students', 'Write students', 'Read violations', 'Write violations', 'Attendance'] },
   { name: 'Wali Santri', description: 'Parent/guardian read-only', icon: 'family_history', bg: 'bg-surface-container-high', iconColor: 'text-primary', status: 'Active',
