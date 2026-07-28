@@ -11,6 +11,7 @@ interface WaSettings {
   isActive: boolean
   senderName: string
   dailyLimit: number
+  deviceId: string
 }
 
 interface SendResult {
@@ -25,7 +26,7 @@ interface ProviderSendParams {
   message: string
   senderName?: string
   endpointUrl?: string
-  extra?: Record<string, any>
+  deviceId?: string
 }
 
 interface ProviderConfigField {
@@ -90,34 +91,54 @@ defineProvider({
   },
 })
 
-// ── Flowkirim Provider ──
+// ── Flowkirim Provider (session-based) ──
 
 defineProvider({
   id: 'flowkirim',
   label: 'Flowkirim',
-  description: 'WA Gateway alternatif dengan berbagai pilihan harga',
+  description: 'WA Gateway session-based, scan QR via dashboard',
   docsUrl: 'https://flowkirim.com',
   configFields: [
-    { key: 'apiKey', label: 'API Key', type: 'password', required: true, placeholder: 'Masukkan API Key dari Flowkirim', helpText: 'Dapatkan dari dashboard Flowkirim' },
-    { key: 'senderName', label: 'Nama Pengirim / Sender ID', type: 'text', required: false, placeholder: 'Nama atau nomor yang akan tampil sebagai pengirim', helpText: 'Kosongkan jika tidak diperlukan' },
+    { key: 'apiKey', label: 'API Token (Bearer)', type: 'password', required: true, placeholder: 'Masukkan token dari dashboard Flowkirim', helpText: 'Dapatkan dari menu Settings > Token API' },
+    { key: 'deviceId', label: 'Device ID', type: 'text', required: true, placeholder: 'flowkirim-xxxxxxxx', helpText: 'ID perangkat dari halaman Perangkat di dashboard Flowkirim' },
   ],
-  async send({ apiKey, phone, message, senderName }): Promise<SendResult> {
+  async send({ apiKey, phone, message, deviceId }): Promise<SendResult> {
     try {
-      const body: Record<string, any> = {
-        api_key: apiKey,
-        number: phone,
-        message,
-      }
-      if (senderName) body.sender = senderName
+      if (!deviceId) return { success: false, error: 'Device ID belum dikonfigurasi' }
 
-      const res = await $fetch<{ status?: boolean; success?: boolean; message_id?: string; id?: string; error?: string; reason?: string; msg?: string }>('https://api.flowkirim.com/send', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body,
-      })
-      const ok = res.status || res.success || false
-      if (ok) return { success: true, messageId: res.message_id || res.id }
-      return { success: false, error: res.error || res.reason || res.msg || 'Gagal mengirim via Flowkirim' }
+      const BASE = 'https://scan.flowkirim.com'
+      const headers = {
+        Authorization: `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+      }
+
+      // 1. Get session_id
+      const sessionRes = await $fetch<{ success: boolean; data?: { session_id: string }; message?: string }>(
+        `${BASE}/api/whatsapp/sessions/${deviceId}`,
+        { method: 'GET', headers }
+      )
+
+      if (!sessionRes.success || !sessionRes.data?.session_id) {
+        return { success: false, error: sessionRes.message || 'Gagal mendapatkan session Flowkirim. Pastikan perangkat sudah scan QR.' }
+      }
+
+      const sessionId = sessionRes.data.session_id
+
+      // 2. Send text message
+      const to = `${phone}@s.whatsapp.net`
+      const sendRes = await $fetch<{ success: boolean; data?: { id: number; message_id: string; status: string }; message?: string }>(
+        `${BASE}/api/whatsapp/messages/text`,
+        {
+          method: 'POST',
+          headers,
+          body: { session_id: sessionId, to, message },
+        }
+      )
+
+      if (sendRes.success && sendRes.data?.message_id) {
+        return { success: true, messageId: sendRes.data.message_id }
+      }
+      return { success: false, error: sendRes.message || 'Gagal mengirim via Flowkirim' }
     } catch (e: any) {
       return { success: false, error: e.message || 'Gagal mengirim via Flowkirim' }
     }
@@ -230,6 +251,7 @@ export async function getWaSettings(): Promise<WaSettings> {
     isActive: false,
     senderName: 'PONPES SBBT',
     dailyLimit: 500,
+    deviceId: '',
   }
 }
 
@@ -265,6 +287,7 @@ export async function sendWaMessage(
     message,
     senderName: settings.senderName,
     endpointUrl: settings.endpointUrl,
+    deviceId: settings.deviceId,
   })
 }
 

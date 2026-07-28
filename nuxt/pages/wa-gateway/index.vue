@@ -123,7 +123,7 @@ const { getDashboard, getLogs, getProviders } = useWaGateway()
 
 const loading = ref(true)
 const stats = reactive({ totalSent: 0, totalDelivered: 0, totalFailed: 0, todaySent: 0, activeTemplates: 0, provider: 'fonnte', isActive: false })
-const settings = reactive({ isActive: false, senderName: '', provider: 'fonnte', apiKey: '', endpointUrl: '', webhookSecret: '', dailyLimit: 500 })
+const settings = reactive({ isActive: false, senderName: '', provider: 'fonnte', apiKey: '', endpointUrl: '', webhookSecret: '', dailyLimit: 500, deviceId: '' })
 const recentMessages = ref<any[]>([])
 const providers = ref<{ id: string; label: string }[]>([])
 const providerLabel = computed(() => {

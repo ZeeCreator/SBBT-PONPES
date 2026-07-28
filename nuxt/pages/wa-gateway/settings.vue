@@ -141,6 +141,7 @@ interface FormState {
   isActive: boolean
   senderName: string
   dailyLimit: number
+  deviceId: string
 }
 
 const providerOptions = ref<ProviderOption[]>([])
@@ -154,6 +155,7 @@ const form = reactive<FormState>({
   isActive: false,
   senderName: 'PONPES SBBT',
   dailyLimit: 500,
+  deviceId: '',
 })
 const saving = ref(false)
 const saved = ref(false)
@@ -167,12 +169,11 @@ function copyUrl() {
 function onProviderChange() {
   const p = selectedProvider.value
   if (!p) return
-  const needsSender = p.configFields.some(f => f.key === 'senderName')
-  const needsEndpoint = p.configFields.some(f => f.key === 'endpointUrl')
-  const needsApiKey = p.configFields.some(f => f.key === 'apiKey')
-  if (!needsSender) form.senderName = ''
-  if (!needsEndpoint) form.endpointUrl = ''
-  if (!needsApiKey) form.apiKey = ''
+  const definedKeys = p.configFields.map(f => f.key)
+  const defaults: Record<string, string> = { senderName: '', endpointUrl: '', apiKey: '', deviceId: '' }
+  for (const [key, val] of Object.entries(defaults)) {
+    if (!definedKeys.includes(key)) (form as any)[key] = val
+  }
 }
 
 async function load() {
@@ -194,21 +195,7 @@ async function saveSettings() {
   saved.value = false
   err.value = ''
   try {
-    const payload: Record<string, any> = { ...form }
-    const p = selectedProvider.value
-    if (p) {
-      const definedKeys = p.configFields.map(f => f.key)
-      for (const key of Object.keys(payload)) {
-        if (key !== 'provider' && key !== 'webhookSecret' && key !== 'isActive' && key !== 'dailyLimit') {
-          if (!definedKeys.includes(key) && key !== 'webhookSecret' && key !== 'isActive' && key !== 'dailyLimit') {
-            if (key === 'senderName' || key === 'endpointUrl' || key === 'apiKey') {
-              if (!definedKeys.includes(key)) payload[key] = ''
-            }
-          }
-        }
-      }
-    }
-    await updateSettings(payload)
+    await updateSettings({ ...form })
     saved.value = true
     setTimeout(() => saved.value = false, 3000)
   } catch (e: any) {
