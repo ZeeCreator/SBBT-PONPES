@@ -112,7 +112,7 @@
           </div>
 
           <!-- Wali Santri -->
-          <div v-if="recipientType === 'walisantri'" class="space-y-3">
+            <div v-if="recipientType === 'walisantri'" class="space-y-3">
             <div class="flex items-center gap-3">
               <button @click="fetchContacts('walisantri')" :disabled="loadingContacts"
                 class="bg-primary text-on-primary px-4 py-2.5 rounded-lg text-label-sm hover:brightness-110 transition-all flex items-center gap-1 disabled:opacity-60">
@@ -135,12 +135,17 @@
                 </span>
               </div>
             </div>
+            <button v-if="selectedContactIds.size > 0" @click="addSelectedContacts"
+              class="w-full mt-2 bg-primary text-on-primary py-2 rounded-lg text-label-sm font-bold hover:brightness-110 transition-all flex items-center justify-center gap-1">
+              <span class="material-symbols-outlined text-sm">playlist_add</span>
+              Tambah {{ selectedContactIds.size }} kontak ke penerima
+            </button>
             <p v-if="!loadingContacts && contacts.length === 0" class="text-label-sm text-on-surface-variant text-center py-4">
               Klik "Muat Data Wali Santri" untuk mengambil daftar wali santri.
             </p>
           </div>
 
-          <!-- Guru -->
+            <!-- Guru -->
           <div v-if="recipientType === 'guru'" class="space-y-3">
             <div class="flex items-center gap-3">
               <button @click="fetchContacts('guru')" :disabled="loadingContacts"
@@ -160,12 +165,17 @@
                 </div>
               </div>
             </div>
+            <button v-if="selectedContactIds.size > 0" @click="addSelectedContacts"
+              class="w-full mt-2 bg-primary text-on-primary py-2 rounded-lg text-label-sm font-bold hover:brightness-110 transition-all flex items-center justify-center gap-1">
+              <span class="material-symbols-outlined text-sm">playlist_add</span>
+              Tambah {{ selectedContactIds.size }} kontak ke penerima
+            </button>
             <p v-if="!loadingContacts && contacts.length === 0" class="text-label-sm text-on-surface-variant text-center py-4">
               Klik "Muat Data Guru" untuk mengambil daftar guru.
             </p>
           </div>
 
-          <!-- Per Kelas -->
+            <!-- Per Kelas -->
           <div v-if="recipientType === 'kelas'" class="space-y-3">
             <div class="flex items-center gap-3">
               <select v-model="selectedClassId" @change="fetchContacts('kelas')"
@@ -186,6 +196,11 @@
                 </div>
               </div>
             </div>
+            <button v-if="selectedContactIds.size > 0" @click="addSelectedContacts"
+              class="w-full mt-2 bg-primary text-on-primary py-2 rounded-lg text-label-sm font-bold hover:brightness-110 transition-all flex items-center justify-center gap-1">
+              <span class="material-symbols-outlined text-sm">playlist_add</span>
+              Tambah {{ selectedContactIds.size }} kontak ke penerima
+            </button>
             <p v-if="selectedClassId && !loadingContacts && contacts.length === 0" class="text-label-sm text-on-surface-variant text-center py-4">
               Tidak ada wali santri dengan nomor HP di kelas ini.
             </p>
