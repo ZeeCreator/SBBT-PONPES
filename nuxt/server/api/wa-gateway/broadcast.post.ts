@@ -11,6 +11,6 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 400, statusMessage: 'Recipients wajib diisi minimal 1' })
   }
 
-  const result = await sendWaBulk(body.recipients, { uid: auth.uid, name: auth.name })
+  const result = await sendWaBulk(body.recipients, { uid: auth.uid, name: auth.name }, { delayMs: body.delayMs || 2000 })
   return result
 })

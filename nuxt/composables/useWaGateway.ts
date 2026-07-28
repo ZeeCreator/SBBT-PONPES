@@ -47,11 +47,16 @@ export function useWaGateway() {
     })
   }
 
-  async function sendBroadcast(recipients: { phone: string; message: string }[]) {
+  async function sendBroadcast(recipients: { phone: string; message: string }[], delayMs?: number) {
     return fetchApi('/api/wa-gateway/broadcast', {
       method: 'POST',
-      body: JSON.stringify({ recipients }),
+      body: JSON.stringify({ recipients, delayMs: delayMs || 2000 }),
     })
+  }
+
+  async function getContacts(type: string, params?: Record<string, string>) {
+    const query = new URLSearchParams({ type, ...params })
+    return fetchApi(`/api/wa-gateway/contacts?${query}`)
   }
 
   async function getTemplates() {
@@ -92,6 +97,7 @@ export function useWaGateway() {
     getProviders,
     sendMessage,
     sendBroadcast,
+    getContacts,
     getTemplates,
     createTemplate,
     updateTemplate,

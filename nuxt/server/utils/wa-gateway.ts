@@ -293,13 +293,16 @@ export async function sendWaMessage(
 
 export async function sendWaBulk(
   recipients: { phone: string; message: string }[],
-  sentBy: { uid: string; name: string }
+  sentBy: { uid: string; name: string },
+  options?: { delayMs?: number }
 ): Promise<{ success: number; failed: number; errors: string[] }> {
   let success = 0
   let failed = 0
   const errors: string[] = []
+  const delay = options?.delayMs || 2000
 
-  for (const r of recipients) {
+  for (let i = 0; i < recipients.length; i++) {
+    const r = recipients[i]
     const result = await sendWaMessage(r.phone, r.message)
     if (result.success) {
       success++
@@ -324,6 +327,9 @@ export async function sendWaBulk(
         sentByName: sentBy.name,
         error: result.error,
       })
+    }
+    if (i < recipients.length - 1 && delay > 0) {
+      await new Promise(resolve => setTimeout(resolve, delay))
     }
   }
 
