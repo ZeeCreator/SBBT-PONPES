@@ -27,7 +27,8 @@ export default defineEventHandler(async (event) => {
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Redirecting...</title>
+  <title>Membuka Aplikasi...</title>
+  <meta http-equiv="refresh" content="5;url=${downloadUrl || 'about:blank'}">
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
@@ -71,48 +72,35 @@ export default defineEventHandler(async (event) => {
   </div>
   <script>
     (function() {
-      var deepLink = '${deepLink}';
+      var tryOpen = '${deepLink}';
       var fallbackUrl = ${JSON.stringify(downloadUrl)};
-      var spinner = document.getElementById('spinner');
-      var status = document.getElementById('status');
-      var fallback = document.getElementById('fallback');
-      var timer, redirected = false;
-
-      function showFallback() {
-        if (redirected) return;
-        spinner.style.display = 'none';
-        status.textContent = fallbackUrl
+      var timer = setTimeout(function() {
+        document.getElementById('spinner').style.display = 'none';
+        document.getElementById('status').textContent = fallbackUrl
           ? 'Aplikasi belum terinstal? Silakan download terlebih dahulu.'
           : 'Tidak dapat membuka aplikasi. Hubungi administrator.';
-        fallback.classList.add('visible');
-      }
+        document.getElementById('fallback').classList.add('visible');
+      }, 3000);
 
-      // If page loses visibility, app likely opened
+      // If app opens, page loses visibility
       document.addEventListener('visibilitychange', function() {
-        if (document.hidden) { redirected = true; clearTimeout(timer); }
-      });
-      window.addEventListener('blur', function() {
-        redirected = true; clearTimeout(timer);
+        if (document.hidden) clearTimeout(timer);
       });
 
-      // Try opening the deep link
-      timer = setTimeout(showFallback, 3000);
-
-      // Fallback: if user navigates back after app was opened
-      window.addEventListener('focus', function() {
-        if (redirected) {
-          redirected = false;
-          status.textContent = 'Selamat datang kembali!';
-          spinner.style.display = 'none';
-        }
-      });
-
-      window.location.href = deepLink;
+      // Try deep link via iframe and location
+      var iframe = document.createElement('iframe');
+      iframe.style.display = 'none';
+      document.body.appendChild(iframe);
+      iframe.src = tryOpen;
+      setTimeout(function() {
+        window.location.href = tryOpen;
+      }, 100);
     })();
   </script>
 </body>
 </html>`
 
   setHeader(event, 'Content-Type', 'text/html; charset=utf-8')
+  setHeader(event, 'Cache-Control', 'no-store')
   return html
 })
