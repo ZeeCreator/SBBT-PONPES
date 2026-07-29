@@ -86,7 +86,8 @@
               <td class="px-4 py-3">
                 <div class="flex items-center gap-2">
                   <button class="text-primary text-label-sm hover:underline" @click="openEditModal(teacher)">Edit</button>
-                  <button class="text-secondary text-label-sm hover:underline" @click="generateMagicLink(teacher)">Link</button>
+                  <NuxtLink :to="'/izin/guru?guruId=' + teacher.id" class="text-secondary text-label-sm hover:underline">Izin</NuxtLink>
+                  <button class="text-[#6366f1] text-label-sm hover:underline" @click="generateMagicLink(teacher)">Link</button>
                   <button class="text-error text-label-sm hover:underline" @click="confirmDelete(teacher)">Hapus</button>
                 </div>
               </td>

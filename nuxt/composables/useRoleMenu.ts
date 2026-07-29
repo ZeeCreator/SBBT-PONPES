@@ -30,6 +30,7 @@ const menus: Record<string, RoleConfig> = {
       { label: 'PSB/PPDB', icon: 'app_registration', to: '/psb/registrations' },
       { label: 'Alumni', icon: 'diversity_3', to: '/alumni' },
       { label: 'Izin Santri', icon: 'passport', to: '/izin' },
+      { label: 'Izin Guru', icon: 'badge', to: '/izin/guru' },
       { label: 'Mutasi', icon: 'swap_horiz', to: '/mutasi' },
       { label: 'Inventaris', icon: 'inventory_2', to: '/inventaris' },
       { label: 'Import/Export', icon: 'file_present', to: '/tools/import-export' },
