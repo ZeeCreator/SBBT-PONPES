@@ -27,7 +27,6 @@ interface ProviderSendParams {
   phone: string
   message: string
   senderName?: string
-  endpointUrl?: string
   baseUrl?: string
   deviceId?: string
   sessionId?: string
@@ -292,10 +291,10 @@ defineProvider({
     { key: 'apiKey', label: 'API Key', type: 'password', required: true, placeholder: 'owa_k1_...', helpText: 'API key dari dashboard Zero Gateway' },
     { key: 'sessionId', label: 'Session ID', type: 'text', required: true, placeholder: '7ca4cbca-1718-439e-bb9b-ec2c07d36277', helpText: 'ID sesi WhatsApp yang aktif di Zero Gateway' },
   ],
-  async send({ apiKey, phone, message, mediaUrl, mediaType, endpointUrl, sessionId }): Promise<SendResult> {
+  async send({ apiKey, phone, message, mediaUrl, mediaType, baseUrl, sessionId }): Promise<SendResult> {
     try {
-      const baseUrl = (endpointUrl || '').replace(/\/+$/, '')
-      if (!baseUrl) return { success: false, error: 'Base URL belum dikonfigurasi' }
+      const gatewayBase = (baseUrl || '').replace(/\/+$/, '')
+      if (!gatewayBase) return { success: false, error: 'Base URL belum dikonfigurasi' }
       if (!sessionId) return { success: false, error: 'Session ID belum dikonfigurasi' }
 
       const headers: Record<string, string> = {
@@ -313,7 +312,7 @@ defineProvider({
         if (isImage || isVideo) body.caption = message
         else body.filename = message
         const res = await $fetch<{ success?: boolean; message?: string; data?: { id?: string } }>(
-          `${baseUrl}/sessions/${sessionId}/messages/${endpoint}`,
+          `${gatewayBase}/sessions/${sessionId}/messages/${endpoint}`,
           { method: 'POST', headers, body }
         )
         if (res.success && res.data?.id) return { success: true, messageId: res.data.id }
@@ -321,7 +320,7 @@ defineProvider({
       }
 
       const res = await $fetch<{ success?: boolean; message?: string; data?: { id?: string } }>(
-        `${baseUrl}/sessions/${sessionId}/messages/send-text`,
+        `${gatewayBase}/sessions/${sessionId}/messages/send-text`,
         { method: 'POST', headers, body: { chatId: `${to}@c.us`, text: message } }
       )
       if (res.success && res.data?.id) return { success: true, messageId: res.data.id }
@@ -356,7 +355,7 @@ export async function getWaSettings(): Promise<WaSettings> {
     dailyLimit: 500,
     deviceId: '',
     sessionId: '',
-    baseUrl: '',
+    baseUrl: 'https://zero-gateway.zerowebsite.eu.org/api',
   }
 }
 
@@ -391,7 +390,7 @@ export async function sendWaMessage(
     phone: phoneNormalized,
     message,
     senderName: settings.senderName,
-    endpointUrl: settings.baseUrl,
+    baseUrl: settings.baseUrl,
     deviceId: settings.deviceId,
     sessionId: settings.sessionId,
     mediaUrl: options?.mediaUrl,
