@@ -7,7 +7,7 @@ export default defineEventHandler(async (event) => {
   }
 
   const body = await readBody(event)
-  const allowed = ['provider', 'apiKey', 'endpointUrl', 'webhookSecret', 'isActive', 'senderName', 'dailyLimit', 'deviceId']
+  const allowed = ['provider', 'apiKey', 'baseUrl', 'webhookSecret', 'isActive', 'senderName', 'dailyLimit', 'deviceId', 'sessionId']
   const filtered: Record<string, any> = {}
   for (const key of allowed) {
     if (body[key] !== undefined) filtered[key] = body[key]

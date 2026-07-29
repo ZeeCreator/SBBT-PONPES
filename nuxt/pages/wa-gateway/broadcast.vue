@@ -285,6 +285,42 @@
               </div>
               <p class="text-[10px] text-on-surface-variant mt-1">Jeda 1-3 detik dianjurkan agar nomor tidak kesuspend</p>
             </div>
+
+            <!-- Media -->
+            <div class="pt-3 border-t border-outline-variant/10">
+              <label class="text-label-sm text-on-surface-variant block mb-2">Lampiran Media</label>
+              <input ref="fileInput" type="file" accept="image/*,video/*,.pdf,.doc,.docx,.xls,.xlsx" class="hidden" @change="handleFileSelect" />
+              <div v-if="!mediaUrl">
+                <button @click="fileInput?.click()" :disabled="uploadingMedia"
+                  class="w-full border-2 border-dashed border-outline-variant/30 rounded-xl py-4 px-3 text-center hover:border-primary/40 transition-all cursor-pointer disabled:opacity-60"
+                  :class="uploadingMedia ? 'opacity-60' : ''">
+                  <div v-if="uploadingMedia" class="flex items-center justify-center gap-2">
+                    <span class="material-symbols-outlined animate-spin text-sm">refresh</span>
+                    <span class="text-label-sm text-on-surface-variant">Mengupload...</span>
+                  </div>
+                  <div v-else>
+                    <span class="material-symbols-outlined text-2xl text-on-surface-variant">add_photo_alternate</span>
+                    <p class="text-label-sm text-on-surface-variant mt-1">Klik untuk upload<br>Gambar / Video / Dokumen</p>
+                  </div>
+                </button>
+              </div>
+              <div v-else class="bg-surface-container-low rounded-xl p-3">
+                <div class="flex items-center gap-3">
+                  <div class="w-10 h-10 rounded-lg bg-primary-fixed/20 flex items-center justify-center shrink-0 overflow-hidden">
+                    <img v-if="mediaType?.startsWith('image/')" :src="mediaUrl" class="w-full h-full object-cover" />
+                    <span v-else-if="mediaType?.startsWith('video/')" class="material-symbols-outlined text-primary">play_circle</span>
+                    <span v-else class="material-symbols-outlined text-primary">description</span>
+                  </div>
+                  <div class="flex-1 min-w-0">
+                    <p class="text-label-sm truncate font-medium">{{ mediaFileName }}</p>
+                    <p class="text-[10px] text-on-surface-variant">{{ mediaType }}</p>
+                  </div>
+                  <button @click="clearMedia" class="text-error hover:text-red-700 transition-colors">
+                    <span class="material-symbols-outlined text-sm">close</span>
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
 
           <button @click="sendBroadcast"
@@ -318,7 +354,7 @@
 
 <script setup lang="ts">
 definePageMeta({ layout: 'super-admin', requiredRole: 'super_admin' })
-const { getTemplates, getSettings, getProviders, getContacts, sendBroadcast: sendBc } = useWaGateway()
+const { getTemplates, getSettings, getProviders, getContacts, sendBroadcast: sendBc, uploadMedia } = useWaGateway()
 
 const templates = ref<any[]>([])
 const selectedTemplate = ref<any>(null)
@@ -365,6 +401,13 @@ const autoFilledVars = ref<Set<string>>(new Set())
 
 // Delay
 const delayMs = ref(2000)
+
+// Media
+const mediaUrl = ref('')
+const mediaType = ref('')
+const mediaFileName = ref('')
+const uploadingMedia = ref(false)
+const fileInput = ref<HTMLInputElement | null>(null)
 
 // Sending
 const sending = ref(false)
@@ -542,7 +585,7 @@ function addSelectedContacts() {
         if (val) msg = msg.replace(new RegExp(`\\{\\{${key}\\}\\}`, 'g'), val)
       }
     }
-    recipients.value.push({ phone: c.phone, message: msg })
+    recipients.value.push({ phone: c.phone, message: msg, mediaUrl: mediaUrl.value || undefined, mediaType: mediaType.value || undefined })
   }
   selectedContactIds.value = new Set()
   contacts.value = []
@@ -552,7 +595,7 @@ function addManualRecipient() {
   const phone = manualPhone.value.trim()
   if (!phone) return
   const msg = currentMessage.value
-  recipients.value.push({ phone, message: msg })
+  recipients.value.push({ phone, message: msg, mediaUrl: mediaUrl.value || undefined, mediaType: mediaType.value || undefined })
   manualPhone.value = ''
 }
 
@@ -563,9 +606,34 @@ function processBatch() {
     const phone = parts[0].trim()
     if (!phone) continue
     const msg = parts[1]?.trim() || currentMessage.value
-    recipients.value.push({ phone, message: msg })
+    recipients.value.push({ phone, message: msg, mediaUrl: mediaUrl.value || undefined, mediaType: mediaType.value || undefined })
   }
   batchInput.value = ''
+}
+
+async function handleFileSelect(e: Event) {
+  const input = e.target as HTMLInputElement
+  const file = input.files?.[0]
+  if (!file) return
+  uploadingMedia.value = true
+  try {
+    const result = await uploadMedia(file)
+    mediaUrl.value = result.url
+    mediaType.value = result.type
+    mediaFileName.value = file.name
+  } catch (e: any) {
+    console.error('Upload gagal:', e)
+    alert('Gagal upload media: ' + e.message)
+  } finally {
+    uploadingMedia.value = false
+    if (fileInput.value) fileInput.value.value = ''
+  }
+}
+
+function clearMedia() {
+  mediaUrl.value = ''
+  mediaType.value = ''
+  mediaFileName.value = ''
 }
 
 async function sendBroadcast() {
@@ -576,7 +644,7 @@ async function sendBroadcast() {
 
   try {
     const total = recipients.value.length
-    const batch = recipients.value.map((r, i) => ({ ...r }))
+    const batch = recipients.value.map((r) => ({ phone: r.phone, message: r.message, mediaUrl: r.mediaUrl, mediaType: r.mediaType }))
 
     for (let i = 0; i < batch.length; i++) {
       const r = batch[i]

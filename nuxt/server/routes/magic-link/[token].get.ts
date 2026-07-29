@@ -27,8 +27,7 @@ export default defineEventHandler(async (event) => {
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Membuka Aplikasi...</title>
-  <meta http-equiv="refresh" content="5;url=${downloadUrl || 'about:blank'}">
+  <title>Redirecting...</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
@@ -72,35 +71,44 @@ export default defineEventHandler(async (event) => {
   </div>
   <script>
     (function() {
-      var tryOpen = '${deepLink}';
+      var deepLink = '${deepLink}';
       var fallbackUrl = ${JSON.stringify(downloadUrl)};
-      var timer = setTimeout(function() {
-        document.getElementById('spinner').style.display = 'none';
-        document.getElementById('status').textContent = fallbackUrl
+      var spinner = document.getElementById('spinner');
+      var status = document.getElementById('status');
+      var fallback = document.getElementById('fallback');
+      var timer, redirected = false;
+
+      function showFallback() {
+        if (redirected) return;
+        spinner.style.display = 'none';
+        status.textContent = fallbackUrl
           ? 'Aplikasi belum terinstal? Silakan download terlebih dahulu.'
           : 'Tidak dapat membuka aplikasi. Hubungi administrator.';
-        document.getElementById('fallback').classList.add('visible');
-      }, 3000);
+        fallback.classList.add('visible');
+      }
 
-      // If app opens, page loses visibility
+      // If page loses visibility, app likely opened
       document.addEventListener('visibilitychange', function() {
-        if (document.hidden) clearTimeout(timer);
+        if (document.hidden) { redirected = true; clearTimeout(timer); }
+      });
+      window.addEventListener('blur', function() {
+        redirected = true; clearTimeout(timer);
       });
 
-      // Try deep link via iframe and location
-      var iframe = document.createElement('iframe');
-      iframe.style.display = 'none';
-      document.body.appendChild(iframe);
-      iframe.src = tryOpen;
-      setTimeout(function() {
-        window.location.href = tryOpen;
-      }, 100);
+      // Try opening the deep link
+      timer = setTimeout(showFallback, 3000);
+
+      // Fallback: if user navigates back after app was opened
+      window.addEventListener('focus', function() {
+        if (redirected) {
+          redirected = false;
+          status.textContent = 'Selamat datang kembali!';
+          spinner.style.display = 'none';
+        }
+      });
+
+      window.location.href = deepLink;
     })();
   </script>
 </body>
 </html>`
-
-  setHeader(event, 'Content-Type', 'text/html; charset=utf-8')
-  setHeader(event, 'Cache-Control', 'no-store')
-  return html
-})

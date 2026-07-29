@@ -40,18 +40,36 @@ export function useWaGateway() {
     return fetchApi('/api/wa-gateway/providers')
   }
 
-  async function sendMessage(phone: string, message: string, options?: { delay?: number; templateId?: string; templateName?: string }) {
+  async function sendMessage(phone: string, message: string, options?: { delay?: number; templateId?: string; templateName?: string; mediaUrl?: string; mediaType?: string }) {
     return fetchApi('/api/wa-gateway/send', {
       method: 'POST',
       body: JSON.stringify({ phone, message, ...options }),
     })
   }
 
-  async function sendBroadcast(recipients: { phone: string; message: string }[], delayMs?: number) {
+  async function sendBroadcast(recipients: { phone: string; message: string; mediaUrl?: string; mediaType?: string }[], delayMs?: number) {
     return fetchApi('/api/wa-gateway/broadcast', {
       method: 'POST',
       body: JSON.stringify({ recipients, delayMs: delayMs || 2000 }),
     })
+  }
+
+  async function uploadMedia(file: File): Promise<{ url: string; type: string }> {
+    const settings = await getSettings()
+    const baseUrl = settings.baseUrl || 'https://zero-gateway.zerowebsite.eu.org/api'
+    const formData = new FormData()
+    formData.append('file', file)
+    const res = await fetch(`${baseUrl.replace(/\/+$/, '')}/upload`, {
+      method: 'POST',
+      headers: { 'X-API-Key': settings.apiKey || '' },
+      body: formData,
+    })
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ message: 'Upload gagal' }))
+      throw new Error(err.message || err.statusMessage || `HTTP ${res.status}`)
+    }
+    const data = await res.json()
+    return { url: data.url || data.data?.url || '', type: file.type }
   }
 
   async function getContacts(type: string, params?: Record<string, string>) {
@@ -88,6 +106,10 @@ export function useWaGateway() {
     return fetchApi(`/api/wa-gateway/logs${params}`)
   }
 
+  async function getSessionInfo() {
+    return fetchApi('/api/wa-gateway')
+  }
+
   return {
     loading,
     error,
@@ -103,5 +125,7 @@ export function useWaGateway() {
     updateTemplate,
     deleteTemplate,
     getLogs,
+    uploadMedia,
+    getSessionInfo,
   }
 }

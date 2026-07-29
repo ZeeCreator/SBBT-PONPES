@@ -1,4 +1,4 @@
-import { getWaStats, getWaSettings, seedDefaultTemplates } from '~/server/utils/wa-gateway'
+import { getWaStats, getWaSettings, seedDefaultTemplates, getWaSessionInfo } from '~/server/utils/wa-gateway'
 
 export default defineEventHandler(async (event) => {
   const auth = event.context.auth
@@ -9,6 +9,7 @@ export default defineEventHandler(async (event) => {
   await seedDefaultTemplates()
   const stats = await getWaStats()
   const settings = await getWaSettings()
+  const sessionInfo = await getWaSessionInfo()
 
-  return { stats, settings }
+  return { stats, settings, sessionInfo }
 })

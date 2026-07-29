@@ -1,4 +1,4 @@
-import { getWaMessages } from '~/server/utils/wa-gateway'
+import { getWaLogsFromGateway } from '~/server/utils/wa-gateway'
 
 export default defineEventHandler(async (event) => {
   const auth = event.context.auth
@@ -7,7 +7,7 @@ export default defineEventHandler(async (event) => {
   }
 
   const query = getQuery(event)
-  return getWaMessages({
+  return getWaLogsFromGateway({
     status: query.status as string,
     type: query.type as string,
     phone: query.phone as string,

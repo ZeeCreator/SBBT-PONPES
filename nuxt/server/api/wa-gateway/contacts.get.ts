@@ -1,9 +1,22 @@
 import { getDatabase } from 'firebase-admin/database'
+import { getWaSettings } from '~/server/utils/wa-gateway'
 
 const MONTHS_INDONESIAN = [
   'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
   'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember',
 ]
+
+async function fetchZeroGatewayContacts(sessionId: string, apiKey: string, baseUrl: string): Promise<any[]> {
+  const headers = { 'X-API-Key': apiKey }
+  const url = `${baseUrl.replace(/\/+$/, '')}/sessions/${sessionId}/contacts`
+  try {
+    const res = await $fetch<{ success?: boolean; data?: any[]; message?: string }>(url, { headers })
+    if (res.success && res.data) return res.data
+    return []
+  } catch {
+    return []
+  }
+}
 
 export default defineEventHandler(async (event) => {
   const auth = event.context.auth
@@ -18,9 +31,8 @@ export default defineEventHandler(async (event) => {
   const bulan = MONTHS_INDONESIAN[now.getMonth()]
   const tahun = now.getFullYear()
 
-  const settingsSnap = await db.ref('wa_gateway/settings').once('value')
-  const settings = settingsSnap.val() || {}
-  const namaPondok = (settings as any).senderName || 'PONPES SBBT'
+  const settings = await getWaSettings()
+  const namaPondok = settings.senderName || 'PONPES SBBT'
 
   async function getActivePeriod(): Promise<{ startDate?: string; endDate?: string; name?: string }> {
     const snap = await db.ref('periods').once('value')
@@ -213,6 +225,13 @@ export default defineEventHandler(async (event) => {
     }
     result.sort((a, b) => a.name.localeCompare(b.name))
     return result
+  }
+
+  if (type === 'zerogateway-contacts') {
+    if (!settings.sessionId || !settings.apiKey || !settings.baseUrl) {
+      throw createError({ statusCode: 400, statusMessage: 'Zero Gateway belum dikonfigurasi' })
+    }
+    return await fetchZeroGatewayContacts(settings.sessionId, settings.apiKey, settings.baseUrl)
   }
 
   throw createError({ statusCode: 400, statusMessage: `Tipe kontak "${type}" tidak dikenal` })

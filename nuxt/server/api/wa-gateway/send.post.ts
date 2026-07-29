@@ -11,7 +11,7 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 400, statusMessage: 'Phone dan message wajib diisi' })
   }
 
-  const result = await sendWaMessage(body.phone, body.message, { delay: body.delay })
+  const result = await sendWaMessage(body.phone, body.message, { delay: body.delay, mediaUrl: body.mediaUrl, mediaType: body.mediaType })
 
   await logWaMessage({
     phone: body.phone,
@@ -24,6 +24,8 @@ export default defineEventHandler(async (event) => {
     error: result.error,
     templateId: body.templateId,
     templateName: body.templateName,
+    mediaUrl: body.mediaUrl,
+    mediaType: body.mediaType,
   })
 
   return result
