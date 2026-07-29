@@ -112,3 +112,4 @@ export default defineEventHandler(async (event) => {
   </script>
 </body>
 </html>`
+})
