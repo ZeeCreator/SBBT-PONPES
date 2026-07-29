@@ -6,16 +6,14 @@ export default defineEventHandler(async (event) => {
   const db = getDatabase()
   const id = generateId()
   const data = {
-    guruId: body.guruId || '',
+    uid: body.uid || '',
     nama: body.nama || '',
-    jenis: body.jenis || '',
-    tglMulai: body.tglMulai || '',
-    tglSelesai: body.tglSelesai || '',
-    keterangan: body.keterangan || '',
-    status: 'Pending',
+    alasan: body.alasan || '',
+    tanggal: body.tanggal || '',
+    status: 'pending',
     createdAt: new Date().toISOString(),
   }
-  await db.ref(`guru_izin/${id}`).set(data)
-  await logActivity(event, 'Ajukan Izin Guru', `${data.nama} - ${data.jenis}`, 'logout', '#9b4500')
+  await db.ref(`izin/${id}`).set(data)
+  await logActivity(event, 'Ajukan Izin Guru', `${data.nama} - ${data.alasan}`, 'logout', '#9b4500')
   return { id, ...data }
 })

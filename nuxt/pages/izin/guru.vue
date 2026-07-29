@@ -3,14 +3,14 @@
     <div class="flex items-center justify-between mb-stack-lg">
       <div>
         <h2 class="font-display text-headline-lg text-primary">Izin Ustadz / Guru</h2>
-        <p class="text-on-surface-variant text-body-md">Kelola pengajuan izin dan cuti tenaga pengajar</p>
+        <p class="text-on-surface-variant text-body-md">Kelola pengajuan izin tenaga pengajar</p>
       </div>
       <button class="bg-primary-container text-on-primary px-6 py-2.5 rounded-xl text-label-md hover:bg-primary transition-all flex items-center gap-2 shadow-md" @click="openAddModal">
         <span class="material-symbols-outlined text-sm">add</span> Ajukan Izin
       </button>
     </div>
 
-    <!-- Stats + Diagram -->
+    <!-- Stats -->
     <div class="grid grid-cols-1 lg:grid-cols-4 gap-gutter mb-stack-lg">
       <div class="glass-card rounded-2xl p-stack-md shadow-sm flex items-center gap-4">
         <div class="w-12 h-12 rounded-full bg-primary-fixed flex items-center justify-center"><span class="material-symbols-outlined text-primary">assignment</span></div>
@@ -30,7 +30,7 @@
       </div>
     </div>
 
-    <!-- Chart Bulanan -->
+    <!-- Diagram Bulanan -->
     <div class="glass-card rounded-2xl p-stack-md shadow-sm mb-stack-lg">
       <div class="flex items-center justify-between mb-4">
         <h4 class="font-display text-title-lg text-primary">Diagram Izin Bulanan</h4>
@@ -41,20 +41,13 @@
         <div v-for="month in chartData" :key="month.label" class="flex items-center gap-4">
           <span class="text-label-sm text-on-surface-variant w-16 shrink-0">{{ month.label }}</span>
           <div class="flex-1 flex items-center gap-0.5 h-8">
-            <div
-              v-for="(item, i) in month.bars"
-              :key="i"
-              class="h-full rounded transition-all duration-500 hover:brightness-110 cursor-pointer relative group"
-              :class="item.color"
-              :style="{ width: item.pct + '%' }"
-              :title="item.label + ': ' + item.count"
-            >
+            <div v-for="(item, i) in month.bars" :key="i" class="h-full rounded transition-all duration-500 hover:brightness-110 cursor-pointer relative group"
+              :class="item.color" :style="{ width: item.pct + '%' }" :title="item.label + ': ' + item.count">
               <div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 px-2 py-1 bg-surface-container-highest rounded text-label-xs whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity shadow-lg z-10">{{ item.label }}: {{ item.count }}</div>
             </div>
           </div>
           <span class="text-label-sm text-on-surface-variant w-8 text-right">{{ month.total }}</span>
         </div>
-        <!-- Legend -->
         <div class="flex items-center gap-4 pt-2 text-label-xs text-on-surface-variant">
           <span class="flex items-center gap-1"><span class="w-3 h-3 rounded bg-amber-400 inline-block"></span> Pending</span>
           <span class="flex items-center gap-1"><span class="w-3 h-3 rounded bg-green-500 inline-block"></span> Disetujui</span>
@@ -72,16 +65,9 @@
         </div>
         <select v-model="filterStatus" class="bg-surface-container-low border border-outline-variant/30 rounded-lg text-label-sm py-2 px-3 focus:ring-primary outline-none">
           <option value="">Semua Status</option>
-          <option value="Pending">Pending</option>
-          <option value="Disetujui">Disetujui</option>
-          <option value="Ditolak">Ditolak</option>
-        </select>
-        <select v-model="filterJenis" class="bg-surface-container-low border border-outline-variant/30 rounded-lg text-label-sm py-2 px-3 focus:ring-primary outline-none">
-          <option value="">Semua Jenis</option>
-          <option value="Izin Sakit">Izin Sakit</option>
-          <option value="Izin Dinas">Izin Dinas</option>
-          <option value="Izin Khusus">Izin Khusus</option>
-          <option value="Cuti">Cuti</option>
+          <option value="pending">Pending</option>
+          <option value="disetujui">Disetujui</option>
+          <option value="ditolak">Ditolak</option>
         </select>
       </div>
       <BulkActionBar :selected-count="selectedCount" @clear="clearSelection">
@@ -97,10 +83,8 @@
             <tr>
               <th class="px-4 py-4 text-label-md text-on-surface-variant w-10"><input type="checkbox" :checked="allSelected" @change="toggleAll" class="w-4 h-4 rounded border-outline-variant text-primary focus:ring-primary" /></th>
               <th class="px-4 py-3 text-label-sm text-on-surface-variant">Guru</th>
-              <th class="px-4 py-3 text-label-sm text-on-surface-variant">Jenis Izin</th>
-              <th class="px-4 py-3 text-label-sm text-on-surface-variant">Tanggal Mulai</th>
-              <th class="px-4 py-3 text-label-sm text-on-surface-variant">Tanggal Selesai</th>
-              <th class="px-4 py-3 text-label-sm text-on-surface-variant">Keterangan</th>
+              <th class="px-4 py-3 text-label-sm text-on-surface-variant">Alasan</th>
+              <th class="px-4 py-3 text-label-sm text-on-surface-variant">Tanggal</th>
               <th class="px-4 py-3 text-label-sm text-on-surface-variant">Status</th>
               <th class="px-4 py-3 text-label-sm text-on-surface-variant">Aksi</th>
             </tr>
@@ -110,21 +94,17 @@
               <td class="px-4 py-4"><input type="checkbox" :checked="isSelected(item.id)" @change="toggleOne(item.id)" class="w-4 h-4 rounded border-outline-variant text-primary focus:ring-primary" /></td>
               <td class="px-4 py-3">
                 <div class="flex items-center gap-3">
-                  <div class="w-8 h-8 rounded-full bg-secondary-fixed flex items-center justify-center text-secondary text-label-sm font-bold">{{ item.nama.charAt(0) }}</div>
+                  <div class="w-8 h-8 rounded-full bg-secondary-fixed flex items-center justify-center text-secondary text-label-sm font-bold">{{ (item.nama || '?').charAt(0) }}</div>
                   <span class="text-label-md font-medium">{{ item.nama }}</span>
                 </div>
               </td>
-              <td class="px-4 py-3">
-                <span class="px-2 py-1 text-[10px] font-bold rounded-full" :class="jenisClass(item.jenis)">{{ item.jenis }}</span>
-              </td>
-              <td class="px-4 py-3 text-label-sm">{{ item.tglMulai ? new Date(item.tglMulai).toLocaleDateString('id-ID') : '-' }}</td>
-              <td class="px-4 py-3 text-label-sm">{{ item.tglSelesai ? new Date(item.tglSelesai).toLocaleDateString('id-ID') : '-' }}</td>
-              <td class="px-4 py-3 text-label-sm text-on-surface-variant max-w-[150px] truncate">{{ item.keterangan || '-' }}</td>
+              <td class="px-4 py-3 text-label-sm max-w-[200px] truncate">{{ item.alasan || '-' }}</td>
+              <td class="px-4 py-3 text-label-sm">{{ item.tanggal ? new Date(item.tanggal + 'T00:00:00').toLocaleDateString('id-ID') : '-' }}</td>
               <td class="px-4 py-3">
                 <span :class="['px-3 py-1 text-[11px] font-bold rounded-full', statusClass(item.status)]">{{ item.status }}</span>
               </td>
               <td class="px-4 py-3">
-                <div v-if="item.status === 'Pending'" class="flex items-center gap-2">
+                <div v-if="item.status === 'pending'" class="flex items-center gap-2">
                   <button class="text-green-600 text-label-sm hover:underline flex items-center gap-0.5" @click="approve(item)"><span class="material-symbols-outlined text-sm">check</span> Setujui</button>
                   <button class="text-error text-label-sm hover:underline flex items-center gap-0.5" @click="reject(item)"><span class="material-symbols-outlined text-sm">close</span> Tolak</button>
                 </div>
@@ -148,34 +128,19 @@
           </div>
           <form @submit.prevent="saveItem" novalidate class="space-y-4">
             <div class="space-y-1">
-              <label class="text-label-md text-on-surface-variant">Nama Guru</label>
-              <select v-model="form.guruId" required class="w-full bg-surface-container-low border border-outline-variant/30 rounded-lg px-4 py-3 text-body-md focus:ring-2 focus:ring-primary outline-none" @change="onGuruChange">
+              <label class="text-label-md text-on-surface-variant">Guru</label>
+              <select v-model="form.uid" required class="w-full bg-surface-container-low border border-outline-variant/30 rounded-lg px-4 py-3 text-body-md focus:ring-2 focus:ring-primary outline-none" @change="onGuruChange">
                 <option value="" disabled>Pilih guru...</option>
-                <option v-for="g in teachers" :key="g.id" :value="g.id">{{ g.name }}</option>
+                <option v-for="g in teachers" :key="g.id" :value="'guru_' + g.id">{{ g.name }}</option>
               </select>
             </div>
             <div class="space-y-1">
-              <label class="text-label-md text-on-surface-variant">Jenis Izin</label>
-              <select v-model="form.jenis" required class="w-full bg-surface-container-low border border-outline-variant/30 rounded-lg px-4 py-3 text-body-md focus:ring-2 focus:ring-primary outline-none">
-                <option value="Izin Sakit">Izin Sakit</option>
-                <option value="Izin Dinas">Izin Dinas</option>
-                <option value="Izin Khusus">Izin Khusus</option>
-                <option value="Cuti">Cuti</option>
-              </select>
-            </div>
-            <div class="grid grid-cols-2 gap-4">
-              <div class="space-y-1">
-                <label class="text-label-md text-on-surface-variant">Tanggal Mulai</label>
-                <input v-model="form.tglMulai" type="date" required class="w-full bg-surface-container-low border border-outline-variant/30 rounded-lg px-4 py-3 text-body-md focus:ring-2 focus:ring-primary outline-none" />
-              </div>
-              <div class="space-y-1">
-                <label class="text-label-md text-on-surface-variant">Tanggal Selesai</label>
-                <input v-model="form.tglSelesai" type="date" required class="w-full bg-surface-container-low border border-outline-variant/30 rounded-lg px-4 py-3 text-body-md focus:ring-2 focus:ring-primary outline-none" />
-              </div>
+              <label class="text-label-md text-on-surface-variant">Tanggal</label>
+              <input v-model="form.tanggal" type="date" required class="w-full bg-surface-container-low border border-outline-variant/30 rounded-lg px-4 py-3 text-body-md focus:ring-2 focus:ring-primary outline-none" />
             </div>
             <div class="space-y-1">
-              <label class="text-label-md text-on-surface-variant">Keterangan</label>
-              <textarea v-model="form.keterangan" rows="3" required class="w-full bg-surface-container-low border border-outline-variant/30 rounded-lg px-4 py-3 text-body-md focus:ring-2 focus:ring-primary outline-none resize-none" placeholder="Alasan izin..."></textarea>
+              <label class="text-label-md text-on-surface-variant">Alasan</label>
+              <textarea v-model="form.alasan" rows="3" required class="w-full bg-surface-container-low border border-outline-variant/30 rounded-lg px-4 py-3 text-body-md focus:ring-2 focus:ring-primary outline-none resize-none" placeholder="Alasan izin..."></textarea>
             </div>
             <button type="submit" :disabled="saving" class="w-full bg-primary text-on-primary py-3.5 rounded-xl font-bold text-body-md hover:brightness-110 active:scale-[0.98] transition-all flex items-center justify-center gap-2 disabled:opacity-60">
               <span v-if="saving" class="material-symbols-outlined animate-spin text-sm">refresh</span>
@@ -195,6 +160,7 @@ definePageMeta({ layout: 'super-admin', requiredRole: 'super_admin' })
 
 const { getIdToken } = useAuth()
 
+const route = useRoute()
 const items = ref<any[]>([])
 const teachers = ref<any[]>([])
 const loading = ref(true)
@@ -202,22 +168,20 @@ const saving = ref(false)
 const showModal = ref(false)
 const searchQuery = ref('')
 const filterStatus = ref('')
-const filterJenis = ref('')
+const filterUid = computed(() => (route.query.uid as string) || '')
 
 const form = reactive({
-  guruId: '',
+  uid: '',
   nama: '',
-  jenis: 'Izin Sakit',
-  tglMulai: '',
-  tglSelesai: '',
-  keterangan: '',
+  alasan: '',
+  tanggal: '',
 })
 
 const filteredItems = computed(() => {
   const q = searchQuery.value.toLowerCase().trim()
   return items.value.filter(i => {
     if (filterStatus.value && i.status !== filterStatus.value) return false
-    if (filterJenis.value && i.jenis !== filterJenis.value) return false
+    if (filterUid.value && i.uid !== filterUid.value) return false
     if (q && !i.nama.toLowerCase().includes(q)) return false
     return true
   })
@@ -227,9 +191,9 @@ const { selected, allSelected, toggleAll, toggleOne, isSelected, clearSelection,
 
 const stats = computed(() => {
   const total = items.value.length
-  const pending = items.value.filter(i => i.status === 'Pending').length
-  const disetujui = items.value.filter(i => i.status === 'Disetujui').length
-  const ditolak = items.value.filter(i => i.status === 'Ditolak').length
+  const pending = items.value.filter(i => i.status === 'pending').length
+  const disetujui = items.value.filter(i => i.status === 'disetujui').length
+  const ditolak = items.value.filter(i => i.status === 'ditolak').length
   return { total, pending, disetujui, ditolak }
 })
 
@@ -240,9 +204,9 @@ const chartData = computed(() => {
     const d = new Date(i.createdAt)
     const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
     if (!byMonth[key]) byMonth[key] = { pending: 0, disetujui: 0, ditolak: 0 }
-    if (i.status === 'Pending') byMonth[key].pending++
-    else if (i.status === 'Disetujui') byMonth[key].disetujui++
-    else if (i.status === 'Ditolak') byMonth[key].ditolak++
+    if (i.status === 'pending') byMonth[key].pending++
+    else if (i.status === 'disetujui') byMonth[key].disetujui++
+    else if (i.status === 'ditolak') byMonth[key].ditolak++
   })
   const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des']
   return Object.entries(byMonth).sort().map(([key, val]) => {
@@ -257,41 +221,30 @@ const chartData = computed(() => {
   })
 })
 
-function jenisClass(jenis: string) {
-  const map: Record<string, string> = {
-    'Izin Sakit': 'bg-purple-100 text-purple-700',
-    'Izin Dinas': 'bg-blue-100 text-blue-700',
-    'Izin Khusus': 'bg-orange-100 text-orange-700',
-    Cuti: 'bg-teal-100 text-teal-700',
-  }
-  return map[jenis] || 'bg-surface-container text-on-surface'
-}
-
 function statusClass(status: string) {
-  if (status === 'Pending') return 'bg-amber-100 text-amber-700'
-  if (status === 'Disetujui') return 'bg-green-100 text-green-700'
-  return 'bg-red-100 text-red-700'
+  if (status === 'pending') return 'bg-amber-100 text-amber-700'
+  if (status === 'disetujui') return 'bg-green-100 text-green-700'
+  if (status === 'ditolak') return 'bg-red-100 text-red-700'
+  return 'bg-surface-container text-on-surface-variant'
 }
 
 function onGuruChange() {
-  const g = teachers.value.find(t => t.id === form.guruId)
+  const g = teachers.value.find(t => form.uid === 'guru_' + t.id)
   form.nama = g?.name || ''
 }
 
 function openAddModal() {
-  form.guruId = ''
+  form.uid = ''
   form.nama = ''
-  form.jenis = 'Izin Sakit'
-  form.tglMulai = ''
-  form.tglSelesai = ''
-  form.keterangan = ''
+  form.alasan = ''
+  form.tanggal = ''
   showModal.value = true
 }
 
 async function saveItem() {
   saving.value = true
   try {
-    await $fetch('/api/guru-izin', { method: 'POST', body: { ...form } })
+    await $fetch('/api/guru-izin', { method: 'POST', body: { uid: form.uid, nama: form.nama, alasan: form.alasan, tanggal: form.tanggal } })
     showModal.value = false
     await fetchData()
   } finally {
@@ -300,12 +253,12 @@ async function saveItem() {
 }
 
 async function approve(item: any) {
-  await $fetch(`/api/guru-izin/${item.id}`, { method: 'PATCH', body: { status: 'Disetujui' } })
+  await $fetch(`/api/guru-izin/${item.id}`, { method: 'PATCH', body: { status: 'disetujui' } })
   await fetchData()
 }
 
 async function reject(item: any) {
-  await $fetch(`/api/guru-izin/${item.id}`, { method: 'PATCH', body: { status: 'Ditolak' } })
+  await $fetch(`/api/guru-izin/${item.id}`, { method: 'PATCH', body: { status: 'ditolak' } })
   await fetchData()
 }
 
