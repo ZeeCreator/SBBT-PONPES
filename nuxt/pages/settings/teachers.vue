@@ -86,6 +86,7 @@
               <td class="px-4 py-3">
                 <div class="flex items-center gap-2">
                   <button class="text-primary text-label-sm hover:underline" @click="openEditModal(teacher)">Edit</button>
+                  <button class="text-secondary text-label-sm hover:underline" @click="generateMagicLink(teacher)">Link</button>
                   <button class="text-error text-label-sm hover:underline" @click="confirmDelete(teacher)">Hapus</button>
                 </div>
               </td>
@@ -157,6 +158,39 @@
       </div>
     </Teleport>
 
+    <!-- Magic Link Modal -->
+    <Teleport to="body">
+      <div v-if="showMagicLink" class="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4" @click.self="showMagicLink = false">
+        <div class="bg-surface rounded-2xl p-8 w-full max-w-lg shadow-2xl text-center">
+          <div class="w-16 h-16 bg-primary-fixed rounded-full flex items-center justify-center mx-auto mb-4">
+            <span class="material-symbols-outlined text-primary text-3xl">link</span>
+          </div>
+          <h3 class="font-display text-title-lg text-primary mb-1">Magic Link</h3>
+          <p class="text-label-md text-on-surface-variant mb-2">
+            Link untuk <strong>{{ magicLinkTarget?.name }}</strong>
+          </p>
+          <p class="text-label-xs text-on-surface-variant mb-4">Berlaku hingga {{ magicLinkExpiry }}</p>
+
+          <div class="bg-surface-container-low rounded-xl p-4 mb-4 text-left">
+            <label class="text-label-xs text-on-surface-variant block mb-1">Link WhatsApp</label>
+            <div class="flex gap-2">
+              <input :value="magicLinkUrl" type="text" readonly class="flex-1 bg-surface border border-outline-variant/30 rounded-lg px-3 py-2.5 text-label-sm focus:outline-none select-all" @click="$event.target.select()" />
+              <button class="bg-primary text-on-primary px-3 py-2.5 rounded-lg text-label-sm hover:brightness-110 transition-all" @click="copyMagicLink">
+                <span class="material-symbols-outlined text-sm">{{ copied ? 'check' : 'content_copy' }}</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="flex gap-3">
+            <button class="flex-1 bg-[#25D366] text-white py-3 rounded-xl text-label-md font-bold hover:brightness-110 transition-all flex items-center justify-center gap-2" @click="sendWhatsApp">
+              <span class="material-symbols-outlined text-sm">send</span> Kirim WA
+            </button>
+            <button class="flex-1 bg-surface-container-high text-on-surface py-3 rounded-xl text-label-md" @click="showMagicLink = false">Tutup</button>
+          </div>
+        </div>
+      </div>
+    </Teleport>
+
     <!-- Delete Confirmation -->
     <Teleport to="body">
       <div v-if="showDelete" class="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4" @click.self="showDelete = false">
@@ -204,6 +238,13 @@ const form = reactive({
   status: 'active',
 })
 const subjectsInput = ref('')
+
+const showMagicLink = ref(false)
+const magicLinkTarget = ref<any>(null)
+const magicLinkUrl = ref('')
+const magicLinkExpiry = ref('')
+const generatingLink = ref(false)
+const copied = ref(false)
 
 const filteredTeachers = computed(() => {
   const q = searchQuery.value.toLowerCase().trim()
@@ -262,6 +303,41 @@ function openEditModal(teacher: any) {
   form.status = teacher.status || 'active'
   subjectsInput.value = (teacher.subjects || []).join(', ')
   showModal.value = true
+}
+
+async function generateMagicLink(teacher: any) {
+  generatingLink.value = true
+  magicLinkTarget.value = teacher
+  try {
+    const res: any = await $fetch('/api/magic-link/generate', {
+      method: 'POST',
+      body: {
+        uid: `guru_${teacher.id}`,
+        role: 'ustadz',
+        nama: teacher.name,
+      },
+    })
+    magicLinkUrl.value = `${window.location.origin}/magic-link/${res.token}`
+    magicLinkExpiry.value = new Date(res.expiresAt).toLocaleString('id-ID')
+    showMagicLink.value = true
+  } catch (e: any) {
+    alert('Gagal generate link: ' + (e.data?.statusMessage || e.message))
+  } finally {
+    generatingLink.value = false
+  }
+}
+
+function copyMagicLink() {
+  navigator.clipboard.writeText(magicLinkUrl.value)
+  copied.value = true
+  setTimeout(() => { copied.value = false }, 2000)
+}
+
+function sendWhatsApp() {
+  const text = encodeURIComponent(
+    `Assalamualaikum, berikut link login SIM PPT untuk ${magicLinkTarget.value.name}:\n\n${magicLinkUrl.value}\n\nLink berlaku 1 jam.`
+  )
+  window.open(`https://wa.me/?text=${text}`, '_blank')
 }
 
 async function saveTeacher() {
