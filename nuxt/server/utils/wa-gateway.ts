@@ -347,7 +347,7 @@ export async function getWaSettings(): Promise<WaSettings> {
   if (snap.exists()) return snap.val() as WaSettings
   return {
     provider: 'zerogateway',
-    apiKey: '',
+    apiKey: 'owa_k1_de9040d14c74431591625d42f899f26d062fddbd7f3077c3abecf1f270465e3b',
     endpointUrl: '',
     webhookSecret: '',
     isActive: false,
