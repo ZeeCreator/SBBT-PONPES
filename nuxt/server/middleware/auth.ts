@@ -1,7 +1,7 @@
 import { getAuth } from 'firebase-admin/auth'
 import { verifySessionToken } from '../utils/session'
 
-const PUBLIC_ROUTES = ['/api/health', '/api/uptime/', '/api/auth/login', '/api/auth/nis-login']
+const PUBLIC_ROUTES = ['/api/health', '/api/uptime/', '/api/auth/login', '/api/auth/nis-login', '/api/magic-link/']
 
 export default defineEventHandler(async (event) => {
   const path = event.path || event.node?.req?.url || ''

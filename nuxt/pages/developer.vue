@@ -228,6 +228,32 @@
       </Teleport>
     </div>
 
+    <!-- ── Magic Link ──────────────────────────────────────────── -->
+    <div class="glass-card rounded-2xl p-stack-md shadow-sm mb-stack-lg">
+      <div class="flex items-center justify-between mb-4">
+        <h4 class="font-display text-title-lg text-primary">Magic Link</h4>
+      </div>
+      <p class="text-label-md text-on-surface-variant mb-4">Konfigurasi URL download aplikasi untuk fallback saat user membuka magic link dari WhatsApp.</p>
+      <div class="space-y-3">
+        <div>
+          <label class="text-label-sm font-medium text-on-surface-variant block mb-1">Download URL</label>
+          <input v-model="magicLinkUrl" type="url" placeholder="https://play.google.com/store/apps/details?id=..." class="w-full px-4 py-2.5 bg-surface-container-low border border-outline-variant rounded-xl text-label-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all" />
+        </div>
+        <div class="flex items-center gap-3">
+          <button class="flex items-center gap-1 px-4 py-2 bg-primary text-on-primary rounded-xl text-label-md hover:brightness-110 active:scale-95 transition-all" @click="saveMagicLinkConfig">
+            <span class="material-symbols-outlined text-sm">save</span> Simpan
+          </button>
+          <span v-if="magicLinkMessage" class="text-label-sm" :class="magicLinkMessage.includes('✅') ? 'text-green-600' : 'text-red-600'">{{ magicLinkMessage }}</span>
+        </div>
+      </div>
+      <div class="mt-6 p-4 bg-surface-container-low rounded-xl">
+        <p class="text-label-sm font-medium text-on-surface-variant mb-2">Preview Link</p>
+        <code class="text-label-sm text-primary break-all">{{ origin }}/magic-link/{token}</code>
+        <p class="text-label-xs text-on-surface-variant mt-1">Gunakan link ini di pesan WhatsApp. Jika app terinstal, akan otomatis login. Jika tidak, redirect ke download URL.</p>
+      </div>
+    </div>
+
+    <!-- ── Activity Logs Preview ──────────────────────────────────── -->
     <div class="glass-card rounded-2xl p-stack-md shadow-sm">
       <div class="flex items-center justify-between mb-4">
         <h4 class="font-display text-title-lg text-primary">Activity Logs Preview</h4>
@@ -279,6 +305,40 @@ const uptimeMessage = ref('')
 
 const systemInfo = ref<Record<string, string>>({})
 const logs = ref<any[]>([])
+
+// ── Magic Link ───────────────────────────────────────────
+const magicLinkUrl = ref('')
+const magicLinkMessage = ref('')
+const origin = ref('')
+
+async function fetchMagicLinkConfig() {
+  try {
+    const token = await getIdToken()
+    const res: any = await $fetch('/api/magic-link/config', { headers: { Authorization: `Bearer ${token}` } })
+    magicLinkUrl.value = res.downloadUrl || ''
+    origin.value = window.location.origin
+  } catch {}
+}
+
+async function saveMagicLinkConfig() {
+  if (!magicLinkUrl.value.trim()) {
+    magicLinkMessage.value = '❌ URL download tidak boleh kosong'
+    setTimeout(() => { magicLinkMessage.value = '' }, 5000)
+    return
+  }
+  try {
+    const token = await getIdToken()
+    await $fetch('/api/magic-link/config', {
+      method: 'PUT',
+      headers: { Authorization: `Bearer ${token}` },
+      body: { downloadUrl: magicLinkUrl.value.trim() },
+    })
+    magicLinkMessage.value = '✅ URL download berhasil disimpan'
+  } catch (e: any) {
+    magicLinkMessage.value = `❌ Gagal: ${e.data?.statusMessage || e.message}`
+  }
+  setTimeout(() => { magicLinkMessage.value = '' }, 5000)
+}
 
 // ── Backup & Restore ─────────────────────────────────────
 const backups = ref<any[]>([])
@@ -490,5 +550,6 @@ onMounted(() => {
   fetchUptimeLogs()
   fetchLogs()
   fetchBackups()
+  fetchMagicLinkConfig()
 })
 </script>
