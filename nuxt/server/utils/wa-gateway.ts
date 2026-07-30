@@ -303,29 +303,33 @@ defineProvider({
       }
 
       const to = phone.startsWith('62') ? phone : phone.startsWith('+62') ? phone : `62${phone.replace(/^0/, '')}`
+      const chatId = `${to}@c.us`
 
       if (mediaUrl) {
         const isImage = mediaType?.startsWith('image/')
         const isVideo = mediaType?.startsWith('video/')
         const endpoint = isImage ? 'send-image' : isVideo ? 'send-video' : 'send-document'
-        const body: Record<string, any> = { chatId: `${to}@c.us`, url: mediaUrl }
+        const url = `${gatewayBase}/sessions/${sessionId}/messages/${endpoint}`
+        const body: Record<string, any> = { chatId, url: mediaUrl }
         if (isImage || isVideo) body.caption = message
         else body.filename = message
-        const res = await $fetch<{ success?: boolean; message?: string; data?: { id?: string } }>(
-          `${gatewayBase}/sessions/${sessionId}/messages/${endpoint}`,
-          { method: 'POST', headers, body }
-        )
+        console.log('[ZEROGATEWAY] POST media:', { url, chatId })
+        const res = await $fetch<{ success?: boolean; message?: string; data?: { id?: string } }>(url, { method: 'POST', headers, body })
+        console.log('[ZEROGATEWAY] media response:', JSON.stringify(res))
         if (res.success && res.data?.id) return { success: true, messageId: res.data.id }
         return { success: false, error: res.message || 'Gagal mengirim media via Zero Gateway' }
       }
 
-      const res = await $fetch<{ success?: boolean; message?: string; data?: { id?: string } }>(
-        `${gatewayBase}/sessions/${sessionId}/messages/send-text`,
-        { method: 'POST', headers, body: { chatId: `${to}@c.us`, text: message } }
-      )
-      if (res.success && res.data?.id) return { success: true, messageId: res.data.id }
-      return { success: false, error: res.message || 'Gagal mengirim via Zero Gateway' }
+      const url = `${gatewayBase}/sessions/${sessionId}/messages/send-text`
+      const body = { chatId, text: message }
+      console.log('[ZEROGATEWAY] POST text:', { url, chatId, textPreview: message.substring(0, 50), apiKeyPrefix: apiKey.substring(0, 12) + '...' })
+      const res = await $fetch<{ messageId?: string; id?: string; error?: string; message?: string }>(url, { method: 'POST', headers, body })
+      console.log('[ZEROGATEWAY] text response:', JSON.stringify(res))
+      const msgId = res.messageId || res.id
+      if (msgId) return { success: true, messageId: msgId }
+      return { success: false, error: res.error || res.message || 'Gagal mengirim via Zero Gateway' }
     } catch (e: any) {
+      console.log('[ZEROGATEWAY] error:', { message: e.message, data: e.data, status: e.statusCode || e.status })
       return { success: false, error: e.message || 'Gagal mengirim via Zero Gateway' }
     }
   },
@@ -365,7 +369,8 @@ export async function saveWaSettings(data: Partial<WaSettings>): Promise<void> {
 }
 
 function getEffectiveApiKey(settings: WaSettings): string {
-  return process.env.WA_GATEWAY_API_KEY || settings.apiKey || ''
+  const config = useRuntimeConfig()
+  return config.openwaApiKey || process.env.WA_GATEWAY_API_KEY || settings.apiKey || ''
 }
 
 export async function sendWaMessage(
@@ -373,8 +378,11 @@ export async function sendWaMessage(
   message: string,
   options?: { delay?: number; mediaUrl?: string; mediaType?: string }
 ): Promise<SendResult> {
+  const config = useRuntimeConfig()
   const settings = await getWaSettings()
-  if (!settings.isActive) return { success: false, error: 'WA Gateway tidak aktif' }
+
+  const isActive = config.openwaApiKey ? true : settings.isActive
+  if (!isActive) return { success: false, error: 'WA Gateway tidak aktif' }
 
   const apiKey = getEffectiveApiKey(settings)
   if (!apiKey) return { success: false, error: 'API Key belum dikonfigurasi' }
@@ -385,14 +393,27 @@ export async function sendWaMessage(
   const provider = getProvider(settings.provider)
   if (!provider) return { success: false, error: `Provider "${settings.provider}" tidak dikenali` }
 
+  const finalBaseUrl = config.openwaBaseUrl || settings.baseUrl
+  const finalSessionId = config.openwaSessionId || settings.sessionId
+
+  console.log('[WA-GATEWAY] sendWaMessage:', {
+    provider: settings.provider,
+    apiKeyPrefix: apiKey.substring(0, 12) + '...',
+    apiKeySource: config.openwaApiKey ? 'env (NUXT_OPENWA_API_KEY)' : process.env.WA_GATEWAY_API_KEY ? 'env (WA_GATEWAY_API_KEY)' : 'firebase settings',
+    baseUrl: finalBaseUrl,
+    sessionId: finalSessionId,
+    phone: phoneNormalized,
+    messagePreview: message.substring(0, 50),
+  })
+
   return provider.send({
     apiKey,
     phone: phoneNormalized,
     message,
     senderName: settings.senderName,
-    baseUrl: settings.baseUrl,
+    baseUrl: finalBaseUrl,
     deviceId: settings.deviceId,
-    sessionId: settings.sessionId,
+    sessionId: finalSessionId,
     mediaUrl: options?.mediaUrl,
     mediaType: options?.mediaType,
   })

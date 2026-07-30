@@ -47,6 +47,13 @@ export function useWaGateway() {
     })
   }
 
+  async function sendText(chatId: string, text: string) {
+    return fetchApi('/api/whatsapp/send-text', {
+      method: 'POST',
+      body: JSON.stringify({ chatId, text }),
+    })
+  }
+
   async function sendBroadcast(recipients: { phone: string; message: string; mediaUrl?: string; mediaType?: string }[], delayMs?: number) {
     return fetchApi('/api/wa-gateway/broadcast', {
       method: 'POST',
@@ -118,6 +125,7 @@ export function useWaGateway() {
     updateSettings,
     getProviders,
     sendMessage,
+    sendText,
     sendBroadcast,
     getContacts,
     getTemplates,

@@ -17,6 +17,9 @@ export default defineNuxtConfig({
     geminiApiKey: '',
     openrouterApiKey: '',
     ocrSpaceApiKey: '',
+    openwaApiKey: '',
+    openwaBaseUrl: 'https://zero-gateway.zerowebsite.eu.org',
+    openwaSessionId: '',
     public: {
       firebaseApiKey: '',
       firebaseAuthDomain: '',
