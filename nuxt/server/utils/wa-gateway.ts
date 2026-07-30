@@ -335,6 +335,48 @@ defineProvider({
   },
 })
 
+// ── GOWA (go-whatsapp-web-multidevice) Provider ──
+
+defineProvider({
+  id: 'gowa',
+  label: 'GOWA (Go WhatsApp Multi-Device)',
+  description: 'Go WhatsApp Web Multi-Device API — support multi-account, webhook, dan MCP',
+  docsUrl: 'https://github.com/aldinokemal/go-whatsapp-web-multidevice',
+  configFields: [
+    { key: 'baseUrl', label: 'Base URL', type: 'url', required: true, placeholder: 'https://zero-gateway.zerowebsite.eu.org', helpText: 'URL server GOWA (tanpa /api)' },
+    { key: 'apiKey', label: 'API Key', type: 'password', required: true, placeholder: 'owa_k1_...', helpText: 'API key dari dashboard' },
+    { key: 'deviceId', label: 'Device ID', type: 'text', required: true, placeholder: '4f17b9bf-6540-4cd7-ad04-c2614489e88b', helpText: 'ID perangkat dari GET /devices' },
+  ],
+  async send({ apiKey, phone, message, mediaUrl, mediaType, baseUrl, deviceId }): Promise<SendResult> {
+    try {
+      const gatewayBase = (baseUrl || '').replace(/\/+$/, '')
+      if (!gatewayBase) return { success: false, error: 'Base URL belum dikonfigurasi' }
+      if (!deviceId) return { success: false, error: 'Device ID belum dikonfigurasi' }
+
+      const headers: Record<string, string> = {
+        'X-API-Key': apiKey,
+        'X-Device-Id': deviceId,
+        'Content-Type': 'application/json',
+      }
+
+      const to = phone.startsWith('62') ? phone : phone.startsWith('+62') ? phone : `62${phone.replace(/^0/, '')}`
+
+      const url = `${gatewayBase}/send/message`
+      const body: Record<string, any> = { phone: to, message }
+      console.log('[GOWA] POST:', { url, phone: to, messagePreview: message.substring(0, 50) })
+      const res = await $fetch<{ code?: string; results?: { message_id?: string; status?: string }; message?: string }>(url, { method: 'POST', headers, body })
+      console.log('[GOWA] response:', JSON.stringify(res))
+      if (res.code === 'SUCCESS' && res.results?.message_id) {
+        return { success: true, messageId: res.results.message_id }
+      }
+      return { success: false, error: res.message || 'Gagal mengirim via GOWA' }
+    } catch (e: any) {
+      console.log('[GOWA] error:', { message: e.message, data: e.data, status: e.statusCode || e.status })
+      return { success: false, error: e.message || 'Gagal mengirim via GOWA' }
+    }
+  },
+})
+
 // ── Core Functions ──
 
 function normalizePhone(phone: string): string {
@@ -390,18 +432,22 @@ export async function sendWaMessage(
   const phoneNormalized = normalizePhone(phone)
   if (phoneNormalized.length < 10) return { success: false, error: 'Nomor telepon tidak valid' }
 
-  const provider = getProvider(settings.provider)
-  if (!provider) return { success: false, error: `Provider "${settings.provider}" tidak dikenali` }
+  const finalProvider = config.gowaDeviceId ? 'gowa' : settings.provider
+  const provider = getProvider(finalProvider)
+  if (!provider) return { success: false, error: `Provider "${finalProvider}" tidak dikenali` }
 
   const finalBaseUrl = config.openwaBaseUrl || settings.baseUrl
   const finalSessionId = config.openwaSessionId || settings.sessionId
+  const finalDeviceId = config.gowaDeviceId || settings.deviceId
 
   console.log('[WA-GATEWAY] sendWaMessage:', {
-    provider: settings.provider,
+    provider: finalProvider,
+    providerSource: config.gowaDeviceId ? 'env (NUXT_GOWA_DEVICE_ID)' : 'firebase settings',
     apiKeyPrefix: apiKey.substring(0, 12) + '...',
     apiKeySource: config.openwaApiKey ? 'env (NUXT_OPENWA_API_KEY)' : process.env.WA_GATEWAY_API_KEY ? 'env (WA_GATEWAY_API_KEY)' : 'firebase settings',
     baseUrl: finalBaseUrl,
     sessionId: finalSessionId,
+    deviceId: finalDeviceId,
     phone: phoneNormalized,
     messagePreview: message.substring(0, 50),
   })
@@ -412,7 +458,7 @@ export async function sendWaMessage(
     message,
     senderName: settings.senderName,
     baseUrl: finalBaseUrl,
-    deviceId: settings.deviceId,
+    deviceId: finalDeviceId,
     sessionId: finalSessionId,
     mediaUrl: options?.mediaUrl,
     mediaType: options?.mediaType,

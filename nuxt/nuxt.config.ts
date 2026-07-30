@@ -20,6 +20,7 @@ export default defineNuxtConfig({
     openwaApiKey: '',
     openwaBaseUrl: 'https://zero-gateway.zerowebsite.eu.org',
     openwaSessionId: '',
+    gowaDeviceId: '',
     public: {
       firebaseApiKey: '',
       firebaseAuthDomain: '',
