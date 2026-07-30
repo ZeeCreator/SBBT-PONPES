@@ -2,11 +2,17 @@ import { handleBotMessage, getBotSettings } from '~/server/utils/wa-bot'
 import { sendWaMessage } from '~/server/utils/wa-gateway'
 
 function extractPhone(body: any): string | null {
-  return body.target || body.from || body.phone || body.sender_phone || body.sender || null
+  const p = body.payload?.from || body.payload?.chat_id
+  return p || body.target || body.from || body.phone || body.sender_phone || body.sender || null
 }
 
 function extractMessage(body: any): string | null {
-  return body.message || body.text || body.msg || body.body || null
+  const m = body.payload?.body || body.payload?.text || body.payload?.message
+  return m || body.message || body.text || body.msg || body.body || null
+}
+
+function normalizeRawPhone(phone: string): string {
+  return phone.replace(/[^0-9]/g, '').replace(/^0/, '62')
 }
 
 export default defineEventHandler(async (event) => {
@@ -27,7 +33,7 @@ export default defineEventHandler(async (event) => {
     return { status: 'ok', ignored: 'no phone or message' }
   }
 
-  const cleanPhone = phone.replace(/[^0-9]/g, '')
+  const cleanPhone = normalizeRawPhone(phone)
   console.log('[WEBHOOK] processing:', { phone: cleanPhone, message })
 
   try {
