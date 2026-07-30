@@ -40,6 +40,31 @@
         </div>
         <p v-if="syncResult" class="text-label-sm text-green-700">{{ syncResult }}</p>
 
+        <div class="border-t border-outline-variant/10 pt-4">
+          <p class="text-label-md font-bold mb-2 text-primary">Konfigurasi AI</p>
+          <div class="flex gap-2 mb-3">
+            <button @click="useOpenRouter" type="button"
+              class="px-3 py-1.5 rounded-lg text-label-sm font-bold border border-primary text-primary hover:bg-primary hover:text-on-primary transition-all">OpenRouter</button>
+            <button @click="useApifreellm" type="button"
+              class="px-3 py-1.5 rounded-lg text-label-sm font-bold border border-outline-variant/30 text-on-surface-variant hover:bg-primary hover:text-on-primary hover:border-primary transition-all">apifreellm</button>
+          </div>
+          <div class="mb-2">
+            <label class="text-label-sm text-on-surface-variant block mb-1">API URL</label>
+            <input v-model="settings.aiUrl" type="url" placeholder="https://apifreellm.com/api/v1/chat"
+              class="w-full bg-surface-container-low border border-outline-variant/30 rounded-lg px-3 py-2 text-label-sm focus:ring-2 focus:ring-primary outline-none" />
+          </div>
+          <div class="mb-2">
+            <label class="text-label-sm text-on-surface-variant block mb-1">API Key</label>
+            <input v-model="settings.aiKey" type="password" placeholder="apf_... / sk-or-..."
+              class="w-full bg-surface-container-low border border-outline-variant/30 rounded-lg px-3 py-2 text-label-sm focus:ring-2 focus:ring-primary outline-none" />
+          </div>
+          <div class="mb-2">
+            <label class="text-label-sm text-on-surface-variant block mb-1">Model (wajib untuk OpenRouter/OpenAI)</label>
+            <input v-model="settings.aiModel" type="text" placeholder="google/gemma-4-26b-a4b-it:free"
+              class="w-full bg-surface-container-low border border-outline-variant/30 rounded-lg px-3 py-2 text-label-sm focus:ring-2 focus:ring-primary outline-none" />
+          </div>
+        </div>
+
         <button @click="saveSettings"
           class="w-full bg-primary text-on-primary py-2.5 rounded-xl font-bold text-label-md hover:brightness-110 transition-all">
           Simpan Pengaturan
@@ -86,7 +111,21 @@
 definePageMeta({ layout: 'super-admin', requiredRole: 'super_admin' })
 const { getBotSettings, updateBotSettings, getConversations } = useWaGateway()
 
-const settings = reactive({ enabled: false, autoReply: true, welcomeMessage: '' })
+const settings = reactive({ enabled: false, autoReply: true, welcomeMessage: '', aiUrl: DEFAULT_AI_URL, aiKey: '', aiModel: '' })
+const DEFAULT_AI_URL = 'https://apifreellm.com/api/v1/chat'
+const DEFAULT_OPENROUTER_URL = 'https://openrouter.ai/api/v1'
+const DEFAULT_OPENROUTER_MODEL = 'google/gemma-4-26b-a4b-it:free'
+
+function useOpenRouter() {
+  settings.aiUrl = DEFAULT_OPENROUTER_URL
+  settings.aiModel = DEFAULT_OPENROUTER_MODEL
+}
+
+function useApifreellm() {
+  settings.aiUrl = DEFAULT_AI_URL
+  settings.aiKey = ''
+  settings.aiModel = ''
+}
 const conversations = ref<any[]>([])
 const syncing = ref(false)
 const syncResult = ref('')
@@ -96,6 +135,7 @@ async function load() {
   try {
     const [s, convs] = await Promise.all([getBotSettings(), getConversations()])
     Object.assign(settings, s)
+    if (s.ai) { settings.aiUrl = s.ai.url; settings.aiKey = s.ai.key; settings.aiModel = s.ai.model || '' }
     conversations.value = convs
     webhookUrl.value = window.location.origin + '/api/wa-gateway/webhook'
   } catch (e) {
@@ -111,7 +151,12 @@ function toggleBot() {
 
 async function saveSettings() {
   try {
-    await updateBotSettings({ enabled: settings.enabled, autoReply: settings.autoReply, welcomeMessage: settings.welcomeMessage })
+    await updateBotSettings({
+      enabled: settings.enabled,
+      autoReply: settings.autoReply,
+      welcomeMessage: settings.welcomeMessage,
+      ai: { url: settings.aiUrl, key: settings.aiKey, model: settings.aiModel || undefined },
+    })
     alert('Pengaturan disimpan')
   } catch (e: any) {
     alert('Gagal: ' + e.message)
@@ -131,5 +176,4 @@ async function syncStudents() {
   }
 }
 
-load()
 </script>

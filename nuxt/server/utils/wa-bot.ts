@@ -5,8 +5,15 @@ import { rtdbGetList } from './firebase'
 const QDRANT_URL = 'https://7253ae62-9eb9-464a-85b8-3d9c9bd03bfe.eu-central-1-0.aws.cloud.qdrant.io'
 const QDRANT_API_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhY2Nlc3MiOiJtIiwic3ViamVjdCI6ImFwaS1rZXk6MjY3MDY3NjYtNDkwOC00ZDBkLTk4NTMtMjQ2OGNlZWMzZjM4In0.pJ-8AnVJ0zcQ80EodA8VZ6rU5wQMipZIPLsb81vmSP8'
 const COLLECTION = '7253ae62-9eb9-464a-85b8-3d9c9bd03bfe'
-const AI_URL = 'https://apifreellm.com/api/v1/chat'
-const AI_KEY = 'apf_h6266kocollosiu76f469ryj'
+const DEFAULT_AI_URL = 'https://apifreellm.com/api/v1/chat'
+const DEFAULT_AI_KEY = 'apf_h6266kocollosiu76f469ryj'
+
+async function getAiConfig(): Promise<{ url: string; key: string; model?: string; provider?: string }> {
+  const db = getDatabase()
+  const snap = await db.ref('wa_gateway/bot_settings/ai').once('value')
+  if (snap.exists()) return snap.val()
+  return { url: DEFAULT_AI_URL, key: DEFAULT_AI_KEY, model: '', provider: 'apifreellm' }
+}
 
 // ── Qdrant ──
 
@@ -119,19 +126,70 @@ async function getGradesSummary(studentId: string): Promise<string> {
 
 // ── AI ──
 
-export async function callAI(message: string, context: string): Promise<string> {
-  const prompt = context
-    ? `Kamu adalah asisten pondok pesantren. Gunakan data berikut untuk menjawab:\n\n${context}\n\nPertanyaan: ${message}\n\nJawab dengan ramah dan informatif dalam Bahasa Indonesia. Jika data tidak ditemukan, beritahu user.`
-    : `Kamu adalah asisten pondok pesantren. Jawab pertanyaan user dengan ramah dalam Bahasa Indonesia.\n\nPertanyaan: ${message}`
+function buildDirectReply(message: string, students: any[]): string {
+  if (students.length === 0) {
+    return 'Maaf, tidak ditemukan data santri dengan nama/NIS tersebut. Ketik nama atau NIS untuk mencari.'
+  }
 
-  const res = await $fetch<{ success: boolean; response?: string; error?: string }>(AI_URL, {
-    method: 'POST',
-    headers: { Authorization: `Bearer ${AI_KEY}`, 'Content-Type': 'application/json' },
-    body: { message: prompt },
-  })
+  let reply = `Ditemukan ${students.length} santri:\n\n`
+  for (const s of students) {
+    reply += `• ${s.name} (NIS: ${s.nis})\n  Kelas: ${s.class || '-'}\n  Status: ${s.status || 'Active'}\n`
+  }
+  reply += '\nKetik nama lengkap untuk detail absensi dan nilai.'
+  return reply
+}
 
-  if (res.success && res.response) return res.response
-  throw new Error(res.error || 'AI gagal merespon')
+function buildDetailReply(students: any[], absensi: string, nilai: string): string {
+  const s = students[0]
+  let reply = `Data ${s.name} (NIS: ${s.nis}):\n\n`
+  reply += `Absensi: ${absensi}\n\n`
+  if (nilai && nilai !== 'Belum ada data nilai.') {
+    reply += `Nilai:\n${nilai}`
+  } else {
+    reply += 'Nilai: Belum ada data.'
+  }
+  return reply
+}
+
+export async function callAI(message: string, context: string): Promise<string | null> {
+  try {
+    const ai = await getAiConfig()
+    if (!ai.key || !ai.url) return null
+
+    const prompt = context
+      ? `Kamu adalah asisten pondok pesantren. Gunakan data berikut untuk menjawab:\n\n${context}\n\nPertanyaan: ${message}\n\nJawab dengan ramah dan informatif dalam Bahasa Indonesia. Jika data tidak ditemukan, beritahu user.`
+      : `Kamu adalah asisten pondok pesantren. Jawab pertanyaan user dengan ramah dalam Bahasa Indonesia.\n\nPertanyaan: ${message}`
+
+    const isOpenAI = ai.url.includes('openrouter') || ai.url.includes('openai') || ai.provider === 'openai' || ai.provider === 'openrouter'
+
+    if (isOpenAI) {
+      const url = ai.url.includes('/chat/completions') ? ai.url : `${ai.url.replace(/\/+$/, '')}/chat/completions`
+      const res = await $fetch<{ choices?: { message?: { content?: string } }[]; error?: { message?: string } }>(url, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${ai.key}`, 'Content-Type': 'application/json' },
+        body: { model: ai.model || 'google/gemma-4-26b-a4b-it:free', messages: [{ role: 'user', content: prompt }] },
+        timeout: 20000,
+      })
+      const content = res.choices?.[0]?.message?.content
+      if (content) return content
+      console.error('[AI] OpenAI error:', res.error?.message)
+      return null
+    }
+
+    const res = await $fetch<{ success: boolean; response?: string; error?: string }>(ai.url, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${ai.key}`, 'Content-Type': 'application/json' },
+      body: { message: prompt },
+      timeout: 15000,
+    })
+
+    if (res.success && res.response) return res.response
+    console.error('[AI] API error:', res.error)
+    return null
+  } catch (e: any) {
+    console.error('[AI] request failed:', e.message)
+    return null
+  }
 }
 
 // ── Bot Handler ──
@@ -143,23 +201,26 @@ export async function handleBotMessage(phone: string, message: string): Promise<
   const students = await searchStudentsFromFirebase(message)
 
   if (students.length === 0) {
-    return callAI(message, '')
+    const aiReply = await callAI(message, '')
+    const reply = aiReply || 'Maaf, tidak ditemukan data santri dengan nama/NIS tersebut. Ketik nama atau NIS untuk mencari.'
+    await saveConversation(phone, message, reply)
+    return reply
   }
 
-  let context = ''
-  for (const s of students) {
-    context += `Santri: ${s.name}\nNIS: ${s.nis}\nKelas: ${s.class || '-'}\nStatus: ${s.status || 'Active'}\n`
-
+  if (message.toLowerCase().includes('detail') || students.length === 1) {
+    const s = students[0]
     const absensi = await getAttendanceSummary(s.id, s.name)
-    context += `Absensi: ${absensi}\n`
-
     const nilai = await getGradesSummary(s.id)
-    context += `Nilai:\n${nilai}\n\n`
+    const directReply = buildDetailReply([s], absensi, nilai)
+
+    const context = `Santri: ${s.name}\nNIS: ${s.nis}\nKelas: ${s.class || '-'}\nStatus: ${s.status || 'Active'}\nAbsensi: ${absensi}\nNilai:\n${nilai}`
+    const aiReply = await callAI(message, `Gunakan data berikut untuk menjawab:\n\n${context}`)
+    const reply = aiReply || directReply
+    await saveConversation(phone, message, reply)
+    return reply
   }
 
-  context += 'Gunakan data di atas untuk menjawab pertanyaan user dengan ramah dalam Bahasa Indonesia.'
-
-  const reply = await callAI(message, context)
+  const reply = buildDirectReply(message, students)
   await saveConversation(phone, message, reply)
   return reply
 }
@@ -190,14 +251,19 @@ export async function getConversations(): Promise<any[]> {
   }))
 }
 
-export async function getBotSettings(): Promise<{ enabled: boolean; autoReply: boolean; welcomeMessage: string }> {
+export async function getBotSettings(): Promise<{ enabled: boolean; autoReply: boolean; welcomeMessage: string; ai?: { url: string; key: string } }> {
   const db = getDatabase()
   const snap = await db.ref('wa_gateway/bot_settings').once('value')
   if (snap.exists()) return snap.val()
   return { enabled: false, autoReply: true, welcomeMessage: 'Assalamualaikum, ketik nama santri untuk cek absensi dan program.' }
 }
 
-export async function saveBotSettings(data: { enabled?: boolean; autoReply?: boolean; welcomeMessage?: string; syncStudents?: boolean }): Promise<void> {
+export async function saveBotSettings(data: { enabled?: boolean; autoReply?: boolean; welcomeMessage?: string; syncStudents?: boolean; ai?: { url: string; key: string } }): Promise<void> {
   const db = getDatabase()
-  await db.ref('wa_gateway/bot_settings').update(data)
+  if (data.ai) {
+    const existing = await getBotSettings()
+    await db.ref('wa_gateway/bot_settings').update({ ...existing, ...data, ai: data.ai })
+  } else {
+    await db.ref('wa_gateway/bot_settings').update(data)
+  }
 }
