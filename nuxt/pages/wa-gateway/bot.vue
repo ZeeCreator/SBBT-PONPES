@@ -103,6 +103,8 @@ async function load() {
   }
 }
 
+onMounted(load)
+
 function toggleBot() {
   settings.enabled = !settings.enabled
 }

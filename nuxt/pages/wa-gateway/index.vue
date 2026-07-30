@@ -179,5 +179,5 @@ async function loadData() {
   }
 }
 
-loadData()
+onMounted(loadData)
 </script>
