@@ -424,15 +424,15 @@ export async function sendWaMessage(
   const isActive = config.openwaApiKey ? true : settings.isActive
   if (!isActive) return { success: false, error: 'WA Gateway tidak aktif' }
 
-  const apiKey = getEffectiveApiKey(settings)
-  if (!apiKey) return { success: false, error: 'API Key belum dikonfigurasi' }
-
-  const phoneNormalized = normalizePhone(phone)
-  if (phoneNormalized.length < 10) return { success: false, error: 'Nomor telepon tidak valid' }
-
   const finalProvider = config.gowaDeviceId ? 'gowa' : settings.provider
   const provider = getProvider(finalProvider)
   if (!provider) return { success: false, error: `Provider "${finalProvider}" tidak dikenali` }
+
+  const apiKey = getEffectiveApiKey(settings)
+  if (!apiKey && finalProvider !== 'gowa') return { success: false, error: 'API Key belum dikonfigurasi' }
+
+  const phoneNormalized = normalizePhone(phone)
+  if (phoneNormalized.length < 10) return { success: false, error: 'Nomor telepon tidak valid' }
 
   const finalBaseUrl = config.openwaBaseUrl || settings.baseUrl
   const finalSessionId = config.openwaSessionId || settings.sessionId
