@@ -201,6 +201,14 @@ Templates: `:checked="allSelected" @change="toggleAll"`, `:checked="isSelected(i
 - Applied to 42 pages with "Hapus" button + `bulkDelete()` function
 - Removed "Keuangan" from sidebar (`useRoleMenu.ts`) and TopBar
 
+### 2025-07-30 WA Gateway: Broadcast, Media Upload & Perbaikan
+- **Broadcast page** (`pages/wa-gateway/broadcast.vue`): 6 tipe penerima (manual, walisantri, guru, per kelas, per santri, per guru) + checkbox per kontak + tombol "Tambah N kontak ke penerima" (sebelumnya hanya checkbox tanpa aksi untuk walisantri/guru/kelas)
+- **Media upload**: Upload gambar/video/dokumen via `https://api-cdnzero.vercel.app/api/upload`, preview thumbnail di sidebar, disertakan ke setiap penerima saat kirim
+- **Provider media support**: Fonnte (url param), Flowkirim (image/video/file endpoint), WhatsApp Cloud API (image/video/document), Custom (media_url/media_type)
+- **Server utils** (`server/utils/wa-gateway.ts`): `sendWaMessage` dan `sendWaBulk` kini terima `mediaUrl`/`mediaType`, tipe recipient diperluas
+- **Composable** (`composables/useWaGateway.ts`): tambah `uploadMedia(file)` method
+- Build verified (0 error)
+
 ## Build & Deploy
 
 ```bash

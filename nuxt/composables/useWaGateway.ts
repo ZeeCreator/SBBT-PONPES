@@ -117,6 +117,21 @@ export function useWaGateway() {
     return fetchApi('/api/wa-gateway')
   }
 
+  async function getBotSettings() {
+    return fetchApi('/api/wa-gateway/bot-settings')
+  }
+
+  async function updateBotSettings(data: any) {
+    return fetchApi('/api/wa-gateway/bot-settings', {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    })
+  }
+
+  async function getConversations() {
+    return fetchApi('/api/wa-gateway/conversations')
+  }
+
   return {
     loading,
     error,
@@ -125,7 +140,6 @@ export function useWaGateway() {
     updateSettings,
     getProviders,
     sendMessage,
-    sendText,
     sendBroadcast,
     getContacts,
     getTemplates,
@@ -134,6 +148,8 @@ export function useWaGateway() {
     deleteTemplate,
     getLogs,
     uploadMedia,
-    getSessionInfo,
+    getBotSettings,
+    updateBotSettings,
+    getConversations,
   }
 }

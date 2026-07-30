@@ -9,6 +9,9 @@
         <NuxtLink to="/wa-gateway/broadcast" class="bg-primary text-on-primary px-4 py-2 rounded-lg text-label-md hover:brightness-110 transition-all flex items-center gap-2">
           <span class="material-symbols-outlined text-sm">campaign</span> Broadcast
         </NuxtLink>
+        <NuxtLink to="/wa-gateway/bot" class="bg-primary-container text-on-primary px-4 py-2 rounded-lg text-label-md hover:bg-primary transition-all flex items-center gap-2">
+          <span class="material-symbols-outlined text-sm">smart_toy</span> Bot AI
+        </NuxtLink>
         <NuxtLink to="/wa-gateway/settings" class="bg-primary-container text-on-primary px-4 py-2 rounded-lg text-label-md hover:bg-primary transition-all flex items-center gap-2">
           <span class="material-symbols-outlined text-sm">settings</span> Pengaturan
         </NuxtLink>
