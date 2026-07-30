@@ -189,7 +189,7 @@ export function useAuth() {
   }
 
   async function getIdToken(): Promise<string | null> {
-    if (!auth.currentUser) return null
+    if (!auth || !auth.currentUser) return null
     return auth.currentUser.getIdToken()
   }
 
