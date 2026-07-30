@@ -180,13 +180,11 @@ function buildDirectReply(message: string, students: any[]): string {
 
 function buildDetailReply(students: any[], absensi: string, nilai: string): string {
   const s = students[0]
-  let reply = `Data ${s.name} (NIS: ${s.nis}):\n\n`
-  reply += `Absensi: ${absensi}\n\n`
+  let reply = `Assalamu'alaikum Wr. Wb.\n\nBerikut data Ananda *${s.name}* (NIS: ${s.nis}):\n\n📋 *Kelas*: ${s.class || '-'}\n📌 *Status*: ${s.status || 'Active'}\n\n📊 *Rekap Absensi*\n${absensi}\n\n`
   if (nilai && nilai !== 'Belum ada data nilai.') {
-    reply += `Nilai:\n${nilai}`
-  } else {
-    reply += 'Nilai: Belum ada data.'
+    reply += `📝 *Nilai*\n${nilai}\n`
   }
+  reply += '\nSemoga informasi ini bermanfaat. Jika ada pertanyaan lain, silakan sampaikan.\nJazakumullah khairan. 🙏'
   return reply
 }
 
@@ -269,10 +267,8 @@ export async function handleBotMessage(phone: string, message: string): Promise<
 
   const students = await searchStudentsFromFirebase(message)
 
-  const bs = { systemPrompt: botSettings.systemPrompt }
-
   if (students.length === 0) {
-    const aiReply = await callAI(message, '', bs)
+    const aiReply = await callAI(message, '')
     const reply = aiReply || 'Maaf, tidak ditemukan data santri dengan nama/NIS tersebut. Ketik nama atau NIS untuk mencari.'
     await saveConversation(phone, message, reply)
     return reply
@@ -282,11 +278,7 @@ export async function handleBotMessage(phone: string, message: string): Promise<
     const s = students[0]
     const absensi = await getAttendanceSummary(s.id, s.name)
     const nilai = await getGradesSummary(s.id)
-    const directReply = buildDetailReply([s], absensi, nilai)
-
-    const context = `Santri: ${s.name}\nNIS: ${s.nis}\nKelas: ${s.class || '-'}\nStatus: ${s.status || 'Active'}\nAbsensi: ${absensi}\nNilai:\n${nilai}`
-    const aiReply = await callAI(message, context, bs)
-    const reply = aiReply || directReply
+    const reply = buildDetailReply([s], absensi, nilai)
     await saveConversation(phone, message, reply)
     return reply
   }
