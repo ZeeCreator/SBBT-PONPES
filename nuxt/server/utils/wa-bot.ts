@@ -170,11 +170,11 @@ function buildDirectReply(message: string, students: any[]): string {
     return 'Maaf, tidak ditemukan data santri dengan nama/NIS tersebut. Ketik nama atau NIS untuk mencari.'
   }
 
-  let reply = `Ditemukan ${students.length} santri:\n\n`
+  let reply = `Assalamu'alaikum Wr. Wb.\n\nDitemukan ${students.length} santri dengan nama tersebut:\n\n`
   for (const s of students) {
-    reply += `• ${s.name} (NIS: ${s.nis})\n  Kelas: ${s.class || '-'}\n  Status: ${s.status || 'Active'}\n`
+    reply += `• *${s.name}* (NIS: ${s.nis})\n  Kelas: ${s.class || '-'}\n  Status: ${s.status || 'Active'}\n`
   }
-  reply += '\nKetik nama lengkap untuk detail absensi dan nilai.'
+  reply += '\nKetik nama lengkap untuk melihat detail absensi dan nilai.\nJazakumullah khairan. 🙏'
   return reply
 }
 
@@ -268,13 +268,10 @@ export async function handleBotMessage(phone: string, message: string): Promise<
   const students = await searchStudentsFromFirebase(message)
 
   if (students.length === 0) {
-    const aiReply = await callAI(message, '')
-    const reply = aiReply || 'Maaf, tidak ditemukan data santri dengan nama/NIS tersebut. Ketik nama atau NIS untuk mencari.'
-    await saveConversation(phone, message, reply)
-    return reply
+    return 'Assalamu\'alaikum Wr. Wb.\n\nMaaf, tidak ditemukan data santri dengan nama/NIS tersebut. Silakan ketik nama lengkap atau NIS untuk mencari.\n\nJazakumullah khairan. 🙏'
   }
 
-  if (message.toLowerCase().includes('detail') || students.length === 1) {
+  if (students.length === 1) {
     const s = students[0]
     const absensi = await getAttendanceSummary(s.id, s.name)
     const nilai = await getGradesSummary(s.id)
