@@ -355,6 +355,7 @@ defineProvider({
       const headers: Record<string, string> = {
         'X-Device-Id': deviceId,
         'Content-Type': 'application/json',
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36',
       }
 
       const to = phone.startsWith('62') ? phone : phone.startsWith('+62') ? phone : `62${phone.replace(/^0/, '')}`
@@ -362,7 +363,7 @@ defineProvider({
       const url = `${gatewayBase}/send/message`
       const body: Record<string, any> = { phone: to, message }
       console.log('[GOWA] POST:', { url, phone: to, messagePreview: message.substring(0, 50) })
-      const res = await $fetch<{ code?: string; results?: { message_id?: string; status?: string }; message?: string }>(url, { method: 'POST', headers, body })
+      const res = await $fetch<{ code?: string; results?: { message_id?: string; status?: string }; message?: string }>(url, { method: 'POST', headers, body, retry: 0 })
       console.log('[GOWA] response:', JSON.stringify(res))
       if (res.code === 'SUCCESS' && res.results?.message_id) {
         return { success: true, messageId: res.results.message_id }
