@@ -136,26 +136,30 @@ interface ProviderOption {
 interface FormState {
   provider: string
   apiKey: string
+  baseUrl: string
   endpointUrl: string
   webhookSecret: string
   isActive: boolean
   senderName: string
   dailyLimit: number
   deviceId: string
+  sessionId: string
 }
 
 const providerOptions = ref<ProviderOption[]>([])
 const selectedProvider = computed(() => providerOptions.value.find(p => p.id === form.provider) || null)
 
 const form = reactive<FormState>({
-  provider: 'fonnte',
+  provider: 'gowa',
   apiKey: '',
+  baseUrl: 'https://zero-gateway.zerowebsite.eu.org',
   endpointUrl: '',
   webhookSecret: '',
   isActive: false,
   senderName: 'PONPES SBBT',
   dailyLimit: 500,
   deviceId: '',
+  sessionId: '',
 })
 const saving = ref(false)
 const saved = ref(false)
@@ -170,9 +174,9 @@ function onProviderChange() {
   const p = selectedProvider.value
   if (!p) return
   const definedKeys = p.configFields.map(f => f.key)
-  const defaults: Record<string, string> = { senderName: '', endpointUrl: '', apiKey: '', deviceId: '' }
-  for (const [key, val] of Object.entries(defaults)) {
-    if (!definedKeys.includes(key)) (form as any)[key] = val
+  const allKeys: (keyof FormState)[] = ['apiKey', 'baseUrl', 'endpointUrl', 'deviceId', 'sessionId', 'senderName']
+  for (const key of allKeys) {
+    if (!definedKeys.includes(key)) (form as any)[key] = ''
   }
 }
 
