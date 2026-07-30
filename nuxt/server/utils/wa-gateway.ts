@@ -344,17 +344,15 @@ defineProvider({
   docsUrl: 'https://github.com/aldinokemal/go-whatsapp-web-multidevice',
   configFields: [
     { key: 'baseUrl', label: 'Base URL', type: 'url', required: true, placeholder: 'https://zero-gateway.zerowebsite.eu.org', helpText: 'URL server GOWA (tanpa /api)' },
-    { key: 'apiKey', label: 'API Key', type: 'password', required: true, placeholder: 'owa_k1_...', helpText: 'API key dari dashboard' },
     { key: 'deviceId', label: 'Device ID', type: 'text', required: true, placeholder: '4f17b9bf-6540-4cd7-ad04-c2614489e88b', helpText: 'ID perangkat dari GET /devices' },
   ],
-  async send({ apiKey, phone, message, mediaUrl, mediaType, baseUrl, deviceId }): Promise<SendResult> {
+  async send({ phone, message, mediaUrl, mediaType, baseUrl, deviceId }): Promise<SendResult> {
     try {
       const gatewayBase = (baseUrl || '').replace(/\/+$/, '')
       if (!gatewayBase) return { success: false, error: 'Base URL belum dikonfigurasi' }
       if (!deviceId) return { success: false, error: 'Device ID belum dikonfigurasi' }
 
       const headers: Record<string, string> = {
-        'X-API-Key': apiKey,
         'X-Device-Id': deviceId,
         'Content-Type': 'application/json',
       }
