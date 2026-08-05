@@ -350,13 +350,15 @@ function printAttendance() {
   const dayCols = Array.from({ length: 31 }, (_, i) => i + 1)
   const colNo = 25, colNama = 120, colKelas = 45, dateColWidth = 15
   const tableWidth = colNo + colNama + colKelas + dayCols.length * dateColWidth
+  const hasSavedData = !!editingId.value
   const dataRows = students.value.map((s, idx) => {
     const d = attendanceData.value[s.id] || {}
+    const mark = (dd: number) => (hasSavedData ? (statusLabel[d[String(dd)]] || '') : '')
     return `<tr style="height:18px">
       <td style="padding:1px 2px;border:1px solid #000;text-align:center;font-size:7pt;font-family:'Times New Roman',serif;width:${colNo}px">${idx + 1}</td>
       <td style="padding:1px 2px;border:1px solid #000;font-size:7pt;font-family:'Times New Roman',serif">${s.name}</td>
       <td style="padding:1px 2px;border:1px solid #000;text-align:center;font-size:7pt;font-family:'Times New Roman',serif">${s.class || ''}</td>
-      ${dayCols.map(dd => `<td style="padding:1px 1px;border:1px solid #000;text-align:center;font-size:6pt;font-family:'Times New Roman',serif;width:${dateColWidth}px;height:18px">${statusLabel[d[String(dd)]] || ''}</td>`).join('')}
+      ${dayCols.map(dd => `<td style="padding:1px 1px;border:1px solid #000;text-align:center;font-size:6pt;font-family:'Times New Roman',serif;width:${dateColWidth}px;height:18px">${mark(dd)}</td>`).join('')}
     </tr>`
   }).join('')
   const logoUrl = window.location.origin + '/image/logo.png'
