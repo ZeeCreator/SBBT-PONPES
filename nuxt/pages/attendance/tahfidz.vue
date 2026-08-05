@@ -5,7 +5,7 @@
     <div class="flex items-center justify-between mb-stack-lg flex-wrap gap-4">
       <div>
         <h2 class="font-display text-headline-lg text-primary">Absensi Tahfidz</h2>
-        <p class="text-on-surface-variant text-body-md">Catat dan kelola setoran tahfidz santri per bulan</p>
+        <p class="text-on-surface-variant text-body-md">Catat dan kelola setoran tahfidz santri per bulan (semua kelas)</p>
       </div>
       <button v-if="editingId" class="bg-error text-on-error px-4 py-2 rounded-xl text-label-sm hover:brightness-110 transition-all flex items-center gap-2" @click="confirmDelete">
         <span class="material-symbols-outlined text-sm">delete</span> Hapus Absensi Bulan Ini
@@ -17,13 +17,6 @@
         <div class="space-y-1">
           <label class="text-label-xs text-on-surface-variant">Bulan</label>
           <input v-model="selectedMonth" type="month" class="bg-surface-container-low border border-outline-variant/30 rounded-lg text-label-sm py-2 px-3 focus:ring-primary outline-none" />
-        </div>
-        <div class="space-y-1">
-          <label class="text-label-xs text-on-surface-variant">Kelas</label>
-          <select v-model="selectedClass" class="bg-surface-container-low border border-outline-variant/30 rounded-lg text-label-sm py-2 px-3 focus:ring-primary outline-none min-w-[160px]" @change="loadStudents">
-            <option value="">-- Pilih Kelas --</option>
-            <option v-for="cls in classes" :key="cls.id" :value="cls.name">{{ cls.name }}</option>
-          </select>
         </div>
         <div class="space-y-1">
           <label class="text-label-xs text-on-surface-variant">Legenda</label>
@@ -40,7 +33,7 @@
     <div v-if="Object.keys(attendanceData).length > 0" class="glass-card rounded-xl shadow-sm overflow-hidden mb-stack-lg">
       <div class="p-stack-md border-b border-outline-variant/20">
         <h3 class="font-display text-title-lg text-primary flex items-center gap-2">
-          <span class="material-symbols-outlined">bar_chart</span> Rekap Absensi Tahfidz {{ selectedClass }}
+          <span class="material-symbols-outlined">bar_chart</span> Rekap Absensi Tahfidz
           <span class="text-label-sm text-on-surface-variant font-normal">{{ selectedMonth }}</span>
         </h3>
       </div>
@@ -65,7 +58,7 @@
             <tr>
               <th class="px-2 py-2 text-label-xs text-on-surface-variant w-8 text-center">#</th>
               <th class="px-2 py-2 text-label-xs text-on-surface-variant sticky left-0 bg-surface-container-low z-10" style="min-width:120px">Nama Santri</th>
-              <th class="px-2 py-2 text-label-xs text-on-surface-variant" style="min-width:80px">Alamat</th>
+              <th class="px-2 py-2 text-label-xs text-on-surface-variant" style="min-width:80px">Kelas</th>
               <th v-for="d in 31" :key="d" class="px-0.5 py-2 text-label-xs text-on-surface-variant text-center" :style="{ minWidth: dayColWidth + 'px', width: dayColWidth + 'px' }">{{ d }}</th>
             </tr>
           </thead>
@@ -73,7 +66,7 @@
             <tr v-for="(student, idx) in students" :key="student.id" class="hover:bg-primary-fixed/5 transition-colors">
               <td class="px-2 py-1 text-label-xs text-on-surface-variant text-center">{{ idx + 1 }}</td>
               <td class="px-2 py-1 text-label-xs font-medium sticky left-0 bg-surface z-10">{{ student.name }}</td>
-              <td class="px-2 py-1 text-label-xs text-on-surface-variant">{{ student.city || '-' }}</td>
+              <td class="px-2 py-1 text-label-xs text-on-surface-variant">{{ student.class || '-' }}</td>
               <td v-for="d in 31" :key="d" class="px-0.5 py-1 text-center">
                 <select v-model="attendanceData[student.id][String(d)]" class="bg-surface-container-low border rounded text-[10px] py-1 px-0.5 focus:ring-primary outline-none w-full" :class="statusClass(attendanceData[student.id][String(d)])">
                   <option v-for="s in STATUS_OPTIONS" :key="s.value" :value="s.value">{{ s.label }}</option>
@@ -98,9 +91,9 @@
       </div>
     </div>
 
-    <div v-if="selectedMonth && selectedClass && students.length === 0 && !loadingStudents" class="glass-card rounded-xl shadow-sm p-8 text-center">
+    <div v-if="selectedMonth && students.length === 0 && !loadingStudents" class="glass-card rounded-xl shadow-sm p-8 text-center">
       <span class="material-symbols-outlined text-4xl text-on-surface-variant mb-3">people</span>
-      <p class="text-label-md text-on-surface-variant">Tidak ada santri di kelas <strong>{{ selectedClass }}</strong></p>
+      <p class="text-label-md text-on-surface-variant">Tidak ada santri terdaftar</p>
     </div>
 
     <div v-if="loadingStudents" class="text-center py-12">
@@ -115,7 +108,7 @@
             <span class="material-symbols-outlined text-error text-3xl">delete</span>
           </div>
           <h3 class="font-display text-title-lg text-primary mb-2">Hapus Absensi Tahfidz?</h3>
-          <p class="text-label-md text-on-surface-variant mb-6">Yakin ingin menghapus absensi bulan <strong>{{ selectedMonth }}</strong> kelas <strong>{{ selectedClass }}</strong>?</p>
+          <p class="text-label-md text-on-surface-variant mb-6">Yakin ingin menghapus absensi bulan <strong>{{ selectedMonth }}</strong>?</p>
           <div class="flex gap-3">
             <button class="flex-1 bg-surface-container-high text-on-surface py-3 rounded-xl text-label-md" @click="showDeleteConfirm = false">Batal</button>
             <button class="flex-1 bg-error text-on-error py-3 rounded-xl text-label-md font-bold hover:brightness-110 transition-all" @click="doDelete">Hapus</button>
@@ -150,8 +143,6 @@ const SUMMARY_CONFIG = [
 const now = new Date()
 const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
 const selectedMonth = ref((route.query.month as string) || currentMonth)
-const selectedClass = ref((route.query.class as string) || '')
-const classes = ref<any[]>([])
 const students = ref<any[]>([])
 const loadingStudents = ref(false)
 const saving = ref(false)
@@ -182,27 +173,11 @@ const summary = computed(() => {
   })
 })
 
-async function fetchClasses() {
-  try {
-    const token = await getIdToken()
-    const res = await fetch('/api/master-data/classes', {
-      headers: { Authorization: `Bearer ${token}` },
-    })
-    if (res.ok) classes.value = await res.json()
-  } catch (e) {
-    console.error(e)
-  }
-}
-
 async function loadStudents() {
-  if (!selectedClass.value) {
-    students.value = []
-    return
-  }
   loadingStudents.value = true
   try {
     const token = await getIdToken()
-    const res = await fetch(`/api/students?class=${encodeURIComponent(selectedClass.value)}`, {
+    const res = await fetch('/api/students', {
       headers: { Authorization: `Bearer ${token}` },
     })
     if (res.ok) students.value = await res.json()
@@ -224,14 +199,14 @@ function initAttendanceData() {
 }
 
 async function loadSession() {
-  if (!selectedMonth.value || !selectedClass.value) return
+  if (!selectedMonth.value) return
   error.value = ''
   await loadStudents()
   if (students.value.length === 0) return
   initAttendanceData()
   try {
     const token = await getIdToken()
-    const res = await fetch(`/api/attendance/tahfidz?month=${encodeURIComponent(selectedMonth.value)}&class=${encodeURIComponent(selectedClass.value)}`, {
+    const res = await fetch(`/api/attendance/tahfidz?month=${encodeURIComponent(selectedMonth.value)}`, {
       headers: { Authorization: `Bearer ${token}` },
     })
     if (!res.ok) {
@@ -271,10 +246,11 @@ async function saveAttendance() {
       studentId: s.id,
       name: s.name,
       nis: s.nis,
+      class: s.class,
       marks: attendanceData.value[s.id] || {},
     }))
     const monthParts = selectedMonth.value.split('-')
-    const body = { year: parseInt(monthParts[0]), month: parseInt(monthParts[1]), monthId: selectedMonth.value, class: selectedClass.value, records }
+    const body = { year: parseInt(monthParts[0]), month: parseInt(monthParts[1]), monthId: selectedMonth.value, class: 'Semua', records }
     const url = editingId.value ? `/api/attendance/tahfidz/${editingId.value}` : '/api/attendance/tahfidz'
     const method = editingId.value ? 'PUT' : 'POST'
     const res = await fetch(url, {
@@ -286,7 +262,7 @@ async function saveAttendance() {
       const result = await res.json()
       editingId.value = result.id
       skipWatchReload.value = true
-      await router.replace({ query: { month: selectedMonth.value, class: selectedClass.value } })
+      await router.replace({ query: { month: selectedMonth.value } })
       skipWatchReload.value = false
       success.value = 'Absensi Tahfidz berhasil disimpan'
       await loadSession()
@@ -348,45 +324,44 @@ function exportExcel() {
   const statusLabel: Record<string, string> = {}
   for (const s of STATUS_OPTIONS) statusLabel[s.value] = s.label
   const cols = Array.from({ length: 31 }, (_, i) => i + 1)
-  let html = `<table border="1"><tr><th>No</th><th>Nama</th><th>Alamat</th>${cols.map(d => `<th>${d}</th>`).join('')}</tr>`
+  let html = `<table border="1"><tr><th>No</th><th>Nama</th><th>Kelas</th>${cols.map(d => `<th>${d}</th>`).join('')}</tr>`
   students.value.forEach((s, i) => {
     const d = attendanceData.value[s.id] || {}
-    html += `<tr><td>${i + 1}</td><td>${s.name}</td><td>${s.city || ''}</td>${cols.map(dd => `<td style="text-align:center">${statusLabel[d[String(dd)]] || statusLabel[DEFAULT_STATUS]}</td>`).join('')}</tr>`
+    html += `<tr><td>${i + 1}</td><td>${s.name}</td><td>${s.class || ''}</td>${cols.map(dd => `<td style="text-align:center">${statusLabel[d[String(dd)]] || statusLabel[DEFAULT_STATUS]}</td>`).join('')}</tr>`
   })
   html += '</table>'
   const blob = new Blob([html], { type: 'application/vnd.ms-excel' })
   const url = URL.createObjectURL(blob)
   const a = document.createElement('a')
   a.href = url
-  a.download = `Absensi_Tahfidz_${selectedClass.value}_${selectedMonth.value}.xls`
+  a.download = `Absensi_Tahfidz_${selectedMonth.value}.xls`
   a.click()
   URL.revokeObjectURL(url)
 }
 
 function printAttendance() {
-  if (!selectedClass.value) return
   const printWindow = window.open('', '_blank')
   if (!printWindow) return
   const statusLabel: Record<string, string> = {}
   for (const s of STATUS_OPTIONS) statusLabel[s.value] = s.label
   const dayCols = Array.from({ length: 31 }, (_, i) => i + 1)
-  const colNo = 30, colNama = 170, colAlamat = 130, dateColWidth = 20
-  const tableWidth = colNo + colNama + colAlamat + dayCols.length * dateColWidth
+  const colNo = 25, colNama = 120, colKelas = 45, dateColWidth = 15
+  const tableWidth = colNo + colNama + colKelas + dayCols.length * dateColWidth
   const dataRows = students.value.map((s, idx) => {
     const d = attendanceData.value[s.id] || {}
-    return `<tr style="height:20px">
-      <td style="padding:1px 3px;border:1px solid #000;text-align:center;font-size:8pt;font-family:'Times New Roman',serif;width:${colNo}px">${idx + 1}</td>
-      <td style="padding:1px 3px;border:1px solid #000;font-size:8pt;font-family:'Times New Roman',serif">${s.name}</td>
-      <td style="padding:1px 3px;border:1px solid #000;font-size:8pt;font-family:'Times New Roman',serif">${s.city || ''}</td>
-      ${dayCols.map(dd => `<td style="padding:1px 2px;border:1px solid #000;text-align:center;font-size:7pt;font-family:'Times New Roman',serif;width:${dateColWidth}px;height:20px">${statusLabel[d[String(dd)]] || ''}</td>`).join('')}
+    return `<tr style="height:18px">
+      <td style="padding:1px 2px;border:1px solid #000;text-align:center;font-size:7pt;font-family:'Times New Roman',serif;width:${colNo}px">${idx + 1}</td>
+      <td style="padding:1px 2px;border:1px solid #000;font-size:7pt;font-family:'Times New Roman',serif">${s.name}</td>
+      <td style="padding:1px 2px;border:1px solid #000;text-align:center;font-size:7pt;font-family:'Times New Roman',serif">${s.class || ''}</td>
+      ${dayCols.map(dd => `<td style="padding:1px 1px;border:1px solid #000;text-align:center;font-size:6pt;font-family:'Times New Roman',serif;width:${dateColWidth}px;height:18px">${statusLabel[d[String(dd)]] || ''}</td>`).join('')}
     </tr>`
   }).join('')
   const logoUrl = window.location.origin + '/image/logo.png'
   const monthName = selectedMonth.value ? new Date(selectedMonth.value + '-01').toLocaleDateString('id-ID', { year: 'numeric', month: 'long' }) : selectedMonth.value
   printWindow.document.write(`<!DOCTYPE html>
-<html><head><title>Absensi Tahfidz - ${selectedClass.value}</title>
+<html><head><title>Absensi Tahfidz</title>
 <style>
-  @page { size: landscape; margin: 10mm 15mm; }
+  @page { size: A4 portrait; margin: 10mm 10mm; }
   body { margin: 0; padding: 0; font-family: 'Times New Roman', Times, serif; color: #000; font-size: 10pt; }
   .header { position: relative; width: ${tableWidth}px; margin: 0 auto; padding-bottom: 4px; }
   .header-left { position: absolute; top: 2px; left: 0; font-size: 8pt; }
@@ -396,25 +371,26 @@ function printAttendance() {
   .logo-img { width: 36px; height: auto; object-fit: contain; }
   .title-group { text-align: center; }
   .title-group .line1 { font-size: 11pt; font-weight: bold; letter-spacing: 2px; }
-  .title-group .line2 { font-size: 20pt; font-weight: bold; letter-spacing: 3px; }
+  .title-group .line2 { font-size: 18pt; font-weight: bold; letter-spacing: 3px; }
   .title-group .line3 { font-size: 8pt; }
   .hr { border: none; border-top: 2.5px solid #000; margin: 2px auto 0 auto; width: ${tableWidth}px; }
   .table-wrap { width: ${tableWidth}px; margin: 0 auto; }
   table { width: ${tableWidth}px; border-collapse: collapse; table-layout: fixed; }
   th { border: 1px solid #000; font-weight: bold; }
-  .th-no { width: ${colNo}px; font-size: 8pt; padding: 3px 1px; text-align: center; }
-  .th-nama { width: ${colNama}px; font-size: 8pt; padding: 3px 2px; text-align: center; }
-  .th-alamat { width: ${colAlamat}px; font-size: 8pt; padding: 3px 2px; text-align: center; }
-  .th-tanggal { font-size: 8pt; padding: 2px 0; text-align: center; border-left: 1px solid #000; border-right: 1px solid #000; }
-  .th-day { font-size: 7pt; padding: 1px 0; text-align: center; width: ${dateColWidth}px; font-weight: normal; }
-  td { font-size: 8pt; }
-  .signature { margin-top: 10px; display: flex; justify-content: space-around; width: ${tableWidth}px; margin-left: auto; margin-right: auto; padding-top: 8px; }
+  thead { display: table-header-group; }
+  .th-no { width: ${colNo}px; font-size: 7pt; padding: 2px 1px; text-align: center; }
+  .th-nama { width: ${colNama}px; font-size: 7pt; padding: 2px 2px; text-align: center; }
+  .th-kelas { width: ${colKelas}px; font-size: 7pt; padding: 2px 2px; text-align: center; }
+  .th-tanggal { font-size: 7pt; padding: 2px 0; text-align: center; border-left: 1px solid #000; border-right: 1px solid #000; }
+  .th-day { font-size: 6pt; padding: 1px 0; text-align: center; width: ${dateColWidth}px; font-weight: normal; }
+  td { font-size: 7pt; }
+  .signature { margin-top: 16px; display: flex; justify-content: space-around; width: ${tableWidth}px; margin-left: auto; margin-right: auto; padding-top: 8px; }
   .signature div { text-align: center; font-size: 9pt; }
   .signature .line { margin-top: 36px; width: 140px; border-top: 1px solid #000; display: block; }
   .signature p { margin: 2px 0; }
 </style></head><body>
 <div class="header">
-  <div class="header-left">INV. DINIYAH/ABSEN TAHFIDZ/KELAS ${selectedClass.value}</div>
+  <div class="header-left">INV. DINIYAH/ABSEN TAHFIDZ</div>
   <div class="header-right">BULAN : ${monthName}</div>
   <div class="header-center">
     <div class="header-inner">
@@ -434,7 +410,7 @@ function printAttendance() {
     <tr>
       <th class="th-no" rowspan="2">NO</th>
       <th class="th-nama" rowspan="2">NAMA</th>
-      <th class="th-alamat" rowspan="2">ALAMAT</th>
+      <th class="th-kelas" rowspan="2">KLS</th>
       <th class="th-tanggal" colspan="31">TANGGAL</th>
     </tr>
     <tr>
@@ -452,18 +428,16 @@ function printAttendance() {
   printWindow.document.close()
 }
 
-watch([selectedMonth, selectedClass], ([month, cls]) => {
+watch(selectedMonth, (month) => {
   if (skipWatchReload.value) {
     skipWatchReload.value = false
     return
   }
-  router.replace({ query: { month, class: cls } })
-  if (month && cls) loadSession()
+  router.replace({ query: { month } })
+  if (month) loadSession()
 })
 
 onMounted(() => {
-  if (selectedMonth.value && selectedClass.value) loadSession()
+  if (selectedMonth.value) loadSession()
 })
-
-fetchClasses()
 </script>
