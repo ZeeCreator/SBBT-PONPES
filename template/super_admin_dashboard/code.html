@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>SIM-PPT Super Admin Dashboard</title>
+<!-- Google Fonts -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Plus+Jakarta+Sans:wght@600;700;800&amp;display=swap" rel="stylesheet"/>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "primary-container": "#064e3b",
+                    "on-background": "#121c2a",
+                    "on-primary-fixed": "#002117",
+                    "on-surface-variant": "#404944",
+                    "surface-dim": "#d0dbed",
+                    "on-primary-container": "#80bea6",
+                    "primary-fixed": "#b0f0d6",
+                    "surface-container": "#e6eeff",
+                    "error": "#ba1a1a",
+                    "on-surface": "#121c2a",
+                    "on-primary": "#ffffff",
+                    "tertiary": "#2c2f30",
+                    "inverse-on-surface": "#eaf1ff",
+                    "on-secondary-fixed-variant": "#763300",
+                    "secondary-fixed-dim": "#ffb68e",
+                    "surface-container-lowest": "#ffffff",
+                    "on-tertiary": "#ffffff",
+                    "on-tertiary-container": "#b0b2b4",
+                    "secondary": "#9b4500",
+                    "background": "#f8f9ff",
+                    "primary-fixed-dim": "#95d3ba",
+                    "on-error-container": "#93000a",
+                    "on-tertiary-fixed": "#191c1e",
+                    "outline-variant": "#bfc9c3",
+                    "surface": "#f8f9ff",
+                    "surface-tint": "#2b6954",
+                    "secondary-container": "#fd8a42",
+                    "on-secondary-fixed": "#331200",
+                    "surface-bright": "#f8f9ff",
+                    "surface-container-highest": "#d9e3f6",
+                    "on-error": "#ffffff",
+                    "secondary-fixed": "#ffdbca",
+                    "tertiary-fixed": "#e1e2e4",
+                    "outline": "#707974",
+                    "inverse-surface": "#27313f",
+                    "primary": "#003527",
+                    "error-container": "#ffdad6",
+                    "surface-container-low": "#eff4ff",
+                    "tertiary-container": "#424547",
+                    "tertiary-fixed-dim": "#c5c6c8",
+                    "on-secondary": "#ffffff",
+                    "on-secondary-container": "#682c00",
+                    "on-tertiary-fixed-variant": "#444749",
+                    "surface-container-high": "#dee9fc",
+                    "on-primary-fixed-variant": "#0b513d",
+                    "surface-variant": "#d9e3f6",
+                    "inverse-primary": "#95d3ba"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "margin-mobile": "16px",
+                    "stack-lg": "32px",
+                    "container-max": "1440px",
+                    "stack-sm": "8px",
+                    "stack-md": "16px",
+                    "gutter": "24px",
+                    "unit": "4px",
+                    "margin-desktop": "40px"
+            },
+            "fontFamily": {
+                    "label-sm": ["Inter"],
+                    "title-lg": ["Inter"],
+                    "body-md": ["Inter"],
+                    "headline-lg-mobile": ["Plus Jakarta Sans"],
+                    "body-lg": ["Inter"],
+                    "label-md": ["Inter"],
+                    "headline-lg": ["Plus Jakarta Sans"],
+                    "headline-md": ["Plus Jakarta Sans"],
+                    "display-lg": ["Plus Jakarta Sans"]
+            },
+            "fontSize": {
+                    "label-sm": ["12px", {"lineHeight": "1.4", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                    "title-lg": ["20px", {"lineHeight": "1.5", "fontWeight": "600"}],
+                    "body-md": ["16px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                    "headline-lg-mobile": ["24px", {"lineHeight": "1.3", "fontWeight": "600"}],
+                    "body-lg": ["18px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                    "label-md": ["14px", {"lineHeight": "1.4", "letterSpacing": "0.01em", "fontWeight": "500"}],
+                    "headline-lg": ["32px", {"lineHeight": "1.3", "fontWeight": "600"}],
+                    "headline-md": ["24px", {"lineHeight": "1.4", "fontWeight": "600"}],
+                    "display-lg": ["48px", {"lineHeight": "1.2", "letterSpacing": "-0.02em", "fontWeight": "700"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.6);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+        }
+        .scrollbar-hide::-webkit-scrollbar {
+            display: none;
+        }
+        .sidebar-active-indicator {
+            position: absolute;
+            left: 0;
+            width: 4px;
+            height: 24px;
+            background-color: #fd8a42; /* secondary-container from config */
+            border-radius: 0 4px 4px 0;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background font-body-md min-h-screen overflow-x-hidden">
+<!-- Navigation Sidebar -->
+<aside class="bg-primary-container h-screen w-64 fixed left-0 top-0 shadow-xl flex flex-col py-stack-md z-50 transform transition-transform duration-300 md:translate-x-0" id="sidebar">
+<div class="px-gutter mb-stack-lg">
+<h1 class="font-headline-md text-headline-md font-bold text-on-primary-container">SIM-PPT</h1>
+<p class="font-label-sm text-label-sm text-on-primary-container/60 uppercase tracking-widest mt-1">Integrated Pesantren System</p>
+</div>
+<nav class="flex-1 overflow-y-auto scrollbar-hide px-4 space-y-1">
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg border-l-4 border-secondary-container bg-white/10 text-on-primary font-bold transition-all duration-200" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="font-label-md text-label-md">Dashboard</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-primary/70 hover:text-on-primary hover:bg-white/5 transition-all duration-200 group" href="#">
+<span class="material-symbols-outlined">group</span>
+<span class="font-label-md text-label-md">Student Database</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-primary/70 hover:text-on-primary hover:bg-white/5 transition-all duration-200 group" href="#">
+<span class="material-symbols-outlined">payments</span>
+<span class="font-label-md text-label-md">Financials</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-primary/70 hover:text-on-primary hover:bg-white/5 transition-all duration-200 group" href="#">
+<span class="material-symbols-outlined">gavel</span>
+<span class="font-label-md text-label-md">Discipline</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-primary/70 hover:text-on-primary hover:bg-white/5 transition-all duration-200 group" href="#">
+<span class="material-symbols-outlined">school</span>
+<span class="font-label-md text-label-md">Academic</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-primary/70 hover:text-on-primary hover:bg-white/5 transition-all duration-200 group" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span class="font-label-md text-label-md">System Settings</span>
+</a>
+</nav>
+<div class="px-4 mt-auto pt-stack-md border-t border-white/10 space-y-1">
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-primary/70 hover:text-on-primary hover:bg-white/5 transition-all duration-200" href="#">
+<span class="material-symbols-outlined">help</span>
+<span class="font-label-md text-label-md">Support</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-primary/70 hover:text-on-primary hover:bg-white/5 transition-all duration-200" href="#">
+<span class="material-symbols-outlined">logout</span>
+<span class="font-label-md text-label-md">Logout</span>
+</a>
+</div>
+</aside>
+<!-- Main Content Area -->
+<main class="md:ml-64 min-h-screen">
+<!-- Top App Bar -->
+<header class="fixed top-0 right-0 w-full md:w-[calc(100%-16rem)] h-16 bg-surface/60 backdrop-blur-xl border-b border-white/20 shadow-sm flex justify-between items-center px-gutter z-40">
+<div class="flex items-center gap-4">
+<button class="md:hidden text-primary p-2">
+<span class="material-symbols-outlined">menu</span>
+</button>
+<div class="hidden sm:flex items-center bg-surface-container-low px-4 py-2 rounded-full border border-outline-variant/30">
+<span class="material-symbols-outlined text-outline">search</span>
+<input class="bg-transparent border-none focus:ring-0 text-body-md w-64 ml-2 placeholder:text-on-surface-variant" placeholder="Search data, students..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-stack-md">
+<div class="hidden lg:flex items-center gap-2 px-3 py-1 bg-primary-fixed text-on-primary-fixed rounded-full">
+<span class="material-symbols-outlined text-[18px]">verified_user</span>
+<span class="font-label-sm text-label-sm">Super Admin</span>
+</div>
+<button class="text-on-surface-variant hover:bg-surface-container-high/50 p-2 rounded-full transition-colors relative">
+<span class="material-symbols-outlined">notifications</span>
+<span class="absolute top-2 right-2 w-2 h-2 bg-error rounded-full"></span>
+</button>
+<button class="text-on-surface-variant hover:bg-surface-container-high/50 p-2 rounded-full transition-colors">
+<span class="material-symbols-outlined">apps</span>
+</button>
+<div class="flex items-center gap-3 ml-2 cursor-pointer p-1 pr-3 hover:bg-surface-container-high/50 rounded-full transition-colors">
+<img class="w-8 h-8 rounded-full object-cover shadow-sm" data-alt="A professional studio portrait of a middle-aged academic administrator with a warm smile, wearing modern modest attire. The background is a soft-focus library with warm, morning light filtering through high windows, creating a serene and authoritative atmosphere. High-end photography with sharp detail and natural lighting." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCib3R6BQ0vqJ5hiBzjSKyCg0qiz6gUIEmaeAoKJf0_Q3JgtG8egZfxQulyQTVLPzHPHokGvhCGmZ4G9OtjTP7bL1zoMn-YJ84fnM-JaxrQ0cg7niNRsBV8fQYBIvP_FtHTQmpE3F0XfvbimSgrTOgdsnX3_pYXv9_u9yDK-y6hEpm6SLIlNV3xT2tf-mUuI2nfvRCwvylMA1BXbdhDxc81TMIPznznvI0PcnPYdBm8cdYMKmYq4b9E3ItJGY-dfzhvK_RFw0SqMuBS"/>
+<div class="hidden sm:block">
+<p class="font-label-md text-label-md leading-none text-primary">Dr. Ahmad Faisal</p>
+</div>
+</div>
+</div>
+</header>
+<!-- Dashboard Content -->
+<div class="pt-24 pb-12 px-gutter max-w-container-max mx-auto">
+<!-- Welcome Header -->
+<div class="mb-stack-lg">
+<h2 class="font-headline-lg text-headline-lg text-primary">Global Overview</h2>
+<p class="font-body-md text-body-md text-on-surface-variant">Real-time snapshots of the Integrated Pesantren ecosystem.</p>
+</div>
+<!-- Global Stats Bento Grid -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-gutter mb-stack-lg">
+<!-- Total Santri -->
+<div class="glass-card p-stack-md rounded-xl shadow-sm border-l-4 border-primary transition-transform hover:scale-[1.02]">
+<div class="flex justify-between items-start mb-4">
+<div class="bg-primary-fixed p-2 rounded-lg text-on-primary-fixed">
+<span class="material-symbols-outlined">group</span>
+</div>
+<span class="text-primary font-bold text-label-sm flex items-center gap-1">
+                            +12% <span class="material-symbols-outlined text-sm">trending_up</span>
+</span>
+</div>
+<p class="font-label-md text-label-md text-on-surface-variant">Total Santri</p>
+<h3 class="font-display-lg text-display-lg text-primary-container leading-none my-2">1,284</h3>
+<p class="text-label-sm text-on-surface-variant/70 italic">856 Active | 428 Alumni</p>
+</div>
+<!-- Total Teachers -->
+<div class="glass-card p-stack-md rounded-xl shadow-sm border-l-4 border-secondary-container transition-transform hover:scale-[1.02]">
+<div class="flex justify-between items-start mb-4">
+<div class="bg-secondary-fixed p-2 rounded-lg text-on-secondary-fixed">
+<span class="material-symbols-outlined">person_pin</span>
+</div>
+<span class="text-secondary font-bold text-label-sm">Active</span>
+</div>
+<p class="font-label-md text-label-md text-on-surface-variant">Total Teachers</p>
+<h3 class="font-display-lg text-display-lg text-primary-container leading-none my-2">72</h3>
+<p class="text-label-sm text-on-surface-variant/70 italic">1:18 Teacher-to-Student</p>
+</div>
+<!-- SPP Collection Rate -->
+<div class="glass-card p-stack-md rounded-xl shadow-sm border-l-4 border-primary-fixed-dim transition-transform hover:scale-[1.02]">
+<div class="flex justify-between items-start mb-4">
+<div class="bg-primary-fixed-dim/30 p-2 rounded-lg text-primary">
+<span class="material-symbols-outlined">payments</span>
+</div>
+<span class="text-primary font-bold text-label-sm">This Month</span>
+</div>
+<p class="font-label-md text-label-md text-on-surface-variant">Financial Health</p>
+<h3 class="font-display-lg text-display-lg text-primary-container leading-none my-2">94.2<span class="text-headline-md">%</span></h3>
+<div class="w-full bg-surface-container-highest rounded-full h-1.5 mt-2">
+<div class="bg-primary h-1.5 rounded-full" style="width: 94.2%"></div>
+</div>
+</div>
+<!-- Recent Violations -->
+<div class="glass-card p-stack-md rounded-xl shadow-sm border-l-4 border-error transition-transform hover:scale-[1.02]">
+<div class="flex justify-between items-start mb-4">
+<div class="bg-error-container p-2 rounded-lg text-on-error-container">
+<span class="material-symbols-outlined">warning</span>
+</div>
+<span class="text-error font-bold text-label-sm">Urgent</span>
+</div>
+<p class="font-label-md text-label-md text-on-surface-variant">Recent Violations</p>
+<h3 class="font-display-lg text-display-lg text-error leading-none my-2">08</h3>
+<p class="text-label-sm text-on-surface-variant/70 italic">4 Major | 4 Minor cases</p>
+</div>
+</div>
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-gutter">
+<!-- Activity Feed -->
+<section class="lg:col-span-2 glass-card rounded-xl shadow-sm flex flex-col h-full">
+<div class="p-6 border-b border-white/20 flex justify-between items-center">
+<div>
+<h4 class="font-title-lg text-title-lg text-primary">Activity Feed</h4>
+<p class="font-label-md text-label-md text-on-surface-variant">Real-time logs from Firestore</p>
+</div>
+<button class="text-primary-container hover:bg-primary-fixed/30 px-3 py-1 rounded-lg transition-colors font-label-md">View All</button>
+</div>
+<div class="flex-1 p-6 space-y-6">
+<!-- Activity Item 1 -->
+<div class="flex gap-4 group">
+<div class="relative">
+<div class="w-10 h-10 rounded-full bg-primary-fixed flex items-center justify-center text-primary z-10 relative">
+<span class="material-symbols-outlined">person_add</span>
+</div>
+<div class="absolute top-10 left-1/2 w-0.5 h-full bg-outline-variant/30 -translate-x-1/2"></div>
+</div>
+<div>
+<p class="font-label-md text-label-md text-on-background">New Student Registration: <span class="font-bold">Zaid Al-Bukhari</span></p>
+<p class="text-label-sm text-on-surface-variant/70">By Admin Sarah • 2 minutes ago</p>
+<div class="mt-2 text-label-sm bg-surface-container-low p-2 rounded-lg border border-outline-variant/20 italic">
+                                    "Verified documents for Senior High School, Room 4A."
+                                </div>
+</div>
+</div>
+<!-- Activity Item 2 -->
+<div class="flex gap-4 group">
+<div class="relative">
+<div class="w-10 h-10 rounded-full bg-secondary-fixed flex items-center justify-center text-secondary z-10 relative">
+<span class="material-symbols-outlined">credit_card</span>
+</div>
+<div class="absolute top-10 left-1/2 w-0.5 h-full bg-outline-variant/30 -translate-x-1/2"></div>
+</div>
+<div>
+<p class="font-label-md text-label-md text-on-background">Bulk Payment Processed: <span class="font-bold">October SPP</span></p>
+<p class="text-label-sm text-on-surface-variant/70">System Automated • 45 minutes ago</p>
+</div>
+</div>
+<!-- Activity Item 3 -->
+<div class="flex gap-4 group">
+<div class="relative">
+<div class="w-10 h-10 rounded-full bg-error-container flex items-center justify-center text-error z-10 relative">
+<span class="material-symbols-outlined">gavel</span>
+</div>
+</div>
+<div>
+<p class="font-label-md text-label-md text-on-background">Violation Reported: <span class="font-bold">Student #1402 (Unexcused absence)</span></p>
+<p class="text-label-sm text-on-surface-variant/70">By Ust. Mansur • 2 hours ago</p>
+</div>
+</div>
+</div>
+</section>
+<!-- Quick Actions & Visual -->
+<div class="space-y-gutter">
+<!-- Quick Actions Section -->
+<section class="glass-card rounded-xl shadow-sm p-6">
+<h4 class="font-title-lg text-title-lg text-primary mb-4">Quick Actions</h4>
+<div class="grid grid-cols-1 gap-3">
+<button class="flex items-center gap-3 w-full p-4 bg-primary text-on-primary rounded-xl hover:bg-primary-container transition-all active:scale-95 text-left">
+<span class="material-symbols-outlined">person_add</span>
+<div>
+<p class="font-label-md text-label-md">Register New Student</p>
+<p class="text-[10px] opacity-70">Onboard new santri to the system</p>
+</div>
+</button>
+<button class="flex items-center gap-3 w-full p-4 bg-white border border-primary text-primary rounded-xl hover:bg-primary-fixed/10 transition-all active:scale-95 text-left">
+<span class="material-symbols-outlined">campaign</span>
+<div>
+<p class="font-label-md text-label-md">Broadcast Announcement</p>
+<p class="text-[10px] text-on-surface-variant">Send SMS/App push to all parents</p>
+</div>
+</button>
+<button class="flex items-center gap-3 w-full p-4 bg-white border border-outline-variant text-on-background rounded-xl hover:bg-surface-container-low transition-all active:scale-95 text-left">
+<span class="material-symbols-outlined">description</span>
+<div>
+<p class="font-label-md text-label-md">Generate Financial Report</p>
+<p class="text-[10px] text-on-surface-variant">Export monthly PDF/Excel data</p>
+</div>
+</button>
+</div>
+</section>
+<!-- Decorative/Info Visual Card -->
+<div class="relative h-64 rounded-xl overflow-hidden shadow-sm group">
+<div class="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-110" data-alt="An artistic, high-definition overhead shot of an Islamic boarding school courtyard at dusk. Golden light spills from arched windows onto perfectly manicured gardens. The scene is tranquil, featuring clean architectural lines and a serene, spiritual atmosphere. Minimalist color palette of deep greens and warm ambers." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuC3XU9re7bj60kIi4xw2SocqxHhVbcAZsUuW9SCGyc27dAxzqL5MMh4tCGOZMIZ1A_OiaB5WfTD1opQj3kQuO_0DzjGVEqcfzkleRzUKNDyycqefKijNueZFkqZkIVrCcbA8iNHDIbX0GscoMVKwOuNuLZqSt9VHjPHlIrIdanSO_rtc9Rj4cCbl_gXff50JzYGLQEwBhbxdEvOXFMoFbvrujNti0mdWqhIB6EKMWBR5fSDaFAFC9HmLagMAse-SKF2mlOGyq31K30j')"></div>
+<div class="absolute inset-0 bg-gradient-to-t from-primary/80 to-transparent flex flex-col justify-end p-6">
+<p class="text-on-primary font-bold text-label-sm uppercase tracking-widest mb-1">Upcoming Event</p>
+<h5 class="text-on-primary font-headline-md text-headline-md mb-2">Annual Haflah Akhirussanah</h5>
+<div class="flex items-center gap-2 text-on-primary/80">
+<span class="material-symbols-outlined text-[18px]">calendar_today</span>
+<span class="text-label-sm">June 15, 2024</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Detailed Grid Example: Academic Snapshot -->
+<section class="mt-stack-lg glass-card rounded-xl shadow-sm p-6 overflow-hidden">
+<div class="flex justify-between items-center mb-6">
+<h4 class="font-title-lg text-title-lg text-primary">Academic Performance Index</h4>
+<div class="flex gap-2">
+<select class="bg-surface-container-low border-outline-variant/30 rounded-lg text-label-sm focus:ring-primary focus:border-primary">
+<option>All Departments</option>
+<option>Tahfidz</option>
+<option>Diniyah</option>
+</select>
+</div>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-left">
+<thead>
+<tr class="text-label-sm text-on-surface-variant/70 border-b border-outline-variant/20">
+<th class="pb-4 font-semibold uppercase tracking-wider">Class Level</th>
+<th class="pb-4 font-semibold uppercase tracking-wider">Avg. Grade</th>
+<th class="pb-4 font-semibold uppercase tracking-wider">Attendance</th>
+<th class="pb-4 font-semibold uppercase tracking-wider">Progress</th>
+<th class="pb-4 font-semibold uppercase tracking-wider">Action</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-outline-variant/10">
+<tr class="hover:bg-primary-fixed/5 transition-colors">
+<td class="py-4 font-label-md text-label-md">10th Grade - Al-Azhar</td>
+<td class="py-4"><span class="bg-primary-fixed text-on-primary-fixed px-2 py-1 rounded text-label-sm font-bold">8.4</span></td>
+<td class="py-4 text-label-md">98.2%</td>
+<td class="py-4">
+<div class="flex items-center gap-2">
+<div class="flex-1 bg-surface-container-highest rounded-full h-1 w-24">
+<div class="bg-primary h-1 rounded-full" style="width: 85%"></div>
+</div>
+<span class="text-[10px] text-on-surface-variant">85%</span>
+</div>
+</td>
+<td class="py-4">
+<button class="material-symbols-outlined text-outline hover:text-primary transition-colors">more_horiz</button>
+</td>
+</tr>
+<tr class="hover:bg-primary-fixed/5 transition-colors">
+<td class="py-4 font-label-md text-label-md">11th Grade - Madinah</td>
+<td class="py-4"><span class="bg-primary-fixed text-on-primary-fixed px-2 py-1 rounded text-label-sm font-bold">7.9</span></td>
+<td class="py-4 text-label-md">94.5%</td>
+<td class="py-4">
+<div class="flex items-center gap-2">
+<div class="flex-1 bg-surface-container-highest rounded-full h-1 w-24">
+<div class="bg-primary h-1 rounded-full" style="width: 72%"></div>
+</div>
+<span class="text-[10px] text-on-surface-variant">72%</span>
+</div>
+</td>
+<td class="py-4">
+<button class="material-symbols-outlined text-outline hover:text-primary transition-colors">more_horiz</button>
+</td>
+</tr>
+<tr class="hover:bg-primary-fixed/5 transition-colors">
+<td class="py-4 font-label-md text-label-md">12th Grade - Makkah</td>
+<td class="py-4"><span class="bg-primary-fixed text-on-primary-fixed px-2 py-1 rounded text-label-sm font-bold">8.1</span></td>
+<td class="py-4 text-label-md">96.8%</td>
+<td class="py-4">
+<div class="flex items-center gap-2">
+<div class="flex-1 bg-surface-container-highest rounded-full h-1 w-24">
+<div class="bg-primary h-1 rounded-full" style="width: 90%"></div>
+</div>
+<span class="text-[10px] text-on-surface-variant">90%</span>
+</div>
+</td>
+<td class="py-4">
+<button class="material-symbols-outlined text-outline hover:text-primary transition-colors">more_horiz</button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+</div>
+</main>
+<!-- Micro-interaction Script -->
+<script>
+        // Toggle Sidebar for Mobile
+        const sidebar = document.getElementById('sidebar');
+        const menuBtn = document.querySelector('header button.md\\:hidden');
+        
+        if (menuBtn) {
+            menuBtn.addEventListener('click', () => {
+                sidebar.classList.toggle('-translate-x-full');
+            });
+        }
+
+        // Close sidebar when clicking outside on mobile
+        document.addEventListener('click', (e) => {
+            if (window.innerWidth < 768) {
+                if (!sidebar.contains(e.target) && !menuBtn.contains(e.target) && !sidebar.classList.contains('-translate-x-full')) {
+                    sidebar.classList.add('-translate-x-full');
+                }
+            }
+        });
+
+        // Search Input Animation
+        const searchInput = document.querySelector('input[type="text"]');
+        const searchContainer = searchInput?.parentElement;
+        
+        searchInput?.addEventListener('focus', () => {
+            searchContainer.classList.add('ring-2', 'ring-primary/20', 'border-primary');
+        });
+        
+        searchInput?.addEventListener('blur', () => {
+            searchContainer.classList.remove('ring-2', 'ring-primary/20', 'border-primary');
+        });
+
+        // Initialize mobile state
+        if (window.innerWidth < 768) {
+            sidebar.classList.add('-translate-x-full');
+        }
+    </script>
+</body></html>

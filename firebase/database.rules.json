@@ -1,0 +1,24 @@
+{
+  "rules": {
+    "roles": {
+      ".read": "auth != null",
+      ".write": false
+    },
+    "uptime_logs": {
+      ".read": true,
+      ".write": false
+    },
+    "activity_logs": {
+      ".read": "auth != null",
+      ".write": false
+    },
+    "notifikasi": {
+      ".read": "auth != null",
+      ".write": false
+    },
+    "$other": {
+      ".read": "auth != null",
+      ".write": false
+    }
+  }
+}

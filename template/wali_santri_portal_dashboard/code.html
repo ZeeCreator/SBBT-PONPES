@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+
+<html class="scroll-smooth" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Wali Santri Portal | SIM-PPT</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            display: inline-block;
+            line-height: 1;
+            text-transform: none;
+            letter-spacing: normal;
+            word-wrap: normal;
+            white-space: nowrap;
+            direction: ltr;
+        }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.6);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+        }
+        .sidebar-active-gradient {
+            background: linear-gradient(90deg, rgba(253, 138, 66, 0.15) 0%, rgba(253, 138, 66, 0) 100%);
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "on-tertiary-fixed": "#191c1e",
+                      "on-secondary-fixed": "#331200",
+                      "background": "#f8f9ff",
+                      "primary-fixed-dim": "#95d3ba",
+                      "outline": "#707974",
+                      "tertiary": "#2c2f30",
+                      "secondary-fixed": "#ffdbca",
+                      "on-surface-variant": "#404944",
+                      "on-secondary-container": "#682c00",
+                      "inverse-primary": "#95d3ba",
+                      "tertiary-fixed": "#e1e2e4",
+                      "primary-fixed": "#b0f0d6",
+                      "error": "#ba1a1a",
+                      "surface-container": "#e6eeff",
+                      "inverse-surface": "#27313f",
+                      "surface-container-lowest": "#ffffff",
+                      "secondary-fixed-dim": "#ffb68e",
+                      "on-primary-fixed-variant": "#0b513d",
+                      "on-error-container": "#93000a",
+                      "secondary-container": "#fd8a42",
+                      "on-tertiary-container": "#b0b2b4",
+                      "on-primary-fixed": "#002117",
+                      "primary-container": "#064e3b",
+                      "outline-variant": "#bfc9c3",
+                      "on-primary": "#ffffff",
+                      "on-background": "#121c2a",
+                      "surface-container-low": "#eff4ff",
+                      "tertiary-fixed-dim": "#c5c6c8",
+                      "surface-tint": "#2b6954",
+                      "surface-container-high": "#dee9fc",
+                      "on-surface": "#121c2a",
+                      "on-error": "#ffffff",
+                      "tertiary-container": "#424547",
+                      "surface-variant": "#d9e3f6",
+                      "surface-container-highest": "#d9e3f6",
+                      "surface": "#f8f9ff",
+                      "surface-bright": "#f8f9ff",
+                      "on-tertiary": "#ffffff",
+                      "on-primary-container": "#80bea6",
+                      "on-tertiary-fixed-variant": "#444749",
+                      "inverse-on-surface": "#eaf1ff",
+                      "on-secondary-fixed-variant": "#763300",
+                      "error-container": "#ffdad6",
+                      "surface-dim": "#d0dbed",
+                      "primary": "#003527",
+                      "secondary": "#9b4500",
+                      "on-secondary": "#ffffff"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "gutter": "24px",
+                      "unit": "4px",
+                      "margin-mobile": "16px",
+                      "container-max": "1440px",
+                      "stack-md": "16px",
+                      "margin-desktop": "40px",
+                      "stack-lg": "32px",
+                      "stack-sm": "8px"
+              },
+              "fontFamily": {
+                      "label-md": ["Inter"],
+                      "body-md": ["Inter"],
+                      "headline-lg": ["Plus Jakarta Sans"],
+                      "display-lg": ["Plus Jakarta Sans"],
+                      "body-lg": ["Inter"],
+                      "headline-md": ["Plus Jakarta Sans"],
+                      "label-sm": ["Inter"],
+                      "headline-lg-mobile": ["Plus Jakarta Sans"],
+                      "title-lg": ["Inter"]
+              },
+              "fontSize": {
+                      "label-md": ["14px", {"lineHeight": "1.4", "letterSpacing": "0.01em", "fontWeight": "500"}],
+                      "body-md": ["16px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                      "headline-lg": ["32px", {"lineHeight": "1.3", "fontWeight": "600"}],
+                      "display-lg": ["48px", {"lineHeight": "1.2", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                      "body-lg": ["18px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                      "headline-md": ["24px", {"lineHeight": "1.4", "fontWeight": "600"}],
+                      "label-sm": ["12px", {"lineHeight": "1.4", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                      "headline-lg-mobile": ["24px", {"lineHeight": "1.3", "fontWeight": "600"}],
+                      "title-lg": ["20px", {"lineHeight": "1.5", "fontWeight": "600"}]
+              }
+            },
+          },
+        }
+      </script>
+</head>
+<body class="bg-background text-on-background font-body-md selection:bg-primary-fixed-dim selection:text-on-primary-fixed">
+<!-- Sidebar Navigation -->
+<aside class="bg-primary h-screen w-64 fixed left-0 top-0 shadow-xl flex flex-col h-full py-stack-md z-50">
+<div class="px-6 mb-10 flex items-center gap-3">
+<div class="w-10 h-10 rounded-lg bg-secondary-container flex items-center justify-center">
+<span class="material-symbols-outlined text-on-primary text-2xl" data-weight="fill">school</span>
+</div>
+<div>
+<h1 class="font-headline-md text-headline-md font-bold text-on-primary leading-tight">SIM-PPT</h1>
+<p class="text-[10px] text-on-primary/60 tracking-widest uppercase">Guardian Portal</p>
+</div>
+</div>
+<nav class="flex-1 space-y-1 px-3">
+<a class="flex items-center gap-3 px-4 py-3 rounded-xl border-l-4 border-secondary-container bg-white/10 text-on-primary font-bold transition-all duration-200" href="#">
+<span class="material-symbols-outlined text-secondary-container" data-weight="fill">dashboard</span>
+<span class="font-label-md text-label-md">Dashboard</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-xl text-on-primary/70 hover:text-on-primary hover:bg-white/5 transition-all duration-200 group" href="#">
+<span class="material-symbols-outlined group-hover:scale-110 transition-transform">payments</span>
+<span class="font-label-md text-label-md">Financials</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-xl text-on-primary/70 hover:text-on-primary hover:bg-white/5 transition-all duration-200 group" href="#">
+<span class="material-symbols-outlined group-hover:scale-110 transition-transform">auto_stories</span>
+<span class="font-label-md text-label-md">Academic</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-xl text-on-primary/70 hover:text-on-primary hover:bg-white/5 transition-all duration-200 group" href="#">
+<span class="material-symbols-outlined group-hover:scale-110 transition-transform">gavel</span>
+<span class="font-label-md text-label-md">Discipline</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-xl text-on-primary/70 hover:text-on-primary hover:bg-white/5 transition-all duration-200 group" href="#">
+<span class="material-symbols-outlined group-hover:scale-110 transition-transform">calendar_month</span>
+<span class="font-label-md text-label-md">Attendance</span>
+</a>
+</nav>
+<div class="mt-auto px-3 space-y-1">
+<a class="flex items-center gap-3 px-4 py-3 rounded-xl text-on-primary/70 hover:text-on-primary hover:bg-white/5 transition-all duration-200" href="#">
+<span class="material-symbols-outlined">help</span>
+<span class="font-label-md text-label-md">Support</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-xl text-error hover:bg-error/10 transition-all duration-200" href="#">
+<span class="material-symbols-outlined">logout</span>
+<span class="font-label-md text-label-md">Logout</span>
+</a>
+</div>
+</aside>
+<!-- Main Content Canvas -->
+<main class="ml-64 min-h-screen">
+<!-- TopAppBar -->
+<header class="fixed top-0 right-0 w-[calc(100%-16rem)] h-16 bg-surface/60 backdrop-blur-xl border-b border-white/20 flex justify-between items-center px-gutter z-40">
+<div class="flex items-center gap-4">
+<h2 class="font-title-lg text-title-lg text-primary">Assalamu'alaikum, Bp. Ahmad</h2>
+</div>
+<div class="flex items-center gap-6">
+<button class="relative w-10 h-10 flex items-center justify-center hover:bg-surface-container-high/50 rounded-full transition-colors">
+<span class="material-symbols-outlined text-on-surface-variant">notifications</span>
+<span class="absolute top-2 right-2 w-2 h-2 bg-secondary-container rounded-full border border-surface"></span>
+</button>
+<div class="flex items-center gap-3 pl-4 border-l border-outline-variant/30">
+<div class="text-right hidden sm:block">
+<p class="font-label-md text-label-md text-on-surface">Ahmad Fauzi</p>
+<p class="text-[10px] text-on-surface-variant">Wali dari: M. Rizky</p>
+</div>
+<img class="w-10 h-10 rounded-full border-2 border-primary-fixed-dim object-cover" data-alt="Professional studio portrait of a middle-aged Indonesian father wearing a clean white shirt and a traditional black peci cap, smiling warmly into the camera. The background is a soft, out-of-focus Islamic pattern in muted emerald and gold tones, creating a trustworthy and respectful atmosphere consistent with the portal's serene design." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDgJdx3e9phQKAKsZeshqUq6eLLYJgiGEL1r4mb8vpQqgjIsq9qmImLhNRbbrFugxNJ8w5V2ZpfkcxocMZbyAy3eYT4btnZg4XhcQclgyzVLQ6cv2xEBBqwQ_2SRSIQIUPoHKHaXps6NPFVGHqJ4lr99ajNCapEmLTn6Q7k-JKR9_L7qAGaFC9DhG1UdOXCcCZD8UPTffNszyVgXK3WY8gUbvZ0uLzwYrgpsrcbVOl0l1F-1-2skkEL1PN7sGURh_lVRQ86ZSrLJsZa"/>
+</div>
+</div>
+</header>
+<!-- Scrollable Dashboard Content -->
+<div class="pt-24 pb-12 px-gutter max-w-container-max mx-auto">
+<!-- Hero Bento Header -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-stack-lg mb-stack-lg">
+<!-- Student Profile Card -->
+<div class="lg:col-span-2 glass-card rounded-3xl p-8 flex flex-col md:flex-row items-center gap-8 relative overflow-hidden group">
+<div class="absolute -right-12 -top-12 w-48 h-48 bg-primary-fixed-dim/10 rounded-full blur-3xl group-hover:bg-primary-fixed-dim/20 transition-all"></div>
+<div class="relative">
+<div class="w-32 h-32 rounded-2xl overflow-hidden ring-4 ring-white shadow-lg">
+<img class="w-full h-full object-cover" data-alt="A focused high school student at an Islamic boarding school, wearing a neat white uniform and a black songkok. He is sitting in a bright, modern library with shelves of traditional Islamic books and modern computers in the background. The lighting is soft and natural, emphasizing a studious and disciplined environment with deep emerald and white color accents." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCchY1aV-pMY32nwewzYbRJq1H1XZkwAh1bXw9RjpUQG4-Rphw-rOnlQ1mA4-iRvH0a_BaiIPXiV_vqu30B6pe6NXmAqjbABaODg-v-uRg_ZFCYiewiHP4WuuTdqjn87l2D2zq0u8aE7O1FUb3WtO3wQiRQx8CF66DB5nfCtC8URRprA28iPOS3e9PWjczcLxQ0e34cCIL03cuNPKC41QOJxlhyNt83mjTo_x-4r_FToM7V68QVd00-PPodBUSJd1VnbCaiFXASvZqZ"/>
+</div>
+<div class="absolute -bottom-2 -right-2 bg-primary text-white text-[10px] px-2 py-1 rounded-md font-bold uppercase tracking-wider">Active</div>
+</div>
+<div class="flex-1 text-center md:text-left space-y-2">
+<span class="px-3 py-1 bg-primary-fixed text-on-primary-fixed text-[12px] font-bold rounded-full">Grade 11 - IPA 2</span>
+<h3 class="font-display-lg text-headline-lg text-primary">Muhammad Rizky Fauzi</h3>
+<div class="flex flex-wrap justify-center md:justify-start gap-4 pt-2">
+<div class="flex items-center gap-2 text-on-surface-variant">
+<span class="material-symbols-outlined text-primary text-sm">id_card</span>
+<span class="font-label-md">NIS: 202410023</span>
+</div>
+<div class="flex items-center gap-2 text-on-surface-variant">
+<span class="material-symbols-outlined text-primary text-sm">home_pin</span>
+<span class="font-label-md">Dorm: Al-Ghazali 3</span>
+</div>
+</div>
+</div>
+<div class="w-full md:w-auto flex flex-row md:flex-col gap-3">
+<button class="flex-1 bg-primary text-white px-6 py-3 rounded-xl font-label-md flex items-center justify-center gap-2 hover:opacity-90 transition-opacity">
+<span class="material-symbols-outlined text-sm">person_search</span>
+                            Profile
+                        </button>
+<button class="flex-1 bg-white border border-primary text-primary px-6 py-3 rounded-xl font-label-md flex items-center justify-center gap-2 hover:bg-primary/5 transition-colors">
+<span class="material-symbols-outlined text-sm">mail</span>
+                            Message
+                        </button>
+</div>
+</div>
+<!-- Quick Stats -->
+<div class="space-y-stack-md">
+<div class="glass-card rounded-3xl p-6 flex items-center justify-between border-l-4 border-secondary-container">
+<div>
+<p class="text-on-surface-variant text-label-sm uppercase tracking-widest mb-1">Attendance</p>
+<h4 class="text-headline-md font-bold text-primary">98.4%</h4>
+</div>
+<div class="w-12 h-12 bg-secondary-fixed rounded-full flex items-center justify-center">
+<span class="material-symbols-outlined text-on-secondary-fixed">fact_check</span>
+</div>
+</div>
+<div class="glass-card rounded-3xl p-6 flex items-center justify-between border-l-4 border-primary-container">
+<div>
+<p class="text-on-surface-variant text-label-sm uppercase tracking-widest mb-1">Academic Rank</p>
+<h4 class="text-headline-md font-bold text-primary">3 / 32</h4>
+</div>
+<div class="w-12 h-12 bg-primary-fixed rounded-full flex items-center justify-center">
+<span class="material-symbols-outlined text-on-primary-fixed">military_tech</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Financials and Academic Row -->
+<div class="grid grid-cols-1 xl:grid-cols-2 gap-stack-lg">
+<!-- Financials (Midtrans style integration) -->
+<div class="glass-card rounded-3xl p-8">
+<div class="flex items-center justify-between mb-8">
+<div>
+<h3 class="font-headline-md text-headline-md text-primary">SPP Payment Status</h3>
+<p class="text-on-surface-variant font-body-md">Manage education fees and bills</p>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant/40 text-4xl">payments</span>
+</div>
+<!-- Current Bill Highlight -->
+<div class="bg-primary text-white rounded-2xl p-6 mb-8 flex flex-col md:flex-row items-center justify-between gap-6 relative overflow-hidden shadow-lg shadow-primary-container/20">
+<div class="absolute inset-0 bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-stops))] from-primary-fixed-dim/20 to-transparent opacity-50"></div>
+<div class="relative z-10">
+<p class="text-on-primary/60 text-label-sm uppercase tracking-wider mb-1">Outstanding Balance</p>
+<h2 class="text-display-lg font-display-lg">Rp 1.250.000</h2>
+<p class="text-on-primary-fixed-variant text-label-md bg-white/10 w-fit px-3 py-1 rounded-full mt-2">Due on Oct 10, 2024</p>
+</div>
+<button class="relative z-10 bg-secondary-container text-on-secondary-fixed font-bold px-8 py-4 rounded-xl flex items-center gap-3 hover:scale-105 active:scale-95 transition-transform shadow-xl shadow-secondary-container/30">
+                            Pay via Midtrans
+                            <span class="material-symbols-outlined">arrow_forward</span>
+</button>
+</div>
+<!-- Payment History -->
+<div class="space-y-4">
+<h4 class="font-title-lg text-title-lg text-primary">Recent Transactions</h4>
+<div class="divide-y divide-outline-variant/30">
+<div class="py-4 flex items-center justify-between">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 rounded-full bg-surface-container-high flex items-center justify-center">
+<span class="material-symbols-outlined text-primary text-lg">description</span>
+</div>
+<div>
+<p class="font-label-md text-on-surface">September SPP &amp; Building Fee</p>
+<p class="text-label-sm text-on-surface-variant">Paid on Sept 05, 2024 • Credit Card</p>
+</div>
+</div>
+<div class="text-right">
+<p class="font-label-md text-primary font-bold">Rp 1.250.000</p>
+<span class="text-[10px] text-green-600 bg-green-100 px-2 py-0.5 rounded-full font-bold uppercase">Success</span>
+</div>
+</div>
+<div class="py-4 flex items-center justify-between">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 rounded-full bg-surface-container-high flex items-center justify-center">
+<span class="material-symbols-outlined text-primary text-lg">description</span>
+</div>
+<div>
+<p class="font-label-md text-on-surface">August SPP Fee</p>
+<p class="text-label-sm text-on-surface-variant">Paid on Aug 08, 2024 • Bank Transfer</p>
+</div>
+</div>
+<div class="text-right">
+<p class="font-label-md text-primary font-bold">Rp 750.000</p>
+<span class="text-[10px] text-green-600 bg-green-100 px-2 py-0.5 rounded-full font-bold uppercase">Success</span>
+</div>
+</div>
+</div>
+<button class="w-full text-center py-4 text-secondary font-label-md hover:underline">View All History</button>
+</div>
+</div>
+<!-- Academic Progress -->
+<div class="space-y-stack-lg">
+<!-- Academic Card -->
+<div class="glass-card rounded-3xl p-8 h-full">
+<div class="flex items-center justify-between mb-8">
+<div>
+<h3 class="font-headline-md text-headline-md text-primary">Academic Progress</h3>
+<p class="text-on-surface-variant font-body-md">Latest examination results</p>
+</div>
+<button class="bg-surface-container-high/50 p-2 rounded-full hover:bg-surface-container-high transition-colors">
+<span class="material-symbols-outlined text-primary">download</span>
+</button>
+</div>
+<!-- Grades Grid -->
+<div class="grid grid-cols-2 gap-4 mb-8">
+<div class="p-5 rounded-2xl bg-surface-container-low border border-white flex flex-col gap-2">
+<p class="text-label-sm text-on-surface-variant uppercase tracking-widest">Al-Qur'an &amp; Hadith</p>
+<div class="flex items-end justify-between">
+<span class="text-headline-md font-bold text-primary">92</span>
+<span class="text-label-sm text-green-600 bg-green-100 px-2 py-0.5 rounded uppercase">A</span>
+</div>
+<div class="w-full bg-outline-variant/30 h-1 rounded-full mt-2">
+<div class="bg-primary h-1 rounded-full" style="width: 92%"></div>
+</div>
+</div>
+<div class="p-5 rounded-2xl bg-surface-container-low border border-white flex flex-col gap-2">
+<p class="text-label-sm text-on-surface-variant uppercase tracking-widest">Mathematics</p>
+<div class="flex items-end justify-between">
+<span class="text-headline-md font-bold text-primary">85</span>
+<span class="text-label-sm text-primary-container bg-primary-fixed px-2 py-0.5 rounded uppercase">B+</span>
+</div>
+<div class="w-full bg-outline-variant/30 h-1 rounded-full mt-2">
+<div class="bg-primary h-1 rounded-full" style="width: 85%"></div>
+</div>
+</div>
+<div class="p-5 rounded-2xl bg-surface-container-low border border-white flex flex-col gap-2">
+<p class="text-label-sm text-on-surface-variant uppercase tracking-widest">Physics</p>
+<div class="flex items-end justify-between">
+<span class="text-headline-md font-bold text-primary">88</span>
+<span class="text-label-sm text-primary-container bg-primary-fixed px-2 py-0.5 rounded uppercase">A-</span>
+</div>
+<div class="w-full bg-outline-variant/30 h-1 rounded-full mt-2">
+<div class="bg-primary h-1 rounded-full" style="width: 88%"></div>
+</div>
+</div>
+<div class="p-5 rounded-2xl bg-surface-container-low border border-white flex flex-col gap-2">
+<p class="text-label-sm text-on-surface-variant uppercase tracking-widest">Arabic Language</p>
+<div class="flex items-end justify-between">
+<span class="text-headline-md font-bold text-primary">95</span>
+<span class="text-label-sm text-green-600 bg-green-100 px-2 py-0.5 rounded uppercase">A</span>
+</div>
+<div class="w-full bg-outline-variant/30 h-1 rounded-full mt-2">
+<div class="bg-primary h-1 rounded-full" style="width: 95%"></div>
+</div>
+</div>
+</div>
+<!-- Discipline Snippet -->
+<div class="p-6 rounded-3xl bg-error-container/30 border border-error/10">
+<div class="flex items-start gap-4">
+<div class="w-12 h-12 bg-error-container rounded-2xl flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-error" data-weight="fill">gavel</span>
+</div>
+<div>
+<h4 class="font-title-lg text-error font-bold mb-1">Disciplinary Points: 5</h4>
+<p class="text-on-surface-variant text-label-md">Recent: Late to Fajr prayer (3 pts), Not wearing uniform correctly (2 pts). Total accumulated points: 5/100.</p>
+<button class="mt-3 text-error font-bold text-label-sm flex items-center gap-1 hover:underline">
+                                        View Details <span class="material-symbols-outlined text-xs">arrow_outward</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Attendance Heatmap/Overview -->
+<div class="mt-stack-lg glass-card rounded-3xl p-8">
+<div class="flex items-center justify-between mb-8">
+<div>
+<h3 class="font-headline-md text-headline-md text-primary">Attendance Overview</h3>
+<p class="text-on-surface-variant font-body-md">Tracking daily academic and spiritual activities</p>
+</div>
+<div class="flex gap-2">
+<div class="flex items-center gap-2 px-3 py-1 rounded-lg bg-green-50 border border-green-100">
+<span class="w-3 h-3 rounded-full bg-green-500"></span>
+<span class="text-label-sm text-green-700">Present</span>
+</div>
+<div class="flex items-center gap-2 px-3 py-1 rounded-lg bg-amber-50 border border-amber-100">
+<span class="w-3 h-3 rounded-full bg-amber-500"></span>
+<span class="text-label-sm text-amber-700">Permit</span>
+</div>
+<div class="flex items-center gap-2 px-3 py-1 rounded-lg bg-red-50 border border-red-100">
+<span class="w-3 h-3 rounded-full bg-red-500"></span>
+<span class="text-label-sm text-red-700">Alpha</span>
+</div>
+</div>
+</div>
+<div class="grid grid-cols-7 sm:grid-cols-14 md:grid-cols-31 gap-2">
+<!-- Sample Days of a Month -->
+<script>
+                        for(let i=1; i<=31; i++) {
+                            const isAlpha = i === 12;
+                            const isPermit = i === 24;
+                            const color = isAlpha ? 'bg-red-500' : (isPermit ? 'bg-amber-500' : 'bg-green-500');
+                            const opacity = i > 25 ? 'opacity-20' : 'opacity-100';
+                            document.write(`
+                                <div class="group relative flex flex-col items-center">
+                                    <div class="w-full aspect-square rounded-md ${color} ${opacity} transition-transform hover:scale-110 cursor-help"></div>
+                                    <span class="text-[8px] mt-1 text-on-surface-variant font-medium">${i}</span>
+                                    <div class="absolute bottom-full mb-2 hidden group-hover:block z-20 w-32 bg-primary text-white text-[10px] p-2 rounded-lg text-center shadow-xl">
+                                        Day ${i} Oct: ${isAlpha ? 'Absent (No Notice)' : (isPermit ? 'Sick Permit' : 'Present')}
+                                    </div>
+                                </div>
+                            `);
+                        }
+                    </script>
+</div>
+<div class="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
+<div class="flex items-center gap-4 p-4 rounded-2xl bg-surface-container-low border border-white">
+<div class="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center">
+<span class="material-symbols-outlined text-green-700">check_circle</span>
+</div>
+<div>
+<p class="text-on-surface-variant text-[10px] uppercase font-bold tracking-widest">Congregational Prayer</p>
+<p class="font-bold text-primary">100% On-time</p>
+</div>
+</div>
+<div class="flex items-center gap-4 p-4 rounded-2xl bg-surface-container-low border border-white">
+<div class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
+<span class="material-symbols-outlined text-blue-700">menu_book</span>
+</div>
+<div>
+<p class="text-on-surface-variant text-[10px] uppercase font-bold tracking-widest">Tahfidz Target</p>
+<p class="font-bold text-primary">On Schedule (Juz 12)</p>
+</div>
+</div>
+<div class="flex items-center gap-4 p-4 rounded-2xl bg-surface-container-low border border-white">
+<div class="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center">
+<span class="material-symbols-outlined text-purple-700">fitness_center</span>
+</div>
+<div>
+<p class="text-on-surface-variant text-[10px] uppercase font-bold tracking-widest">Extracurricular</p>
+<p class="font-bold text-primary">Karate Club (Active)</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Floating Quick Action (Help / Chat) -->
+<button class="fixed bottom-8 right-8 w-16 h-16 bg-primary-container text-on-primary-container rounded-full shadow-2xl flex items-center justify-center hover:scale-110 active:scale-95 transition-transform z-50 group">
+<span class="material-symbols-outlined text-3xl group-hover:rotate-12 transition-transform">support_agent</span>
+</button>
+</main>
+<script>
+        // Micro-interactions and effects
+        document.querySelectorAll('.glass-card').forEach(card => {
+            card.addEventListener('mousemove', (e) => {
+                const rect = card.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                card.style.setProperty('--mouse-x', `${x}px`);
+                card.style.setProperty('--mouse-y', `${y}px`);
+            });
+        });
+
+        // Add subtle animation to progress bars on scroll
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('animate-grow-width');
+                }
+            });
+        }, { threshold: 0.5 });
+
+        document.querySelectorAll('.bg-primary.h-1').forEach(bar => {
+            observer.observe(bar);
+        });
+    </script>
+</body></html>

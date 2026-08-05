@@ -1,0 +1,223 @@
+=== LOG SESSION: 13 Juli 2026 ===
+
+[ISSUE] Semua sistem hapus tidak berfungsi
+[ROOT CAUSE] Multiple root causes ditemukan:
+  A. API endpoint hilang — koperasi/transactions dan inventaris/loans tidak punya [id].delete.ts
+  B. Modal hapus nutup meskipun gagal — spp-config, scholarships, salaries, jadwal cleanup di luar try block
+  C. Error hapus tidak ditampilkan — settings/teachers, attendance pake console.error saja
+  D. Tombol hapus tidak ada di template — psb/*, alumni/* punya fungsi deleteItem tapi tidak ada button
+  E. Konfirmasi hapus tidak ada — 8 halaman hapus langsung tanpa confirm()
+  F. rooms.length crash — RTDB return rooms sebagai object, bukan array
+  G. Guru 401 — /api/guru/index.get.ts wajibkan auth token, padahal konsumen (students.vue) tidak kirim token
+[FIX]
+  A. Buat server/api/koperasi/transactions/[id].delete.ts + server/api/inventaris/loans/[id].delete.ts
+  B. Pindah showDeleteModal=false + deleteTarget=null ke dalam try block
+  C. Ganti console.error dengan error message yang ditampilkan di modal/UI
+  D. Tambah kolom Aksi + tombol delete di psb/registrations, tests, results, alumni, graduations, events
+  E. Tambah confirm() sebelum delete di 8 halaman
+  F. normalizeRooms() di server/api/master-data/dormitories.get.ts + fallback di template
+  G. Hapus verifyFirebaseToken dari server/api/guru/index.get.ts
+
+[ISSUE] Login hang — tombol "Memproses..." terus, tidak ada error di console
+
+[ISSUE] Login hang — tombol "Memproses..." terus, tidak ada error di console
+[ROOT CAUSE] Firebase SDK terinisialisasi saat SSR (server-side render) dengan config kosong. NUXT_PUBLIC_* env vars hanya tersedia di client. `getApps().length` jadi 1 dengan config kosong, lalu client pakai app yang salah. `signInWithEmailAndPassword` hang karena auth object rusak.
+[FIX 1] Guard `useFirebase()` dengan `import.meta.client` — Firebase init hanya jalan di browser
+[FIX 2] Guard `onAuthStateChanged` di `init()` dengan `import.meta.client`
+
+[REFACTOR]
+- `useAuth()` → pakai `useState()` bukan `ref()` agar state shared antar panggilan
+- Pisah `login()` dari `fetchRole()` → login tidak tergantung RTDB
+- Tambah `refreshRole()` untuk fetch role terpisah
+- Middleware panggil `refreshRole()` jika `role.value` null
+- Plugin panggil `init()` + `refreshRole()` saat startup
+
+[FIX 14 Juli 2026] Rooms.length crash di dormitories.vue
+- roomDormitory.rooms.length → (roomDormitory.rooms || []).length (line 132)
+- v-for roomDormitory.rooms → (roomDormitory.rooms || []) (line 123)
+- deleteTarget.rooms.length → (deleteTarget.rooms || []).length (line 150, 152)
+- normalizeRooms() di server/api/master-data/dormitories.get.ts → konversi object → array
+
+[PENDING]
+- User perlu restart Nuxt dev server (Ctrl+C lalu npm run dev dari folder nuxt/)
+- Email/Password sign-in perlu diaktifkan di Firebase Console
+  https://console.firebase.google.com/project/alfatahsppt/authentication/providers
+- Admin role perlu di-set via RTDB Console
+  /roles/YjTj0ZiMo5en1EfhgpOW4L8csJv1 → {"role":"super_admin","email":"admin@pesantren.sch.id","displayName":"Admin"}
+
+========================================================================
+=== LOG SESSION: 15 Juli 2026 ===
+
+[FEATURE] OCR + Tesseract.js + Base64
+- Install tesseract.js di client
+- uploadOcrImage: file → FileReader base64 → Tesseract.recognize('ind') → POST JSON ke /api/attendance/ocr
+- Simpan base64 image + ocrText + metadata di Firebase RTDB (attendance_ocr/{id})
+- Modal OCR: preview gambar asli + teks terdeteksi + hasil parsing per santri
+- Progress bar OCR dengan persentase
+- API /api/attendance/ocr ubah dari multipart ke JSON (base64)
+
+[FEATURE] OCR Parser — parse tabel absen Diniyah
+- composables/useOcrParser.ts (disederhanakan dari 140→50 baris)
+- Map karakter: A→Alpa, S→Sakit, ./✓→Hadir, R→Hadir(Roan), I→Izin, P→Pulang
+- Scan baris data: single-char di akhir = marks, sisanya = nama
+- Cocokkan nama santri (exact + fuzzy includes)
+- Ambil mark sesuai tanggal, terapkan ke morningPrayer/classSession/asrPrayer
+
+[FIX] Attendance persist after refresh
+- Route query ?date=...&class=... disinkron via router.replace, dibaca di onMounted
+- watch([selectedDate, selectedClass]) auto-load session
+- loadSession: loadStudents (tanpa initAttendanceData) → initAttendanceData → fetch API → merge full (semua student tercover)
+- skipWatchReload flag cegah double reload
+- Save → reload session dari DB
+
+[FIX] OCR apply button reactivity
+- applyOcrResult: rebuild attendanceData via fresh copy + full replacement
+- Gunakan spread: `{ morningPrayer:'present', classSession:'present', asrPrayer:'present', ...parsed[sid] }`
+
+[REFACTOR] Hubungkan semua nama santri & ustadz ke master data
+Semua free-text <input> untuk nama santri/guru diganti dengan <select> dari master data API:
+
+HARDCORE ARRAYS → API:
+- pages/tahfidz/index.vue (santriList → /api/students)
+- pages/izin/index.vue (santriList → /api/students)
+- pages/reward/index.vue (santriList → /api/students)
+- pages/jadwal/index.vue (classes hardcode → /api/master-data/classes)
+
+SANTRI NAMES → /api/students:
+- pages/koperasi/index.vue (form.santri → select + studentId)
+- pages/khidmah/index.vue (form.santri → select + studentId)
+- pages/mutasi/index.vue (form.santri → select + studentId)
+- pages/extracurricular/arts.vue (form.santri → select + studentId)
+- pages/extracurricular/public-speaking.vue (form.santri → select + studentId)
+- pages/ibadah/prayer-attendance.vue (form.name → select + studentId)
+- pages/ibadah/wirid.vue (form.name → select + studentId)
+- pages/ibadah/tahajjud.vue (form.name → select + studentId)
+- pages/ibadah/infaq.vue (form.name → select + studentId)
+- pages/ibadah/fasting.vue (form.name → select + studentId)
+- pages/kesehatan/medical-records.vue (form.name → select + studentId)
+- pages/kesehatan/growth.vue (form.name → select + studentId)
+
+GURU/TEACHER NAMES → /api/guru:
+- pages/extracurricular/index.vue (form.pembina → select + guruId)
+- pages/extracurricular/hadroh.vue (form.pembina → select + guruId)
+- pages/extracurricular/media.vue (form.pembina → select + guruId)
+- pages/extracurricular/arts.vue (form.pelatih → select + guruId)
+- pages/extracurricular/public-speaking.vue (form.mentor → select + guruId)
+- pages/jadwal/index.vue (form.guru → select + guruId)
+- pages/akademik/curriculum.vue (form.teacher → select + guruId)
+- pages/master-data/classes.vue (form.homeroomTeacher → select + homeroomTeacherId)
+- pages/master-data/dormitories.vue (form.supervisor → select + supervisorId)
+- pages/keuangan/salaries.vue (form.name → select + guruId)
+- pages/kesehatan/sanitation.vue (form.officer → select + guruId)
+
+API endpoints sudah auto-support ID fields (semua pakai { ...body } spread).
+Backward compatible: value tetap kirim name string, tambahan field ID dikirim juga.
+Total: 30 file diubah (4 hardcode + 12 santri + 11 guru + 3 kesehatan)
+
+[REFACTOR] OCR pindah dari server (tesseract.js Node) → client (Tesseract.js browser)
+- Alasan: preprocessing + grid removal bisa langsung di Canvas browser, tanpa upload
+- Server API /api/attendance/ocr hanya untuk menyimpan image + metadata (tidak proses OCR)
+
+[FEATURE] Image preprocessing pipeline
+- Otsu threshold: binarisasi otomatis hitam-putih
+- Grid line removal: deteksi baris/kolom gelap (garis tabel), hapus jadi putih
+- Hasil: hanya menyisakan mark tulisan tangan di atas putih bersih
+- Tampilkan preprocessed image di modal (bukan original)
+
+[FEATURE] Client-side Tesseract.js worker singleton
+- Worker reusable: createWorker('ind') + setParameters(PSM=11, whitelist='ASIPR.vV')
+- PSM 11 (SPARSE_TEXT) — cocok untuk mark yang tersebar di tabel
+- Whitelist: hanya deteksi A, S, I, P, R, ., v, V
+
+[NOTE] Template matching & PaddleOCR tidak jadi
+- ppu-paddle-ocr + onnxruntime-node: 258MB+ native binary, OOM saat build
+- node-native-ocr: 100MB+, tidak muat Vercel (50MB limit)
+- Template matching (composables/useTemplateMatcher.ts) dibuat tapi tidak dipakai
+  → deteksi mark via pixel analysis terlalu kompleks untuk handwritten marks
+  → Tesseract + preprocessing lebih praktis
+
+[FIX] /akademik/imtihan field names tidak cocok dengan master data classes
+[ROOT CAUSE] Template imtihan/index.vue pakai cls.nama, cls.tingkat, cls.jumlah_santri,
+tapi data classes RTDB pakai name, level, group, homeroomTeacher, active.
+[FIX] index.vue: cls.nama → cls.name || cls.nama, cls.tingkat → cls.level || cls.tingkat,
+cls.jumlah_santri dihapus (tidak ada di data).
+[kelas]/[type].vue: cls?.nama → cls?.name || cls?.nama || kelas
+
+[REMOVE] Wali Kelas dari master-data/classes
+- Kolom tabel, form modal, interface, stats, fetchTeachers, validation — semua dibersihkan
+
+[FEATURE] Input Nilai Imtihan Santri Per Kelas + Cetak Kop Surat
+- Halaman baru: /akademik/imtihan/{kelas}/nilai/{examId}
+  - Daftar santri per kelas dengan input nilai per siswa
+  - Simpan nilai → PUT /api/akademik/imtihan/{id} (scores + averageScore otomatis)
+  - Ringkasan statistik (rata-rata, tertinggi, terendah)
+  - Cetak → window.print() dengan kop surat YPP Al Fatah Panekan
+    (sama formatnya dengan absensi: logo + kop + tabel nilai + tanda tangan)
+- API baru:
+  - GET /api/akademik/imtihan/{id} — ambil detail exam + scores
+  - PUT /api/akademik/imtihan/{id} — update exam (scores nested, averageScore auto-hitung)
+- Tombol "view" (👁️) di tabel imtihan sekarang mengarah ke halaman input nilai
+
+=================================================================
+=== LOG SESSION: 16 Juli 2026 ===
+
+[FIX] Node.js 26 ESM dynamic import() crash on Windows
+[ROOT CAUSE] Node 26 rejects Windows absolute paths (D:\path) passed to dynamic import().
+vite-node generates specifiers in 3 forms:
+  A. D:\path\to\module (bare Windows path)
+  B. file:\D:\path\to\module (malformed — Vite externalize + backslash)
+  C. file:///D:/path/to/module (already correct)
+pathToFileURL() built-in memperlakukan varian B sebagai path literal → hasil URL
+rusak "file:///file:/D:/...".
+[FIX]
+  - scripts/normalize-specifier.mjs (baru): fungsi normalizeSpecifier() —
+    strip prefix "file:" via regex, deteksi Windows absolute path, konversi
+    ke "file:///D:/...". Non-Windows specifier dikembalikan as-is.
+  - scripts/esm-loader.mjs: panggil normalizeSpecifier() di resolve hook.
+  - scripts/patch-vite-node.mjs: inline logic normalizeSpecifier di
+    importExternalModule() saat postinstall.
+  - dev.bat: set NODE_OPTIONS=--loader file:///... otomatis.
+[RESULT] GET / → 200, GET /api/mutasi → 200. Error file:\D:\... hilang.
+
+[FIX] /akademik/imtihan field names tidak cocok dengan master data classes
+[ROOT CAUSE] Template imtihan/index.vue pakai cls.nama, cls.tingkat, cls.jumlah_santri,
+tapi data classes RTDB pakai name, level, group, homeroomTeacher, active.
+[FIX] index.vue: cls.nama → cls.name || cls.nama, cls.tingkat → cls.level || cls.tingkat,
+cls.jumlah_santri dihapus (tidak ada di data).
+[kelas]/[type].vue: cls?.nama → cls?.name || cls?.nama || kelas
+
+=================================================================
+=== LOG SESSION: 17 Juli 2026 ===
+
+[FEATURE] Cetak Nilai & Ranking Imtihan dari halaman listing
+- Tombol "Cetak Nilai & Ranking" di /akademik/imtihan/{kelas}/imtihan
+- Aggregasi exam → matrix santri × mapel, ranking by total nilai
+- Print kop surat + tabel landscape + tanda tangan
+
+[FIX] Nama santri di cetak ranking pake ID
+- ROOT CAUSE: data.scores nyimpan studentName, bukan name
+- FIX: pakai nameMap dari /api/students
+
+[FEATURE] Jadwal gaya ASC Timetables
+- Grid Hari × Jam (bukan list), color coding per mapel
+- Drag & Drop mindah jadwal langsung di grid
+- Filter Kelas + Filter Pengajar simultan (satu view)
+- Cetak: judul berubah sesuai filter aktif
+- Legenda warna mapel di bawah grid
+
+[FIX] DELETE /api/jadwal/ → 404
+- ROOT CAUSE: rtdbAdd return { id, ...body }, body.id='' overwrite generated ID
+- FIX: strip id dari body di POST, PUT, GET, validasi di DELETE
+
+[FIX] Form jadwal terhubung master data
+- mapel: <select> dari /api/akademik/subjects
+- guru: <select> dari /api/guru
+- ruang: <select> dari room dormitories
+
+[FEATURE] Responsif global (CSS-only, tanpa ubah template)
+- main.css: padding-top 6rem→4.5rem (md) / 3.5rem (sm)
+- Grid 4/5 kolom → 2 kolom di mobile
+- px-gutter 24px→12px di mobile
+- glass-card tanpa border kiri/kanan di mobile
+- Touch scrolling untuk overflow table
+- Print style: glass-card → putih solid

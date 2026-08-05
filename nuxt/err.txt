@@ -1,0 +1,36 @@
+## FIXED: Node.js v26.5.0 on Windows — ESM dynamic import() fails on absolute paths
+
+### Root cause
+Node.js 26 rejects Windows absolute paths passed to dynamic `import()`.  
+The `vite-node` module passes two forms of problematic specifiers:
+1. `D:\path\to\module` (bare Windows path)
+2. `file:\D:\path\to\module` (malformed — `file:` + backslash + path)
+
+### Fix applied
+**New file: `scripts/normalize-specifier.mjs`**  
+Single normalization function `normalizeSpecifier(specifier)` that:
+- Strips any `file:` prefix (file://, file:\, file: alone) via regex `/^file:[\\/]*/i`
+- If the remainder is a Windows drive-letter path → returns `file:///D:/path...`
+- If the original is a bare Windows path → returns `file:///D:/path...`
+- Otherwise → returns specifier unchanged (relative imports, bare package names, valid file:// URLs)
+
+**Updated: `scripts/esm-loader.mjs`**  
+Calls `normalizeSpecifier()` in the resolve hook before `nextResolve()`.
+
+**Updated: `scripts/patch-vite-node.mjs`**  
+Inlines the same normalize-specifier logic into `importExternalModule()` at postinstall time.
+
+### Verification
+- `GET /` → **200** (SSR page renders, previously 500)
+- `GET /api/mutasi` → **200** (API endpoint)
+- No more `Cannot find module '...file:\...\vue\index.mjs'` errors
+
+### How to run
+```
+dev.bat              # Windows CMD (sets NODE_OPTIONS loader)
+```
+Or manually:
+```powershell
+$env:NODE_OPTIONS='--loader file:///' + (Resolve-Path 'scripts/esm-loader.mjs').ToString().Replace('\','/')
+npx nuxt dev
+```
