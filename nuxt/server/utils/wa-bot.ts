@@ -100,6 +100,52 @@ async function getAttendanceSummary(studentId: string, studentName: string): Pro
   return `Hadir ${totalHadir}, Izin ${totalIzin}, Sakit ${totalSakit}, Alpha ${totalAlpha} (dari ${totalDays} hari)`
 }
 
+// ── Attendance from attendance_mutholaah / attendance_tahfidz ──
+
+async function getAttendanceSummaryFrom(
+  path: string,
+  studentId: string,
+  studentName: string,
+  labels: { key: string; label: string }[]
+): Promise<string> {
+  const db = getDatabase()
+  const snap = await db.ref(path).once('value')
+  if (!snap.exists()) return 'Belum ada data absensi.'
+
+  const totals: Record<string, number> = {}
+  let totalDays = 0
+  for (const entry of Object.values(snap.val()) as any[]) {
+    const records = entry.records || []
+    const found = records.find((r: any) => r.studentId === studentId || r.name === studentName)
+    if (!found || !found.marks) continue
+    for (const day of Object.values(found.marks) as string[]) {
+      totalDays++
+      if (day) totals[day] = (totals[day] || 0) + 1
+    }
+  }
+
+  if (totalDays === 0) return 'Belum ada data absensi.'
+  const parts = labels.map(l => `${l.label} ${totals[l.key] || 0}`)
+  return `${parts.join(', ')} (dari ${totalDays} hari)`
+}
+
+async function getMutholaahSummary(studentId: string, studentName: string): Promise<string> {
+  return getAttendanceSummaryFrom('attendance_mutholaah', studentId, studentName, [
+    { key: 'present', label: 'Hadir' },
+    { key: 'sick', label: 'Sakit' },
+    { key: 'permit', label: 'Izin' },
+    { key: 'absent', label: 'Alpa' },
+  ])
+}
+
+async function getTahfidzSummary(studentId: string, studentName: string): Promise<string> {
+  return getAttendanceSummaryFrom('attendance_tahfidz', studentId, studentName, [
+    { key: 'setor', label: 'Setor' },
+    { key: 'tidak_setor', label: 'Tidak Setor' },
+    { key: 'alpa', label: 'Alpa' },
+  ])
+}
+
 // ── Grades from grades/ ──
 
 async function getGradesSummary(studentId: string): Promise<string> {
@@ -178,11 +224,17 @@ function buildDirectReply(message: string, students: any[]): string {
   return reply
 }
 
-function buildDetailReply(students: any[], absensi: string, nilai: string): string {
+function buildDetailReply(students: any[], absensi: string, nilai: string, mutholaah?: string, tahfidz?: string): string {
   const s = students[0]
-  let reply = `Assalamu'alaikum Wr. Wb.\n\nBerikut data Ananda *${s.name}* (NIS: ${s.nis}):\n\n📋 *Kelas*: ${s.class || '-'}\n📌 *Status*: ${s.status || 'Active'}\n\n📊 *Rekap Absensi*\n${absensi}\n\n`
+  let reply = `Assalamu'alaikum Wr. Wb.\n\nBerikut data Ananda *${s.name}* (NIS: ${s.nis}):\n\n📋 *Kelas*: ${s.class || '-'}\n📌 *Status*: ${s.status || 'Active'}\n\n📊 *Rekap Absensi*\n${absensi}\n`
+  if (mutholaah && mutholaah !== 'Belum ada data absensi.') {
+    reply += `\n🕌 *Absensi Muthola'ah*\n${mutholaah}\n`
+  }
+  if (tahfidz && tahfidz !== 'Belum ada data absensi.') {
+    reply += `\n📖 *Absensi Tahfidz*\n${tahfidz}\n`
+  }
   if (nilai && nilai !== 'Belum ada data nilai.') {
-    reply += `📝 *Nilai*\n${nilai}\n`
+    reply += `\n📝 *Nilai*\n${nilai}\n`
   }
   reply += '\nSemoga informasi ini bermanfaat. Jika ada pertanyaan lain, silakan sampaikan.\nJazakumullah khairan. 🙏'
   return reply
@@ -274,8 +326,10 @@ export async function handleBotMessage(phone: string, message: string): Promise<
   if (students.length === 1) {
     const s = students[0]
     const absensi = await getAttendanceSummary(s.id, s.name)
+    const mutholaah = await getMutholaahSummary(s.id, s.name)
+    const tahfidz = await getTahfidzSummary(s.id, s.name)
     const nilai = await getGradesSummary(s.id)
-    const reply = buildDetailReply([s], absensi, nilai)
+    const reply = buildDetailReply([s], absensi, nilai, mutholaah, tahfidz)
     await saveConversation(phone, message, reply)
     return reply
   }

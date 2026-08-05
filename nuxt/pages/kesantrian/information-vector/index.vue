@@ -258,6 +258,101 @@
         </div>
       </div>
 
+      <!-- Riwayat Absensi Muthola'ah -->
+      <div class="glass-card rounded-2xl overflow-hidden mb-stack-lg">
+        <div class="p-stack-md border-b border-outline-variant/20 flex items-center justify-between">
+          <h3 class="font-display text-title-lg text-primary flex items-center gap-2">
+            <span class="material-symbols-outlined text-primary">auto_stories</span> Riwayat Absensi Muthola'ah
+          </h3>
+          <span class="text-label-sm text-on-surface-variant">{{ attendanceMutholaah.length }} bulan</span>
+        </div>
+        <div v-if="loadingAttendanceMutholaah" class="p-6 text-center text-on-surface-variant text-label-sm">Memuat...</div>
+        <div v-else-if="attendanceMutholaah.length === 0" class="p-6 text-center text-on-surface-variant text-label-sm">Belum ada data absensi muthola'ah</div>
+        <div v-else class="space-y-4 p-4">
+          <div v-for="month in attendanceMutholaah" :key="month.monthId" class="border border-outline-variant/20 rounded-xl overflow-hidden">
+            <div class="bg-surface-container-low px-4 py-2 flex items-center justify-between">
+              <span class="text-label-sm font-bold">{{ month.monthLabel }}</span>
+              <span class="text-label-xs text-on-surface-variant">Kelas: {{ month.className }}</span>
+            </div>
+            <div class="overflow-x-auto">
+              <table class="w-full text-left">
+                <thead>
+                  <tr class="bg-surface-container-lowest">
+                    <th class="px-2 py-1 text-[10px] text-on-surface-variant w-24">Nama</th>
+                    <th v-for="d in 31" :key="d" class="px-0.5 py-1 text-[9px] text-on-surface-variant text-center" style="min-width:22px">{{ d }}</th>
+                    <th class="px-2 py-1 text-[10px] text-on-surface-variant text-center w-16">Hadir</th>
+                    <th class="px-2 py-1 text-[10px] text-on-surface-variant text-center w-12">S/I/A</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr class="divide-x divide-outline-variant/10">
+                    <td class="px-2 py-1 text-label-xs font-medium">{{ month.student.name }}</td>
+                    <td v-for="d in 31" :key="d" class="px-0.5 py-1 text-center">
+                      <span :class="['inline-block w-5 h-5 rounded text-[9px] font-bold leading-5', mutholaahDay(month.student.marks?.[String(d)]).cls]">
+                        {{ mutholaahDay(month.student.marks?.[String(d)]).label }}
+                      </span>
+                    </td>
+                    <td class="px-2 py-1 text-center text-label-xs font-bold text-green-600">{{ month.stats.hadir }}</td>
+                    <td class="px-2 py-1 text-center text-label-xs">
+                      <span class="text-amber-600">{{ month.stats.sakit }}</span>/
+                      <span class="text-blue-600">{{ month.stats.izin }}</span>/
+                      <span class="text-red-600">{{ month.stats.alpa }}</span>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Riwayat Absensi Tahfidz -->
+      <div class="glass-card rounded-2xl overflow-hidden mb-stack-lg">
+        <div class="p-stack-md border-b border-outline-variant/20 flex items-center justify-between">
+          <h3 class="font-display text-title-lg text-primary flex items-center gap-2">
+            <span class="material-symbols-outlined text-primary">menu_book</span> Riwayat Absensi Tahfidz
+          </h3>
+          <span class="text-label-sm text-on-surface-variant">{{ attendanceTahfidz.length }} bulan</span>
+        </div>
+        <div v-if="loadingAttendanceTahfidz" class="p-6 text-center text-on-surface-variant text-label-sm">Memuat...</div>
+        <div v-else-if="attendanceTahfidz.length === 0" class="p-6 text-center text-on-surface-variant text-label-sm">Belum ada data absensi tahfidz</div>
+        <div v-else class="space-y-4 p-4">
+          <div v-for="month in attendanceTahfidz" :key="month.monthId" class="border border-outline-variant/20 rounded-xl overflow-hidden">
+            <div class="bg-surface-container-low px-4 py-2 flex items-center justify-between">
+              <span class="text-label-sm font-bold">{{ month.monthLabel }}</span>
+              <span class="text-label-xs text-on-surface-variant">Kelas: {{ month.className }}</span>
+            </div>
+            <div class="overflow-x-auto">
+              <table class="w-full text-left">
+                <thead>
+                  <tr class="bg-surface-container-lowest">
+                    <th class="px-2 py-1 text-[10px] text-on-surface-variant w-24">Nama</th>
+                    <th v-for="d in 31" :key="d" class="px-0.5 py-1 text-[9px] text-on-surface-variant text-center" style="min-width:22px">{{ d }}</th>
+                    <th class="px-2 py-1 text-[10px] text-on-surface-variant text-center w-16">Setor</th>
+                    <th class="px-2 py-1 text-[10px] text-on-surface-variant text-center w-12">TS/A</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr class="divide-x divide-outline-variant/10">
+                    <td class="px-2 py-1 text-label-xs font-medium">{{ month.student.name }}</td>
+                    <td v-for="d in 31" :key="d" class="px-0.5 py-1 text-center">
+                      <span :class="['inline-block w-5 h-5 rounded text-[9px] font-bold leading-5', tahfidzDay(month.student.marks?.[String(d)]).cls]">
+                        {{ tahfidzDay(month.student.marks?.[String(d)]).label }}
+                      </span>
+                    </td>
+                    <td class="px-2 py-1 text-center text-label-xs font-bold text-green-600">{{ month.stats.setor }}</td>
+                    <td class="px-2 py-1 text-center text-label-xs">
+                      <span class="text-amber-600">{{ month.stats.tidakSetor }}</span>/
+                      <span class="text-red-600">{{ month.stats.alpa }}</span>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- Pelanggaran -->
       <div class="glass-card rounded-2xl overflow-hidden mb-stack-lg">
         <div class="p-stack-md border-b border-outline-variant/20 flex items-center justify-between">
@@ -362,9 +457,13 @@ const deleteTarget = ref<any>(null)
 const deleteType = ref<'student' | 'teacher'>('student')
 
 const attendance = ref<any[]>([])
+const attendanceMutholaah = ref<any[]>([])
+const attendanceTahfidz = ref<any[]>([])
 const violations = ref<any[]>([])
 const grades = ref<any[]>([])
 const loadingAttendance = ref(false)
+const loadingAttendanceMutholaah = ref(false)
+const loadingAttendanceTahfidz = ref(false)
 const loadingViolations = ref(false)
 const loadingGrades = ref(false)
 
@@ -446,6 +545,8 @@ async function selectStudent(s: any) {
   selectedStudent.value = s
   await Promise.all([
     loadAttendance(s.id),
+    loadAttendanceMutholaah(s.id),
+    loadAttendanceTahfidz(s.id),
     loadViolations(s.id),
     loadGrades(s.id),
   ])
@@ -493,6 +594,91 @@ async function loadAttendance(studentId: string) {
     })
   } catch { attendance.value = [] }
   finally { loadingAttendance.value = false }
+}
+
+const MUTHOLAAH_DAY: Record<string, { label: string; cls: string }> = {
+  present: { label: '✓', cls: 'bg-green-100 text-green-700' },
+  sick: { label: 'S', cls: 'bg-amber-100 text-amber-700' },
+  permit: { label: 'I', cls: 'bg-blue-100 text-blue-700' },
+  absent: { label: 'A', cls: 'bg-red-100 text-red-700' },
+}
+const TAHFIDZ_DAY: Record<string, { label: string; cls: string }> = {
+  setor: { label: 'S', cls: 'bg-green-100 text-green-700' },
+  tidak_setor: { label: 'TS', cls: 'bg-amber-100 text-amber-700' },
+  alpa: { label: 'A', cls: 'bg-red-100 text-red-700' },
+}
+
+function mutholaahDay(status: string) {
+  const m = MUTHOLAAH_DAY[status]
+  return { label: m?.label || '', cls: m?.cls || 'bg-surface-container-low text-on-surface-variant' }
+}
+
+function tahfidzDay(status: string) {
+  const m = TAHFIDZ_DAY[status]
+  return { label: m?.label || '', cls: m?.cls || 'bg-surface-container-low text-on-surface-variant' }
+}
+
+async function loadAttendanceMutholaah(studentId: string) {
+  loadingAttendanceMutholaah.value = true
+  try {
+    const { getIdToken } = useAuth()
+    const token = await getIdToken()
+    const res = await fetch('/api/attendance/mutholaah', {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+    const allMonths: any[] = res.ok ? await res.json() : []
+    attendanceMutholaah.value = buildSpecialAttendance(allMonths, studentId, 'mutholaah')
+  } catch { attendanceMutholaah.value = [] }
+  finally { loadingAttendanceMutholaah.value = false }
+}
+
+async function loadAttendanceTahfidz(studentId: string) {
+  loadingAttendanceTahfidz.value = true
+  try {
+    const { getIdToken } = useAuth()
+    const token = await getIdToken()
+    const res = await fetch('/api/attendance/tahfidz', {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+    const allMonths: any[] = res.ok ? await res.json() : []
+    attendanceTahfidz.value = buildSpecialAttendance(allMonths, studentId, 'tahfidz')
+  } catch { attendanceTahfidz.value = [] }
+  finally { loadingAttendanceTahfidz.value = false }
+}
+
+function buildSpecialAttendance(allMonths: any[], studentId: string, type: 'mutholaah' | 'tahfidz') {
+  return allMonths
+    .filter((m: any) => (m.records || []).some((r: any) => r.studentId === studentId))
+    .sort((a: any, b: any) => (b.monthId || '').localeCompare(a.monthId || ''))
+    .map((m: any) => {
+      const student = (m.records || []).find((r: any) => r.studentId === studentId)
+      const marks = student?.marks || {}
+      const stats: Record<string, number> = type === 'mutholaah'
+        ? { hadir: 0, sakit: 0, izin: 0, alpa: 0 }
+        : { setor: 0, tidakSetor: 0, alpa: 0 }
+      for (let d = 1; d <= 31; d++) {
+        const v = marks[String(d)]
+        if (type === 'mutholaah') {
+          if (v === 'present') stats.hadir++
+          else if (v === 'sick') stats.sakit++
+          else if (v === 'permit') stats.izin++
+          else if (v === 'absent') stats.alpa++
+        } else {
+          if (v === 'setor') stats.setor++
+          else if (v === 'tidak_setor') stats.tidakSetor++
+          else if (v === 'alpa') stats.alpa++
+        }
+      }
+      const [y, mo] = (m.monthId || '').split('-')
+      const monthLabel = mo ? new Date(parseInt(y), parseInt(mo) - 1).toLocaleDateString('id-ID', { year: 'numeric', month: 'long' }) : m.monthId
+      return {
+        monthId: m.monthId,
+        monthLabel,
+        className: m.class || '-',
+        student: { ...(student || {}), marks, name: student?.name || 'Unknown' },
+        stats,
+      }
+    })
 }
 
 function dayClass(status: string) {
