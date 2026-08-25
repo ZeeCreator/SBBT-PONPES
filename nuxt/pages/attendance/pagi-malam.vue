@@ -56,14 +56,17 @@
         <table class="w-full text-left" style="min-width:2200px">
           <thead class="bg-surface-container-low">
             <tr>
-              <th rowspan="2" class="px-2 py-2 text-label-xs text-on-surface-variant w-8 text-center">#</th>
-              <th rowspan="2" class="px-2 py-2 text-label-xs text-on-surface-variant sticky left-0 bg-surface-container-low z-10" style="min-width:120px">Nama Santri</th>
-              <th rowspan="2" class="px-2 py-2 text-label-xs text-on-surface-variant" style="min-width:60px">Kelas</th>
-              <th v-for="d in totalDays" :key="'h' + d" colspan="2" class="px-0.5 py-1 text-label-xs text-on-surface-variant text-center border-l border-outline-variant/20">{{ d }}</th>
+              <th rowspan="3" class="px-2 py-2 text-label-xs text-on-surface-variant w-8 text-center align-middle">NO</th>
+              <th rowspan="3" class="px-2 py-2 text-label-xs text-on-surface-variant sticky left-0 bg-surface-container-low z-10 align-middle" style="min-width:120px">NAMA</th>
+              <th rowspan="3" class="px-2 py-2 text-label-xs text-on-surface-variant align-middle" style="min-width:44px">KLS</th>
+              <th :colspan="totalDays * 2" class="px-0.5 py-1 text-label-xs text-on-surface-variant text-center border-l border-outline-variant/20 font-bold">TANGGAL</th>
+            </tr>
+            <tr>
+              <th v-for="d in totalDays" :key="'h' + d" colspan="2" class="px-0.5 py-1 text-label-xs text-on-surface-variant text-center border-l border-outline-variant/20 font-medium">{{ d }}</th>
             </tr>
             <tr>
               <template v-for="d in totalDays" :key="'s' + d">
-                <th class="px-0.5 py-1 text-[10px] text-on-surface-variant text-center font-normal">P</th>
+                <th class="px-0.5 py-1 text-[10px] text-on-surface-variant text-center font-normal border-l border-outline-variant/10">P</th>
                 <th class="px-0.5 py-1 text-[10px] text-on-surface-variant text-center font-normal">M</th>
               </template>
             </tr>
@@ -73,16 +76,18 @@
               <td class="px-2 py-1 text-label-xs text-on-surface-variant text-center">{{ idx + 1 }}</td>
               <td class="px-2 py-1 text-label-xs font-medium sticky left-0 bg-surface z-10">{{ student.name }}</td>
               <td class="px-2 py-1 text-label-xs text-on-surface-variant">{{ shortClass(student.class) || '-' }}</td>
-              <td v-for="d in totalDays" :key="'p' + d" class="px-0.5 py-1 text-center border-l border-outline-variant/10">
-                <select v-model="attendanceData[student.id][dayKey(d, 'P')]" class="bg-surface-container-low border rounded text-[10px] py-1 px-0.5 focus:ring-primary outline-none w-full" :class="statusClass(attendanceData[student.id][dayKey(d, 'P')])">
-                  <option v-for="s in SELECT_OPTIONS" :key="s.value" :value="s.value">{{ s.symbol }}</option>
-                </select>
-              </td>
-              <td v-for="d in totalDays" :key="'m' + d" class="px-0.5 py-1 text-center">
-                <select v-model="attendanceData[student.id][dayKey(d, 'M')]" class="bg-surface-container-low border rounded text-[10px] py-1 px-0.5 focus:ring-primary outline-none w-full" :class="statusClass(attendanceData[student.id][dayKey(d, 'M')])">
-                  <option v-for="s in SELECT_OPTIONS" :key="s.value" :value="s.value">{{ s.symbol }}</option>
-                </select>
-              </td>
+              <template v-for="d in totalDays" :key="'pm' + d">
+                <td class="px-0.5 py-1 text-center border-l border-outline-variant/10">
+                  <select v-model="attendanceData[student.id][dayKey(d, 'P')]" class="bg-surface-container-low border rounded text-[10px] py-1 px-0.5 focus:ring-primary outline-none w-full" :class="statusClass(attendanceData[student.id][dayKey(d, 'P')])">
+                    <option v-for="s in SELECT_OPTIONS" :key="s.value" :value="s.value">{{ s.symbol }}</option>
+                  </select>
+                </td>
+                <td class="px-0.5 py-1 text-center">
+                  <select v-model="attendanceData[student.id][dayKey(d, 'M')]" class="bg-surface-container-low border rounded text-[10px] py-1 px-0.5 focus:ring-primary outline-none w-full" :class="statusClass(attendanceData[student.id][dayKey(d, 'M')])">
+                    <option v-for="s in SELECT_OPTIONS" :key="s.value" :value="s.value">{{ s.symbol }}</option>
+                  </select>
+                </td>
+              </template>
             </tr>
           </tbody>
         </table>
@@ -375,9 +380,9 @@ function exportExcel() {
   const symbolOf: Record<string, string> = {}
   for (const s of STATUS_OPTIONS) symbolOf[s.value] = s.symbol
   const days = Array.from({ length: totalDays.value }, (_, i) => i + 1)
-  let html = '<table border="1"><tr><th>No</th><th>Nama</th><th>Kelas</th>'
+  let html = '<table border="1"><tr><th rowspan="3">NO</th><th rowspan="3">NAMA</th><th rowspan="3">KLS</th><th colspan="' + (days.length * 2) + '">TANGGAL</th></tr><tr>'
   for (const d of days) html += `<th colspan="2">${d}</th>`
-  html += '</tr><tr><th></th><th></th><th></th>'
+  html += '</tr><tr>'
   for (const _ of days) html += '<th>P</th><th>M</th>'
   html += '</tr>'
   students.value.slice().sort((a, b) => {
@@ -494,9 +499,9 @@ function printAttendance() {
 <table>
   <thead>
     <tr>
-      <th class="th-no" rowspan="2">NO</th>
-      <th class="th-nama" rowspan="2">NAMA</th>
-      <th class="th-kelas" rowspan="2">KLS</th>
+      <th class="th-no" rowspan="3">NO</th>
+      <th class="th-nama" rowspan="3">NAMA</th>
+      <th class="th-kelas" rowspan="3">KLS</th>
       <th class="th-tanggal" colspan="${days.length * 2}">TANGGAL</th>
     </tr>
     <tr>
