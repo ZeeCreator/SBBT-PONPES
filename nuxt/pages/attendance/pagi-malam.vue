@@ -69,10 +69,10 @@
             </tr>
           </thead>
           <tbody class="divide-y divide-outline-variant/10">
-            <tr v-for="(student, idx) in students" :key="student.id" class="hover:bg-primary-fixed/5 transition-colors">
+            <tr v-for="(student, idx) in sortedStudents" :key="student.id" class="hover:bg-primary-fixed/5 transition-colors">
               <td class="px-2 py-1 text-label-xs text-on-surface-variant text-center">{{ idx + 1 }}</td>
               <td class="px-2 py-1 text-label-xs font-medium sticky left-0 bg-surface z-10">{{ student.name }}</td>
-              <td class="px-2 py-1 text-label-xs text-on-surface-variant">{{ student.class || '-' }}</td>
+              <td class="px-2 py-1 text-label-xs text-on-surface-variant">{{ shortClass(student.class) || '-' }}</td>
               <td v-for="d in totalDays" :key="'p' + d" class="px-0.5 py-1 text-center border-l border-outline-variant/10">
                 <select v-model="attendanceData[student.id][dayKey(d, 'P')]" class="bg-surface-container-low border rounded text-[10px] py-1 px-0.5 focus:ring-primary outline-none w-full" :class="statusClass(attendanceData[student.id][dayKey(d, 'P')])">
                   <option v-for="s in SELECT_OPTIONS" :key="s.value" :value="s.value">{{ s.symbol }}</option>
@@ -142,7 +142,7 @@ const STATUS_OPTIONS = [
   { value: 'hadir', symbol: '✓', label: 'Hadir' },
   { value: 'datang', symbol: '•', label: 'Datang' },
   { value: 'bolos', symbol: 'B', label: 'Bolos' },
-  { value: 'alpa', symbol: 'A', label: 'Alpa/Gawur' },
+  { value: 'alpa', symbol: 'A', label: 'Alpa' },
   { value: 'izin', symbol: 'I', label: 'Izin' },
   { value: 'sakit', symbol: 'S', label: 'Sakit' },
 ]
@@ -181,6 +181,19 @@ const totalDays = computed(() => {
 function dayKey(d: number, session: 'P' | 'M') {
   return `${d}${session}`
 }
+
+function shortClass(c: any) {
+  return String(c || '').replace(/^KELAS\s*/i, '').trim()
+}
+
+const sortedStudents = computed(() => {
+  return [...students.value].sort((a, b) => {
+    const ca = String(a.class || '').toLowerCase()
+    const cb = String(b.class || '').toLowerCase()
+    if (ca !== cb) return ca.localeCompare(cb, 'id', { numeric: true })
+    return String(a.name || '').localeCompare(String(b.name || ''), 'id')
+  })
+})
 
 const summary = computed(() => {
   const days = totalDays.value
@@ -367,9 +380,14 @@ function exportExcel() {
   html += '</tr><tr><th></th><th></th><th></th>'
   for (const _ of days) html += '<th>P</th><th>M</th>'
   html += '</tr>'
-  students.value.forEach((s, i) => {
+  students.value.slice().sort((a, b) => {
+    const ca = String(a.class || '').toLowerCase()
+    const cb = String(b.class || '').toLowerCase()
+    if (ca !== cb) return ca.localeCompare(cb, 'id', { numeric: true })
+    return String(a.name || '').localeCompare(String(b.name || ''), 'id')
+  }).forEach((s, i) => {
     const d = attendanceData.value[s.id] || {}
-    html += `<tr><td>${i + 1}</td><td>${s.name}</td><td>${s.class || ''}</td>`
+    html += `<tr><td>${i + 1}</td><td>${s.name}</td><td>${shortClass(s.class)}</td>`
     for (const dd of days) {
       for (const sess of ['P', 'M'] as const) {
         const v = d[dayKey(dd, sess)]
@@ -394,20 +412,26 @@ function printAttendance() {
   const symbolOf: Record<string, string> = {}
   for (const s of STATUS_OPTIONS) symbolOf[s.value] = s.symbol
   const days = Array.from({ length: totalDays.value }, (_, i) => i + 1)
-  const colNo = 22, colNama = 100, colKelas = 26, dateColWidth = 13
+  const colNo = 20, colNama = 92, colKelas = 22, dateColWidth = 13
   const tableWidth = colNo + colNama + colKelas + days.length * 2 * dateColWidth
   const hasSavedData = !!editingId.value
-  const dataRows = students.value.map((s, idx) => {
+  const sorted = [...students.value].sort((a, b) => {
+    const ca = String(a.class || '').toLowerCase()
+    const cb = String(b.class || '').toLowerCase()
+    if (ca !== cb) return ca.localeCompare(cb, 'id', { numeric: true })
+    return String(a.name || '').localeCompare(String(b.name || ''), 'id')
+  })
+  const dataRows = sorted.map((s, idx) => {
     const d = attendanceData.value[s.id] || {}
-    const cellStyle = 'padding:0px;border:1px solid #000;text-align:center;font-size:7pt;font-family:\'Times New Roman\',serif'
-    let row = `<tr style="height:18px">
+    const cellStyle = 'padding:0px;border:1px solid #000;text-align:center;font-size:6.5pt;font-family:\'Times New Roman\',serif'
+    let row = `<tr style="height:13px">
       <td style="${cellStyle}width:${colNo}px">${idx + 1}</td>
       <td style="${cellStyle}text-align:left;padding-left:2px">${s.name}</td>
-      <td style="${cellStyle}width:${colKelas}px">${s.class || ''}</td>`
+      <td style="${cellStyle}width:${colKelas}px">${String(s.class || '').replace(/^KELAS\s*/i, '').trim()}</td>`
     for (const dd of days) {
       for (const sess of ['P', 'M'] as const) {
         const v = hasSavedData ? (symbolOf[d[dayKey(dd, sess)]] || '') : ''
-        row += `<td style="${cellStyle}width:${dateColWidth}px;height:18px">${v}</td>`
+        row += `<td style="${cellStyle}width:${dateColWidth}px;height:13px">${v}</td>`
       }
     }
     row += '</tr>'
@@ -418,19 +442,20 @@ function printAttendance() {
   printWindow.document.write(`<!DOCTYPE html>
 <html><head><title>Absensi Program Pagi &amp; Malam</title>
 <style>
-  @page { size: A4 landscape; margin: 8mm; }
+  @page { size: A4 landscape; margin: 6mm; }
+  * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
   body { margin: 0; padding: 0; font-family: 'Times New Roman', Times, serif; color: #000; font-size: 10pt; }
-  .header { position: relative; width: ${tableWidth}px; margin: 0 auto; padding-bottom: 4px; }
-  .header-left { position: absolute; top: 2px; left: 0; font-size: 8pt; }
-  .header-right { position: absolute; top: 2px; right: 0; font-size: 9pt; white-space: nowrap; }
+  .header { position: relative; width: ${tableWidth}px; margin: 0 auto; padding-bottom: 2px; }
+  .header-left { position: absolute; top: 2px; left: 0; font-size: 7.5pt; }
+  .header-right { position: absolute; top: 2px; right: 0; font-size: 8.5pt; white-space: nowrap; }
   .header-center { text-align: center; }
-  .header-inner { display: inline-flex; align-items: center; justify-content: center; gap: 12px; }
-  .logo-img { width: 36px; height: auto; object-fit: contain; }
-  .title-group { text-align: center; }
-  .title-group .line1 { font-size: 11pt; font-weight: bold; letter-spacing: 2px; }
-  .title-group .line2 { font-size: 18pt; font-weight: bold; letter-spacing: 3px; }
-  .title-group .line3 { font-size: 8pt; }
-  .hr { border: none; border-top: 2.5px solid #000; margin: 2px auto 0 auto; width: ${tableWidth}px; }
+  .header-inner { display: inline-flex; align-items: center; justify-content: center; gap: 10px; }
+  .logo-img { width: 30px; height: auto; object-fit: contain; }
+  .title-group { text-align: center; line-height: 1.1; }
+  .title-group .line1 { font-size: 9.5pt; font-weight: bold; letter-spacing: 2px; }
+  .title-group .line2 { font-size: 15pt; font-weight: bold; letter-spacing: 3px; }
+  .title-group .line3 { font-size: 7pt; }
+  .hr { border: none; border-top: 2px solid #000; margin: 2px auto 0 auto; width: ${tableWidth}px; }
   .table-wrap { width: ${tableWidth}px; margin: 0 auto; }
   table { width: ${tableWidth}px; border-collapse: collapse; table-layout: fixed; }
   th { border: 1px solid #000; font-weight: bold; }
@@ -442,13 +467,13 @@ function printAttendance() {
   .th-day { font-size: 6pt; padding: 1px 0; text-align: center; font-weight: normal; }
   .th-pm { font-size: 6pt; padding: 0; text-align: center; font-weight: normal; width: ${dateColWidth}px; }
   td { font-size: 7pt; }
-  .legend { width: ${tableWidth}px; margin: 6px auto 0 auto; font-size: 7.5pt; }
+  .legend { width: ${tableWidth}px; margin: 4px auto 0 auto; font-size: 7pt; }
   .legend table { width: auto; border-collapse: collapse; }
-  .legend th, .legend td { border: 1px solid #000; padding: 1px 6px; font-size: 7.5pt; text-align: left; }
-  .signature { margin-top: 14px; display: flex; justify-content: space-around; width: ${tableWidth}px; margin-left: auto; margin-right: auto; padding-top: 6px; }
-  .signature div { text-align: center; font-size: 9pt; }
-  .signature .line { margin-top: 36px; width: 140px; border-top: 1px solid #000; display: block; }
-  .signature p { margin: 2px 0; }
+  .legend th, .legend td { border: 1px solid #000; padding: 0px 5px; font-size: 7pt; text-align: left; }
+  .signature { margin-top: 4px; display: flex; justify-content: space-around; width: ${tableWidth}px; margin-left: auto; margin-right: auto; padding-top: 2px; }
+  .signature div { text-align: center; font-size: 8.5pt; }
+  .signature .line { margin-top: 26px; width: 140px; border-top: 1px solid #000; display: block; }
+  .signature p { margin: 0; }
 </style></head><body>
 <div class="header">
   <div class="header-left">ABSEN PROGRAM PAGI &amp; MALAM</div>
@@ -486,7 +511,7 @@ function printAttendance() {
 </div>
 <div class="legend">
   <table>
-    <tr><th>Keterangan</th><td>&#10003; Hadir</td><td>&#8226; Datang</td><td>B Bolos</td><td>A Gawur</td><td>I Izin</td><td>S Sakit</td></tr>
+    <tr><th>Keterangan</th><td>&#10003; Hadir</td><td>&#8226; Datang</td><td>B Bolos</td><td>A Alpa</td><td>I Izin</td><td>S Sakit</td></tr>
   </table>
 </div>
 <div class="signature">
