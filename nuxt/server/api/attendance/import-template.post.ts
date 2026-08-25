@@ -46,7 +46,10 @@ export default defineEventHandler(async (event) => {
 
   const records = matched.map(s => {
     const marks: Record<string, string> = {}
-    for (let d = 1; d <= totalDays; d++) marks[String(d)] = ''
+    for (let d = 1; d <= totalDays; d++) {
+      marks[`${d}P`] = ''
+      marks[`${d}M`] = ''
+    }
     return {
       studentId: s.id,
       name: s.name,
@@ -57,39 +60,39 @@ export default defineEventHandler(async (event) => {
   })
 
   const now = new Date().toISOString()
-  const results: Record<string, string> = {}
+  const path = 'attendance_program_pm'
+  let result: string
 
-  for (const [path, label] of [['attendance_tahfidz', 'tahfidz'], ['attendance_mutholaah', 'mutholaah']] as const) {
-    const existingList = await rtdbGetList(path)
-    const existing = existingList.find((a: any) => a.monthId === monthId)
-    if (existing) {
-      await rtdbUpdate(path, existing.id, {
-        year,
-        month,
-        class: 'Semua',
-        records,
-        updatedAt: now,
-      })
-      results[label] = `updated:${existing.id}`
-    } else {
-      const created = await rtdbAdd(path, {
-        monthId,
-        year,
-        month,
-        class: 'Semua',
-        records,
-        createdAt: now,
-        updatedAt: now,
-      })
-      results[label] = `created:${created.id}`
-    }
+  const existingList = await rtdbGetList(path)
+  const existing = existingList.find((a: any) => a.monthId === monthId)
+  if (existing) {
+    await rtdbUpdate(path, existing.id, {
+      year,
+      month,
+      class: 'Semua',
+      records,
+      updatedAt: now,
+    })
+    result = `updated:${existing.id}`
+  } else {
+    const created = await rtdbAdd(path, {
+      monthId,
+      year,
+      month,
+      class: 'Semua',
+      records,
+      createdAt: now,
+      updatedAt: now,
+    })
+    result = `created:${created.id}`
   }
 
   return {
     monthId,
+    module: 'attendance_program_pm',
+    action: result,
     matchedCount: matched.length,
     unmatched,
     matchedNames: matched.map(s => ({ id: s.id, name: s.name })),
-    results,
   }
 })
