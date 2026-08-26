@@ -194,6 +194,9 @@
           <button class="w-full flex items-center gap-3 px-4 py-3 bg-secondary-container text-on-secondary-container rounded-xl text-label-md hover:brightness-110 transition-all" @click="printGrades">
             <span class="material-symbols-outlined text-sm">grade</span> Cetak Nilai
           </button>
+          <button class="w-full flex items-center gap-3 px-4 py-3 bg-emerald-600 text-white rounded-xl text-label-md hover:brightness-110 transition-all shadow-sm" @click="printTransferNilai">
+            <span class="material-symbols-outlined text-sm">school</span> Cetak Nilai Perpindahan (Semua Sesi)
+          </button>
           <button class="w-full flex items-center gap-3 px-4 py-3 bg-surface-container-high text-on-surface rounded-xl text-label-md hover:brightness-110 transition-all" @click="printAllHistory">
             <span class="material-symbols-outlined text-sm">history</span> Cetak All Riwayat
           </button>
@@ -385,13 +388,32 @@
         </div>
       </div>
 
-      <!-- Nilai -->
+      <!-- Nilai per Sesi Imtihan -->
       <div class="glass-card rounded-2xl overflow-hidden mb-stack-lg">
-        <div class="p-stack-md border-b border-outline-variant/20 flex items-center justify-between">
+        <div class="p-stack-md border-b border-outline-variant/20 flex flex-wrap items-center justify-between gap-3">
           <h3 class="font-display text-title-lg text-primary flex items-center gap-2">
             <span class="material-symbols-outlined text-secondary">school</span> Nilai Akademik
+            <span class="text-label-sm text-on-surface-variant font-normal">({{ grades.length }} record)</span>
           </h3>
-          <span class="text-label-sm text-on-surface-variant">{{ grades.length }} record</span>
+          <div v-if="grades.length > 0" class="flex flex-wrap items-center gap-2">
+            <select v-model="printSesiSelected" class="bg-surface-container-low border border-outline-variant/20 rounded-lg text-label-sm py-1.5 px-2 focus:ring-primary outline-none">
+              <option value="">Semua Sesi</option>
+              <option v-for="s in availableSesi" :key="s" :value="s">Sesi {{ s }}</option>
+            </select>
+            <button class="px-3 py-1.5 bg-primary text-on-primary rounded-lg text-label-sm hover:brightness-110 flex items-center gap-1" @click="printSesiNilai">
+              <span class="material-symbols-outlined text-[16px]">print</span> Cetak Sesi
+            </button>
+            <button class="px-3 py-1.5 bg-emerald-600 text-white rounded-lg text-label-sm hover:brightness-110 flex items-center gap-1" @click="printTransferNilai">
+              <span class="material-symbols-outlined text-[16px]">description</span> Cetak Perpindahan
+            </button>
+          </div>
+        </div>
+        <!-- Ringkasan per Sesi -->
+        <div v-if="grades.length > 0" class="px-4 py-3 bg-surface-container-low/50 border-b border-outline-variant/10 flex flex-wrap gap-2">
+          <span v-for="s in availableSesi" :key="s" class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-semibold border" :class="sesiBadgeStyle(s)">
+            Sesi {{ s }}: {{ groupedGrades[s]?.length || 0 }} mapel
+          </span>
+          <span v-if="availableSesi.length === 0" class="text-label-sm text-on-surface-variant">Belum ada sesi</span>
         </div>
         <div v-if="loadingGrades" class="p-6 text-center text-on-surface-variant text-label-sm">Memuat...</div>
         <div v-else-if="grades.length === 0" class="p-6 text-center text-on-surface-variant text-label-sm">Belum ada nilai</div>
@@ -462,6 +484,36 @@ const attendanceTahfidz = ref<any[]>([])
 const violations = ref<any[]>([])
 const grades = ref<any[]>([])
 const loadingAttendance = ref(false)
+const printSesiSelected = ref('')
+
+const groupedGrades = computed<Record<string, any[]>>(() => {
+  const g: Record<string, any[]> = {}
+  grades.value.forEach((gr: any) => {
+    const key = gr.sesi ? String(gr.sesi) : 'Tanpa Sesi'
+    if (!g[key]) g[key] = []
+    g[key].push(gr)
+  })
+  // sort each sesi by subject
+  Object.keys(g).forEach(k => g[k].sort((a, b) => (a.subject || '').localeCompare(b.subject || '')))
+  return g
+})
+const availableSesi = computed(() => {
+  const keys = Object.keys(groupedGrades.value).filter(k => k !== 'Tanpa Sesi')
+  keys.sort((a, b) => {
+    const an = Number(a), bn = Number(b)
+    if (!isNaN(an) && !isNaN(bn)) return an - bn
+    return a.localeCompare(b)
+  })
+  if (groupedGrades.value['Tanpa Sesi']) keys.push('Tanpa Sesi')
+  return keys
+})
+function sesiBadgeStyle(sesi: string) {
+  if (sesi === '1') return 'bg-emerald-50 text-emerald-700 border-emerald-200'
+  if (sesi === '2') return 'bg-blue-50 text-blue-700 border-blue-200'
+  if (sesi === '3') return 'bg-amber-50 text-amber-700 border-amber-200'
+  if (sesi === '4') return 'bg-violet-50 text-violet-700 border-violet-200'
+  return 'bg-surface-container-low text-on-surface-variant border-outline-variant/30'
+}
 const loadingAttendanceMutholaah = ref(false)
 const loadingAttendanceTahfidz = ref(false)
 const loadingViolations = ref(false)
@@ -876,6 +928,127 @@ function printGrades() {
 <table><thead><tr><th>Mata Pelajaran</th><th>Nilai</th><th>Grade</th><th>Semester</th><th>Tahun Ajaran</th></tr></thead><tbody>${rows}</tbody></table>
 <div class="footer">
   <div><p>Mengetahui,</p><p>Kepala Pondok</p><span class="line"></span></div>
+</div>
+<script>window.onload=function(){window.print()}<\/script>
+</body></html>`)
+  w.document.close()
+}
+
+function printSesiNilai() {
+  if (!selectedStudent.value || grades.value.length === 0) return
+  const sesi = printSesiSelected.value
+  let list = grades.value
+  if (sesi) list = list.filter((g: any) => String(g.sesi) === String(sesi))
+  if (!list.length) return
+  const s = selectedStudent.value
+  const w = window.open('', '_blank')
+  if (!w) return
+  const titleSesi = sesi ? `SESI IMTIHAN ${sesi}` : 'SEMUA SESI (FILTER)'
+  const rows = list.map((g: any, i: number) => `<tr><td style="padding:4px 8px;border:1px solid #000;text-align:center">${i + 1}</td><td style="padding:4px 8px;border:1px solid #000;text-align:center;font-weight:bold">Imtihan ${g.sesi || '-'}</td><td style="padding:4px 8px;border:1px solid #000">${g.subject || '-'}</td><td style="padding:4px 8px;border:1px solid #000;text-align:center;font-weight:bold">${g.score ?? '-'}</td><td style="padding:4px 8px;border:1px solid #000;text-align:center">${g.date || '-'}</td><td style="padding:4px 8px;border:1px solid #000">${g.notes || '-'}</td></tr>`).join('')
+  const total = list.reduce((a: number, b: any) => a + (Number(b.score) || 0), 0)
+  const avg = list.length ? (total / list.length).toFixed(1) : '-'
+  w.document.write(`<!DOCTYPE html>
+<html><head><title>Nilai Sesi ${sesi || 'Semua'} - ${s.name}</title>
+<style>
+  @page { size: portrait; margin: 12mm 15mm; }
+  body { font-family: 'Times New Roman', Times, serif; font-size: 11pt; color:#000; }
+  .kop { text-align:center; border-bottom:2px solid #333; padding-bottom:10px; margin-bottom:14px; }
+  .kop h1{font-size:15pt;margin:0;} .kop h2{font-size:12pt;margin:4px 0;font-weight:normal;} .kop p{font-size:9pt;margin:2px 0;}
+  hr{border:none;border-top:2px solid #000;margin:8px 0;}
+  .info{margin-bottom:8px;font-size:10pt;}
+  .info td{padding:2px 6px;}
+  table.data{width:100%;border-collapse:collapse;margin:10px 0;}
+  table.data th{background:#f0f0f0;padding:6px 8px;border:1px solid #333;font-size:10pt;}
+  table.data td{padding:4px 8px;border:1px solid #333;font-size:10pt;}
+  .summary{margin-top:10px;font-size:10pt;}
+  .footer{margin-top:30px;display:flex;justify-content:space-around;text-align:center;font-size:10pt;}
+  .footer .line{margin-top:45px;width:150px;border-top:1px solid #000;display:inline-block;}
+</style></head><body>
+<div class="kop"><h1>DAFTAR NILAI IMTIHAN — ${titleSesi}</h1><h2>YAYASAN PONDOK PESANTREN AL FATAH PANEKAN</h2><p>Turi, Panekan, Kabupaten Magetan, Jawa Timur 63352</p></div>
+<hr/>
+<table class="info"><tr><td style="width:120px;font-weight:bold">Nama</td><td>: ${s.name}</td><td style="width:100px;font-weight:bold">NIS</td><td>: ${s.nis || '-'}</td></tr><tr><td style="font-weight:bold">Kelas</td><td>: ${s.class || '-'}</td><td style="font-weight:bold">Status</td><td>: ${s.status || '-'}</td></tr></table>
+<table class="data"><thead><tr><th style="width:30px">No</th><th style="width:80px">Sesi</th><th>Mata Pelajaran</th><th style="width:65px">Nilai</th><th style="width:95px">Tanggal</th><th>Keterangan</th></tr></thead><tbody>${rows}</tbody></table>
+<table class="summary"><tr><td>Jumlah Mapel</td><td>: ${list.length}</td></tr><tr><td>Total Nilai</td><td>: ${total}</td></tr><tr><td>Rata-rata</td><td>: ${avg}</td></tr></table>
+<div class="footer"><div><p>Mengetahui,</p><p>Kepala Pondok</p><span class="line"></span></div><div><p>Magetan, ${new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}</p><p>Wali Kelas</p><span class="line"></span></div></div>
+<script>window.onload=function(){window.print()}<\/script>
+</body></html>`)
+  w.document.close()
+}
+
+function printTransferNilai() {
+  if (!selectedStudent.value || grades.value.length === 0) return
+  const s = selectedStudent.value
+  const w = window.open('', '_blank')
+  if (!w) return
+  const grouped = groupedGrades.value
+  const sesiKeys = availableSesi.value
+  const totalAll = grades.value.reduce((a: number, b: any) => a + (Number(b.score) || 0), 0)
+  const avgAll = grades.value.length ? (totalAll / grades.value.length).toFixed(1) : '-'
+  const sesiBlocks = sesiKeys.map((sk: string) => {
+    const list = grouped[sk] || []
+    if (!list.length) return ''
+    const rows = list.map((g: any, i: number) => `<tr><td style="padding:4px 8px;border:1px solid #000;text-align:center">${i + 1}</td><td style="padding:4px 8px;border:1px solid #000">${g.subject || '-'}</td><td style="padding:4px 8px;border:1px solid #000;text-align:center;font-weight:bold">${g.score ?? '-'}</td><td style="padding:4px 8px;border:1px solid #000;text-align:center">${g.date || '-'}</td><td style="padding:4px 8px;border:1px solid #000">${g.notes || '-'}</td></tr>`).join('')
+    const tot = list.reduce((a: number, b: any) => a + (Number(b.score) || 0), 0)
+    const avg = list.length ? (tot / list.length).toFixed(1) : '-'
+    return `
+    <h3 style="font-size:11pt;margin:14px 0 6px;background:${sk==='1'?'#ecfdf5':sk==='2'?'#eff6ff':sk==='3'?'#fffbeb':sk==='4'?'#f5f3ff':'#f8fafc'};padding:6px 10px;border:1px solid #333;border-bottom:none;">SESI IMTIHAN ${sk} — ${list.length} Mata Pelajaran (Total: ${tot}, Rata-rata: ${avg})</h3>
+    <table style="width:100%;border-collapse:collapse;margin-bottom:8px;">
+      <thead><tr><th style="padding:5px 8px;border:1px solid #333;background:#f0f0f0;font-size:9pt;width:30px">No</th><th style="padding:5px 8px;border:1px solid #333;background:#f0f0f0;font-size:9pt">Mata Pelajaran</th><th style="padding:5px 8px;border:1px solid #333;background:#f0f0f0;font-size:9pt;width:65px">Nilai</th><th style="padding:5px 8px;border:1px solid #333;background:#f0f0f0;font-size:9pt;width:95px">Tanggal</th><th style="padding:5px 8px;border:1px solid #333;background:#f0f0f0;font-size:9pt">Keterangan</th></tr></thead>
+      <tbody>${rows}</tbody>
+    </table>`
+  }).join('')
+
+  w.document.write(`<!DOCTYPE html>
+<html><head><title>Nilai Perpindahan - ${s.name}</title>
+<style>
+  @page { size: portrait; margin: 12mm 14mm; }
+  body { font-family: 'Times New Roman', Times, serif; font-size: 11pt; color:#000; }
+  .kop { text-align:center; border-bottom:3px double #333; padding-bottom:10px; margin-bottom:12px; }
+  .kop h1{font-size:14pt;margin:0;letter-spacing:0.5px;} .kop h2{font-size:11pt;margin:3px 0;font-weight:normal;} .kop p{font-size:8pt;margin:1px 0;}
+  .judul{ text-align:center; margin:10px 0; }
+  .judul h2{ font-size:13pt; margin:0; text-decoration:underline; }
+  .judul p{ font-size:9pt; margin:4px 0; }
+  .biodata{ width:100%; border-collapse:collapse; margin:10px 0; }
+  .biodata td{ padding:3px 8px; font-size:10pt; border:none; }
+  .biodata td.label{ font-weight:bold; width:130px; }
+  h3{ font-size:11pt; }
+  table{ width:100%; border-collapse:collapse; }
+  th, td{ font-size:9pt; }
+  .ringkasan{ margin:14px 0; border:1px solid #333; padding:10px; background:#fafafa; }
+  .ringkasan td{ padding:3px 8px; font-size:10pt; border:none; }
+  .footer{ margin-top:28px; display:flex; justify-content:space-between; text-align:center; font-size:9pt; }
+  .footer .box{ width:175px; }
+  .footer .jabatan{ margin-bottom:50px; }
+  .footer .nama{ font-weight:bold; text-decoration:underline; margin-top:4px; }
+  .catatan{ margin-top:16px; font-size:8pt; border:1px solid #999; padding:8px; background:#fffde7; }
+  @media print { .no-print{display:none;} }
+</style></head><body>
+<div class="kop">
+  <h1>YAYASAN PONDOK PESANTREN AL FATAH PANEKAN</h1>
+  <h2>Pondok Pesantren Al Fatah Panekan</h2>
+  <p>Turi, Panekan, Kabupaten Magetan, Jawa Timur 63352 &nbsp;|&nbsp; Telp. — &nbsp;|&nbsp; Email: —</p>
+</div>
+<div class="judul">
+  <h2>TRANSKRIP NILAI IMTIHAN — SURAT KETERANGAN PINDAH PONDOK</h2>
+  <p>Nomor: ______ / IM / AL-FATAH / ${new Date().getFullYear()}</p>
+</div>
+<table class="biodata">
+  <tr><td class="label">Nama Lengkap</td><td>: <strong>${s.name}</strong></td><td class="label">NIS</td><td>: ${s.nis || '-'}</td></tr>
+  <tr><td class="label">Kelas Terakhir</td><td>: ${s.class || '-'}</td><td class="label">Jenis Kelamin</td><td>: ${s.gender || '-'}</td></tr>
+  <tr><td class="label">Kota Asal</td><td>: ${s.city || '-'}</td><td class="label">Status</td><td>: ${s.status || '-'}</td></tr>
+  <tr><td class="label">Orang Tua / Wali</td><td>: ${s.parentName || '-'}</td><td class="label">No. HP Wali</td><td>: ${s.parentPhone || '-'}</td></tr>
+</table>
+<p style="font-size:9pt; margin:8px 0;">Dengan ini menerangkan bahwa santri tersebut telah mengikuti imtihan pada sesi-sesi berikut dengan rincian nilai:</p>
+${sesiBlocks || '<p style="text-align:center;padding:20px;border:1px solid #333">Belum ada data nilai</p>'}
+<div class="ringkasan">
+  <table style="width:100%"><tr><td style="width:180px;font-weight:bold">Total Mata Pelajaran</td><td>: ${grades.value.length}</td><td style="width:140px;font-weight:bold">Total Nilai</td><td>: ${totalAll}</td><td style="width:140px;font-weight:bold">Rata-rata Keseluruhan</td><td>: ${avgAll}</td></tr></table>
+</div>
+<div class="catatan">
+  <strong>Catatan:</strong> Transkrip ini dicetak dari Sistem Informasi Manajemen Pondok Pesantren Terpadu (SIM-PPT) sebagai data nilai perpindahan pondok. Nilai per Sesi Imtihan telah diverifikasi oleh wali kelas dan pimpinan pondok. Dokumen sah tanpa stempel basah bila dicetak dari sistem.
+</div>
+<div class="footer">
+  <div class="box"><div class="jabatan">Mengetahui,<br/>Pimpinan Pondok</div><div class="nama">___________________</div></div>
+  <div class="box"><div>Magetan, ${new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}<br/>Wali Kelas ${s.class || ''}</div><div class="nama" style="margin-top:54px">___________________</div></div>
 </div>
 <script>window.onload=function(){window.print()}<\/script>
 </body></html>`)

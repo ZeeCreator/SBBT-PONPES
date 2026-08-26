@@ -6,7 +6,7 @@
           <span class="material-symbols-outlined text-sm">arrow_back</span> Kembali
         </button>
         <h2 class="font-display text-headline-lg text-primary capitalize">{{ type }} - {{ className }}</h2>
-        <p class="text-on-surface-variant text-body-md">{{ type === 'imtihan' ? 'Kelola jadwal dan nilai ujian' : 'Catatan iktibar harian santri' }}</p>
+        <p class="text-on-surface-variant text-body-md">{{ type === 'imtihan' ? 'Kelola jadwal dan nilai ujian per sesi' : 'Catatan iktibar harian santri' }}</p>
       </div>
       <div v-if="type === 'imtihan'" class="flex flex-wrap items-center gap-3">
         <div class="flex items-center gap-2">
@@ -19,9 +19,9 @@
           </button>
         </div>
         <button class="flex items-center gap-2 px-6 py-2.5 bg-secondary text-on-secondary rounded-lg text-label-md shadow-md hover:brightness-110 active:scale-95 transition-all" @click="printRanking">
-          <span class="material-symbols-outlined text-sm">print</span> Cetak Nilai & Ranking
+          <span class="material-symbols-outlined text-sm">print</span> Ranking Semua Sesi
         </button>
-        <button class="flex items-center gap-2 px-6 py-2.5 bg-primary text-on-primary rounded-lg text-label-md shadow-md hover:brightness-110 active:scale-95 transition-all" @click="showAddModal = true">
+        <button class="flex items-center gap-2 px-6 py-2.5 bg-primary text-on-primary rounded-lg text-label-md shadow-md hover:brightness-110 active:scale-95 transition-all" @click="openAddModal()">
           <span class="material-symbols-outlined text-sm">add</span> Tambah Ujian
         </button>
       </div>
@@ -38,35 +38,74 @@
           <p class="text-label-sm text-on-surface-variant">{{ s.label }}</p>
         </div>
       </div>
-      <div class="glass-card rounded-xl shadow-sm overflow-hidden">
-        <div class="overflow-x-auto">
-          <table class="w-full text-left">
-            <thead class="bg-surface-container-low">
-              <tr>
-                <th class="px-4 py-3 text-label-sm text-on-surface-variant">Sesi</th>
-                <th class="px-4 py-3 text-label-sm text-on-surface-variant">Mata Pelajaran</th>
-                <th class="px-4 py-3 text-label-sm text-on-surface-variant">Tanggal</th>
-                <th class="px-4 py-3 text-label-sm text-on-surface-variant">Durasi</th>
-                <th class="px-4 py-3 text-label-sm text-on-surface-variant">Nilai Rata-rata</th>
-                <th class="px-4 py-3 text-label-sm text-on-surface-variant text-center">Aksi</th>
-              </tr>
-            </thead>
-            <tbody class="divide-y divide-outline-variant/10">
-              <tr v-for="exam in exams" :key="exam.id" class="hover:bg-primary-fixed/5 transition-colors">
-                <td class="px-4 py-3 text-label-sm text-on-surface-variant text-center font-semibold">Imtihan {{ exam.sesi || '-' }}</td>
-                <td class="px-4 py-3 text-label-md font-medium">{{ exam.subject }}</td>
-                <td class="px-4 py-3 text-label-sm text-on-surface-variant">{{ exam.date }}</td>
-                <td class="px-4 py-3 text-label-sm text-on-surface-variant">{{ exam.duration }} menit</td>
-                <td class="px-4 py-3 text-label-md">{{ exam.averageScore || '-' }}</td>
-                <td class="px-4 py-3 text-center">
-                  <button class="text-primary hover:text-primary-fixed mr-2 transition-colors" @click="navigateTo(`/akademik/imtihan/${kelas}/nilai/${exam.id}`)"><span class="material-symbols-outlined">visibility</span></button>
-                  <button class="text-error hover:text-red-700 transition-colors" @click="deleteExam(exam.id)"><span class="material-symbols-outlined">delete</span></button>
-                </td>
-              </tr>
-              <tr v-if="exams.length === 0"><td colspan="6" class="px-4 py-8 text-center text-on-surface-variant text-label-md">Belum ada data ujian</td></tr>
-            </tbody>
-          </table>
+
+      <!-- Card per SESI IMTIHAN -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-gutter">
+        <div v-for="sesi in sesiKeys" :key="sesi" class="glass-card rounded-2xl shadow-sm overflow-hidden border border-outline-variant/20 flex flex-col">
+          <!-- Card Header -->
+          <div class="px-5 py-4 flex items-center justify-between gap-3" :class="sesiHeaderClass(sesi)">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-xl flex items-center justify-center text-white font-bold text-label-md" :class="sesiBadgeClass(sesi)">
+                {{ sesi }}
+              </div>
+              <div>
+                <h3 class="font-display text-title-md text-primary leading-none">SESI IMTIHAN {{ sesi }}</h3>
+                <p class="text-label-sm text-on-surface-variant">{{ (groupedExams[sesi] || []).length }} mata pelajaran</p>
+              </div>
+            </div>
+            <div class="flex items-center gap-1.5">
+              <button class="p-2 rounded-lg bg-white/80 hover:bg-white text-primary shadow-sm transition-colors" title="Print sesi ini" @click="printSesi(sesi)" :disabled="(groupedExams[sesi] || []).length === 0">
+                <span class="material-symbols-outlined text-[18px]">print</span>
+              </button>
+              <button class="p-2 rounded-lg bg-primary text-on-primary hover:brightness-110 shadow-sm transition-all" title="Tambah mapel ke sesi ini" @click="openAddModal(sesi)">
+                <span class="material-symbols-outlined text-[18px]">add</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Card Body -->
+          <div class="flex-1">
+            <div v-if="(groupedExams[sesi] || []).length === 0" class="py-10 px-6 text-center">
+              <div class="w-12 h-12 rounded-full bg-surface-container-low flex items-center justify-center mx-auto mb-3">
+                <span class="material-symbols-outlined text-on-surface-variant">menu_book</span>
+              </div>
+              <p class="text-label-md text-on-surface-variant mb-3">Belum ada mata pelajaran di sesi ini</p>
+              <button class="px-4 py-2 bg-primary text-on-primary rounded-lg text-label-sm hover:brightness-110 transition-all" @click="openAddModal(sesi)">
+                + Tambah Mata Pelajaran
+              </button>
+            </div>
+            <div v-else class="divide-y divide-outline-variant/10">
+              <div v-for="(exam, idx) in groupedExams[sesi]" :key="exam.id" class="flex items-center gap-3 px-4 py-3 hover:bg-primary-fixed/5 transition-colors group">
+                <span class="w-6 h-6 rounded-full bg-surface-container-low flex items-center justify-center text-[10px] font-bold text-on-surface-variant shrink-0">{{ idx + 1 }}</span>
+                <div class="flex-1 min-w-0">
+                  <p class="text-label-md font-medium truncate">{{ exam.subject }}</p>
+                  <p class="text-[11px] text-on-surface-variant">{{ exam.date || '-' }} • {{ exam.duration || '-' }} menit <span v-if="exam.averageScore || exam.avgComputed">• Avg {{ exam.averageScore || exam.avgComputed }}</span></p>
+                </div>
+                <div class="flex items-center gap-1 shrink-0">
+                  <button class="w-8 h-8 rounded-lg bg-primary-fixed/30 hover:bg-primary-fixed/60 text-primary flex items-center justify-center transition-colors" title="Input / Lihat Nilai" @click="navigateTo(`/akademik/imtihan/${kelas}/nilai/${exam.id}`)">
+                    <span class="material-symbols-outlined text-[16px]">edit_square</span>
+                  </button>
+                  <button class="w-8 h-8 rounded-lg hover:bg-red-50 text-red-500 flex items-center justify-center transition-colors" title="Hapus" @click="deleteExam(exam.id)">
+                    <span class="material-symbols-outlined text-[16px]">delete</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Card Footer -->
+          <div v-if="(groupedExams[sesi] || []).length > 0" class="px-4 py-2.5 bg-surface-container-low/50 border-t border-outline-variant/10 flex items-center justify-between">
+            <span class="text-[11px] text-on-surface-variant">{{ (groupedExams[sesi] || []).length }} mapel • {{ sesiStats(sesi).avgText }}</span>
+            <button class="text-[11px] font-semibold text-primary hover:underline flex items-center gap-1" @click="printSesi(sesi)">
+              <span class="material-symbols-outlined text-[14px]">print</span> Cetak Sesi {{ sesi }}
+            </button>
+          </div>
         </div>
+      </div>
+
+      <!-- Jika belum ada sesi sama sekali -->
+      <div v-if="sesiKeys.length === 0 && exams.length > 0" class="mt-gutter glass-card rounded-xl p-6 text-center text-on-surface-variant text-label-md">
+        Tidak ada sesi — data ujian belum memiliki field sesi.
       </div>
     </template>
 
@@ -121,28 +160,52 @@
     </template>
 
     <Teleport to="body">
-      <div v-if="showAddModal" class="fixed inset-0 z-[60] flex items-center justify-center p-gutter bg-black/40 backdrop-blur-sm" @click.self="showAddModal = false">
-        <div class="bg-surface rounded-2xl shadow-2xl max-w-lg w-full overflow-hidden animate-modal-enter">
-          <div class="bg-primary px-gutter py-stack-md flex justify-between items-center">
-            <h2 class="font-display text-headline-md text-on-primary">Tambah Ujian</h2>
+      <div v-if="showAddModal" class="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm" @click.self="showAddModal = false">
+        <div class="bg-surface rounded-2xl shadow-2xl max-w-[560px] w-full max-h-[90vh] overflow-hidden animate-modal-enter flex flex-col">
+          <div class="bg-primary px-6 py-4 flex justify-between items-center shrink-0">
+            <div>
+              <h2 class="font-display text-title-lg text-on-primary leading-none">Tambah Mata Pelajaran</h2>
+              <p class="text-on-primary/70 text-label-sm mt-1">Pilih sesi dan mata pelajaran</p>
+            </div>
             <button class="text-on-primary/60 hover:text-on-primary p-2" @click="showAddModal = false"><span class="material-symbols-outlined">close</span></button>
           </div>
-          <form class="p-gutter space-y-stack-md" @submit.prevent="submitExam">
-            <div class="space-y-1">
-              <label class="text-label-md text-on-surface-variant">Sesi</label>
-              <select v-model="examForm.sesi" class="w-full bg-surface-container-low border-none rounded-lg text-body-md focus:ring-primary p-3 outline-none" required>
-                <option value="">-- Pilih Sesi --</option>
-                <option v-for="n in 4" :key="n" :value="n">Imtihan {{ n }}</option>
-              </select>
+          <form class="p-6 space-y-5 overflow-y-auto" @submit.prevent="submitExam">
+            <!-- Pilih Sesi dengan Radio -->
+            <div class="space-y-2">
+              <label class="text-label-md font-semibold text-on-surface">Sesi Imtihan <span class="text-error">*</span></label>
+              <div class="grid grid-cols-4 gap-2">
+                <label v-for="n in 4" :key="n" class="relative flex flex-col items-center gap-1 p-3 rounded-xl border-2 cursor-pointer transition-all" :class="String(examForm.sesi) === String(n) ? 'border-primary bg-primary-fixed/20 text-primary' : 'border-outline-variant/30 bg-surface-container-low hover:border-primary/30'">
+                  <input type="radio" :value="String(n)" v-model="examForm.sesi" class="sr-only" required />
+                  <span class="w-8 h-8 rounded-full flex items-center justify-center text-label-md font-bold" :class="String(examForm.sesi) === String(n) ? 'bg-primary text-on-primary' : 'bg-surface-container-high text-on-surface-variant'">{{ n }}</span>
+                  <span class="text-label-sm font-medium">Sesi {{ n }}</span>
+                  <span v-if="String(examForm.sesi) === String(n)" class="absolute top-1.5 right-1.5 w-5 h-5 rounded-full bg-primary flex items-center justify-center"><span class="material-symbols-outlined text-white text-[14px]">check</span></span>
+                </label>
+              </div>
             </div>
-            <div class="space-y-1">
-              <label class="text-label-md text-on-surface-variant">Mata Pelajaran</label>
-              <select v-model="examForm.subject" class="w-full bg-surface-container-low border-none rounded-lg text-body-md focus:ring-primary p-3 outline-none" required>
-                <option value="">-- Pilih Mata Pelajaran --</option>
-                <option v-for="s in subjects" :key="s.id" :value="s.name">{{ s.name }}</option>
-              </select>
+
+            <!-- Pilih Mapel dengan Radio -->
+            <div class="space-y-2">
+              <div class="flex items-center justify-between">
+                <label class="text-label-md font-semibold text-on-surface">Mata Pelajaran <span class="text-error">*</span></label>
+                <input v-model="mapelSearch" type="text" placeholder="Cari mapel..." class="bg-surface-container-low border border-outline-variant/20 rounded-lg text-label-sm py-1.5 px-3 focus:ring-primary outline-none w-40" />
+              </div>
+              <div v-if="filteredSubjects.length === 0" class="py-6 text-center text-label-sm text-on-surface-variant border border-dashed border-outline-variant/30 rounded-xl">
+                Tidak ada mata pelajaran. Tambahkan dulu di menu kurikulum.
+              </div>
+              <div v-else class="grid grid-cols-2 gap-2 max-h-[180px] overflow-y-auto pr-1">
+                <label v-for="s in filteredSubjects" :key="s.id" class="flex items-center gap-2.5 p-2.5 rounded-xl border cursor-pointer transition-all" :class="examForm.subject === s.name ? 'border-primary bg-primary-fixed/15 ring-1 ring-primary' : 'border-outline-variant/20 bg-surface-container-low hover:bg-surface-container-high'">
+                  <input type="radio" :value="s.name" v-model="examForm.subject" class="accent-primary w-4 h-4 shrink-0" required />
+                  <span class="text-label-sm font-medium leading-tight truncate">{{ s.name }}</span>
+                </label>
+              </div>
+              <!-- Input manual jika tidak ada di daftar -->
+              <div class="flex items-center gap-2 pt-1">
+                <span class="text-label-sm text-on-surface-variant shrink-0">Atau ketik manual:</span>
+                <input v-model="examForm.subject" placeholder="Nama mapel..." class="flex-1 bg-surface-container-low border border-outline-variant/20 rounded-lg text-label-sm py-1.5 px-3 focus:ring-primary outline-none" />
+              </div>
             </div>
-            <div class="grid grid-cols-2 gap-stack-md">
+
+            <div class="grid grid-cols-2 gap-4">
               <div class="space-y-1">
                 <label class="text-label-md text-on-surface-variant">Tanggal</label>
                 <input type="date" v-model="examForm.date" class="w-full bg-surface-container-low border-none rounded-lg text-body-md focus:ring-primary p-3 outline-none" required />
@@ -152,9 +215,11 @@
                 <input type="number" v-model="examForm.duration" class="w-full bg-surface-container-low border-none rounded-lg text-body-md focus:ring-primary p-3 outline-none" required />
               </div>
             </div>
-            <div class="flex justify-end gap-stack-sm pt-stack-sm">
+            <div class="flex justify-end gap-3 pt-2">
               <button class="px-6 py-2.5 text-on-surface-variant text-label-md hover:bg-surface-container-high rounded-lg" type="button" @click="showAddModal = false">Batal</button>
-              <button class="px-8 py-2.5 bg-primary text-on-primary text-label-md rounded-lg shadow-md hover:brightness-110 active:scale-95 transition-all" type="submit">Simpan</button>
+              <button class="px-8 py-2.5 bg-primary text-on-primary text-label-md rounded-lg shadow-md hover:brightness-110 active:scale-95 transition-all flex items-center gap-2" type="submit">
+                <span class="material-symbols-outlined text-sm">save</span> Simpan
+              </button>
             </div>
           </form>
         </div>
@@ -180,22 +245,91 @@ const subjects = ref<any[]>([])
 
 const selectedStudentId = ref('')
 const showAddModal = ref(false)
+const mapelSearch = ref('')
 const examForm = reactive({ sesi: '', subject: '', date: '', duration: 90 })
 const iktibarDate = ref(new Date().toISOString().split('T')[0])
 const iktibarSearch = ref('')
 const iktibarForm = reactive({ santri: '', catatan: '', date: new Date().toISOString().split('T')[0] })
 
+const filteredSubjects = computed(() => {
+  if (!mapelSearch.value.trim()) return subjects.value
+  const q = mapelSearch.value.toLowerCase()
+  return subjects.value.filter((s: any) => (s.name || '').toLowerCase().includes(q))
+})
+
+const sesiKeys = computed(() => {
+  const set = new Set<string>()
+  for (let i = 1; i <= 4; i++) set.add(String(i))
+  exams.value.forEach((e: any) => {
+    if (e.sesi !== undefined && e.sesi !== null && String(e.sesi).trim() !== '') set.add(String(e.sesi))
+  })
+  return Array.from(set).sort((a, b) => {
+    const an = Number(a), bn = Number(b)
+    if (!isNaN(an) && !isNaN(bn)) return an - bn
+    return a.localeCompare(b)
+  })
+})
+
+const groupedExams = computed<Record<string, any[]>>(() => {
+  const g: Record<string, any[]> = {}
+  sesiKeys.value.forEach(k => g[k] = [])
+  exams.value.forEach((e: any) => {
+    const key = e.sesi !== undefined && e.sesi !== null && String(e.sesi).trim() !== '' ? String(e.sesi) : '1'
+    if (!g[key]) g[key] = []
+    // compute avg if missing
+    if (!e.averageScore && e.scores) {
+      const vals = Object.values(e.scores as Record<string, any>).map((v: any) => Number(v.score) || 0).filter(v => v > 0)
+      e.avgComputed = vals.length ? (vals.reduce((a: number, b: number) => a + b, 0) / vals.length).toFixed(1) : ''
+    }
+    g[key].push(e)
+  })
+  // sort each group by subject name
+  Object.keys(g).forEach(k => g[k].sort((a, b) => (a.subject || '').localeCompare(b.subject || '')))
+  return g
+})
+
+function sesiHeaderClass(sesi: string) {
+  const n = Number(sesi)
+  if (n === 1) return 'bg-gradient-to-r from-emerald-50 to-teal-50 border-b border-emerald-100'
+  if (n === 2) return 'bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-blue-100'
+  if (n === 3) return 'bg-gradient-to-r from-amber-50 to-orange-50 border-b border-amber-100'
+  if (n === 4) return 'bg-gradient-to-r from-violet-50 to-purple-50 border-b border-violet-100'
+  return 'bg-surface-container-low border-b border-outline-variant/10'
+}
+function sesiBadgeClass(sesi: string) {
+  const n = Number(sesi)
+  if (n === 1) return 'bg-emerald-600'
+  if (n === 2) return 'bg-blue-600'
+  if (n === 3) return 'bg-amber-600'
+  if (n === 4) return 'bg-violet-600'
+  return 'bg-primary'
+}
+function sesiStats(sesi: string) {
+  const list = groupedExams.value[sesi] || []
+  const avgVals = list.map(e => Number(e.averageScore || e.avgComputed) || 0).filter(v => v > 0)
+  const avg = avgVals.length ? (avgVals.reduce((a, b) => a + b, 0) / avgVals.length).toFixed(1) : '-'
+  return { avgText: `Rata-rata ${avg}` }
+}
+
 const examStats = computed(() => [
   { label: 'Total Ujian', value: exams.value.length.toString(), color: 'text-primary' },
-  { label: 'Rata-rata Nilai', value: exams.value.length ? (exams.value.reduce((s, e) => s + (Number(e.averageScore) || 0), 0) / exams.value.length).toFixed(1) : '-', color: 'text-secondary' },
+  { label: 'Rata-rata Nilai', value: exams.value.length ? (exams.value.reduce((s, e) => s + (Number(e.averageScore || e.avgComputed) || 0), 0) / exams.value.length).toFixed(1) : '-', color: 'text-secondary' },
   { label: 'Mata Pelajaran', value: [...new Set(exams.value.map(e => e.subject))].length.toString(), color: 'text-tertiary' },
-  { label: 'Nilai Tertinggi', value: exams.value.length ? Math.max(...exams.value.map(e => Number(e.averageScore) || 0)).toString() : '-', color: 'text-green-600' },
+  { label: 'Nilai Tertinggi', value: exams.value.length ? Math.max(...exams.value.map(e => Number(e.averageScore || e.avgComputed) || 0)).toString() : '-', color: 'text-green-600' },
 ])
 
 const filteredIktibar = computed(() => iktibarList.value.filter(i =>
   (!iktibarSearch.value || i.santri.toLowerCase().includes(iktibarSearch.value.toLowerCase())) &&
   (!iktibarDate.value || i.date === iktibarDate.value)
 ))
+
+function openAddModal(sesi?: string) {
+  if (sesi) examForm.sesi = String(sesi)
+  else if (!examForm.sesi) examForm.sesi = '1'
+  mapelSearch.value = ''
+  if (!examForm.date) examForm.date = new Date().toISOString().split('T')[0]
+  showAddModal.value = true
+}
 
 async function fetchData() {
   loading.value = true; error.value = ''
@@ -219,11 +353,129 @@ async function fetchData() {
 }
 
 async function submitExam() {
+  if (!examForm.sesi || !examForm.subject) {
+    error.value = 'Sesi dan mata pelajaran wajib diisi'
+    return
+  }
   try {
     await $fetch('/api/akademik/imtihan', { method: 'POST', body: { ...examForm, kelas } })
     showAddModal.value = false; examForm.sesi = ''; examForm.subject = ''; examForm.date = ''; examForm.duration = 90
     await fetchData()
   } catch (e: any) { error.value = e.message || 'Gagal menyimpan' }
+}
+
+async function printSesi(sesi: string) {
+  const list = groupedExams.value[sesi] || []
+  if (!list.length) { error.value = `Belum ada data di Sesi ${sesi}`; return }
+  error.value = ''
+  try {
+    const examDetails = await Promise.all(
+      list.map((e: any) => $fetch<any>(`/api/akademik/imtihan/${e.id}`).catch(() => e))
+    )
+    const valid = examDetails.filter(Boolean)
+    const classes = await $fetch<any[]>('/api/master-data/classes')
+    const cls = classes.find((c: any) => c.id === kelas)
+    const allStudents = await $fetch<any[]>(`/api/students?class=${encodeURIComponent(cls?.name || kelas)}`) || []
+    const nameMap: Record<string, string> = {}
+    allStudents.forEach(s => { nameMap[s.id] = s.name })
+    // build ranking for this sesi
+    const studentMap: Record<string, Record<string, number>> = {}
+    valid.forEach((exam: any) => {
+      if (!exam.scores) return
+      Object.entries(exam.scores).forEach(([sid, data]: [string, any]) => {
+        if (!studentMap[sid]) studentMap[sid] = {}
+        studentMap[sid][exam.subject] = Number(data.score) || 0
+      })
+    })
+    // include students with no score yet as 0 row
+    allStudents.forEach(s => { if (!studentMap[s.id]) studentMap[s.id] = {} })
+
+    interface RankEntry { id: string; name: string; subjects: Record<string, number>; total: number; avg: number }
+    const ranked: RankEntry[] = Object.entries(studentMap).map(([id, subs]) => {
+      // sum only subjects in this sesi
+      const vals = valid.map((e: any) => subs[e.subject] || 0)
+      const total = vals.reduce((a, b) => a + b, 0)
+      return { id, name: nameMap[id] || id, subjects: subs, total, avg: vals.length ? total / vals.length : 0 }
+    })
+    ranked.sort((a, b) => b.total - a.total || b.avg - a.avg)
+
+    const subjectNames = valid.map(e => e.subject)
+    const headerCells = subjectNames.map(s => `<th style="padding:6px 8px;border:1px solid #333;font-size:10pt;text-align:center;white-space:nowrap;">${s}</th>`).join('')
+    const rows = ranked.map((r, i) => {
+      const scoreCells = subjectNames.map(s =>
+        `<td style="text-align:center;padding:4px 6px;border:1px solid #333;font-size:10pt;">${r.subjects[s] ? r.subjects[s] : '-'}</td>`
+      ).join('')
+      return `<tr>
+        <td style="text-align:center;padding:4px 6px;border:1px solid #333;font-size:10pt;">${i + 1}</td>
+        <td style="padding:4px 6px;border:1px solid #333;font-size:10pt;">${r.name}</td>
+        ${scoreCells}
+        <td style="text-align:center;padding:4px 6px;border:1px solid #333;font-size:10pt;font-weight:bold;">${r.total}</td>
+        <td style="text-align:center;padding:4px 6px;border:1px solid #333;font-size:10pt;">${r.avg.toFixed(1)}</td>
+      </tr>`
+    }).join('')
+
+    const win = window.open('', '_blank')
+    if (!win) return
+    win.document.write(`
+<html><head><title>Rekap Sesi ${sesi} - ${className.value}</title>
+<style>
+  @page { size: landscape; margin: 12mm 15mm; }
+  body { font-family: 'Times New Roman', Times, serif; font-size: 12pt; color: #000; margin: 0; padding: 15px; }
+  .kop { text-align: center; border-bottom: 2px solid #333; padding-bottom: 10px; margin-bottom: 16px; }
+  .kop .logo { max-height: 55px; vertical-align: middle; margin-right: 8px; }
+  .kop .kop-title { font-size: 15pt; font-weight: bold; }
+  .kop .kop-alamat { font-size: 9pt; }
+  h2 { text-align: center; font-size: 13pt; margin: 14px 0 4px; text-decoration: underline; }
+  .sub { text-align:center; font-size:10pt; margin-bottom:10px; }
+  .info { margin-bottom: 10px; }
+  .info td { padding: 2px 6px; font-size: 10pt; }
+  table.data { width: 100%; border-collapse: collapse; margin: 10px 0; }
+  table.data th { background: #f0f0f0; padding: 6px; border: 1px solid #333; font-size: 10pt; }
+  table.data td { padding: 4px 6px; border: 1px solid #333; font-size: 10pt; }
+  .ttd { margin-top: 30px; display: flex; justify-content: space-around; }
+  .ttd div { text-align: center; width: 180px; }
+  .ttd .jabatan { font-size: 10pt; margin-bottom: 50px; }
+  .ttd .nama { font-size: 11pt; font-weight: bold; text-decoration: underline; }
+</style></head><body>
+<div class="kop">
+  <table style="width:100%;"><tr>
+    <td style="width:70px;text-align:center;">
+      <img src="/image/logo.png" class="logo" style="max-height:55px;" onerror="this.style.display='none'" />
+    </td>
+    <td style="text-align:center;">
+      <div class="kop-title">YAYASAN PONDOK PESANTREN<br>AL FATAH PANEKAN</div>
+      <div class="kop-alamat">Turi, Panekan, Kabupaten Magetan, Jawa Timur 63352</div>
+    </td>
+  </tr></table>
+</div>
+
+<h2>REKAP NILAI IMTIHAN — SESI ${sesi}</h2>
+<p class="sub">Kelas: ${className.value} &nbsp;|&nbsp; Jumlah Mapel: ${valid.length} &nbsp;|&nbsp; Jumlah Santri: ${ranked.length}</p>
+
+<table class="data">
+  <thead>
+    <tr>
+      <th style="width:32px;">No</th>
+      <th>Nama Santri</th>
+      ${headerCells}
+      <th style="width:55px;">Jumlah</th>
+      <th style="width:60px;">Rata-rata</th>
+    </tr>
+  </thead>
+  <tbody>${rows}</tbody>
+</table>
+
+<div class="ttd">
+  <div><div class="jabatan">Wali Kelas,</div><div class="nama">_____________________</div></div>
+  <div><div class="jabatan">Kepala Pondok,</div><div class="nama">_____________________</div></div>
+</div>
+</body></html>
+`)
+    win.document.close()
+    setTimeout(() => { win.print() }, 500)
+  } catch (e: any) {
+    error.value = e.message || 'Gagal mencetak sesi'
+  }
 }
 
 async function printNilaiSantri() {
@@ -242,18 +494,17 @@ async function printNilaiSantri() {
     const student = students.value.find(s => s.id === selectedStudentId.value)
     if (!student) { error.value = 'Santri tidak ditemukan'; return }
 
-    const studentScores: { subject: string; date: string; score: string; notes: string }[] = []
+    const studentScores: { subject: string; date: string; score: string; notes: string; sesi: string }[] = []
     valid.forEach((exam: any) => {
       if (!exam.scores) return
       const data = exam.scores[selectedStudentId.value]
       if (data) {
-        studentScores.push({ subject: exam.subject, date: exam.date, score: data.score || '-', notes: data.notes || '' })
+        studentScores.push({ subject: exam.subject, date: exam.date, score: data.score || '-', notes: data.notes || '', sesi: exam.sesi || '-' })
       }
     })
 
     const total = studentScores.reduce((s, r) => s + (Number(r.score) || 0), 0)
     const avg = studentScores.length ? (total / studentScores.length) : 0
-    const subjectNames = valid.map(e => e.subject)
 
     const win = window.open('', '_blank')
     if (!win) return
@@ -299,14 +550,14 @@ async function printNilaiSantri() {
   <tr><td class="label">Nama Santri</td><td>: ${student.name}</td></tr>
   ${student.nis ? `<tr><td>NIS</td><td>: ${student.nis}</td></tr>` : ''}
   <tr><td>Kelas</td><td>: ${className.value}</td></tr>
-  <tr><td>Mata Pelajaran Diujikan</td><td>: ${subjectNames.join(', ')}</td></tr>
 </table>
 
 <table class="data">
   <thead>
     <tr>
       <th style="width:32px;">No</th>
-      <th style="width:160px;">Mata Pelajaran</th>
+      <th style="width:70px;">Sesi</th>
+      <th>Mata Pelajaran</th>
       <th style="width:100px;">Tanggal</th>
       <th style="width:70px;">Nilai</th>
       <th>Keterangan</th>
@@ -316,6 +567,7 @@ async function printNilaiSantri() {
     ${studentScores.map((r, i) => `
     <tr>
       <td>${i + 1}</td>
+      <td>${r.sesi !== '-' ? `Sesi ${r.sesi}` : '-'}</td>
       <td class="left">${r.subject}</td>
       <td>${r.date}</td>
       <td style="font-weight:bold;">${r.score}</td>
@@ -428,7 +680,7 @@ async function printRanking() {
   </tr></table>
 </div>
 
-<h2>REKAP NILAI & RANKING IMTIHAN</h2>
+<h2>REKAP NILAI & RANKING IMTIHAN — SEMUA SESI</h2>
 
 <table class="info">
   <tr><td>Kelas</td><td>: ${className.value}</td></tr>
