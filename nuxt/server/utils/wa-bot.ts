@@ -63,11 +63,27 @@ export async function syncStudentsToQdrant(): Promise<number> {
 
 // ── Firebase Student Search ──
 
+function normName(s: string): string {
+  return String(s || '').toLowerCase().replace(/[-_']/g, ' ').replace(/\s+/g, ' ').trim()
+}
+function recordMatchesStudent(r: any, studentId: string, studentName: string, studentNis?: string): boolean {
+  if (String(r.studentId || '') === String(studentId)) return true
+  if (studentNis && String(r.nis || '') === String(studentNis)) return true
+  const rn = normName(r.name)
+  const tn = normName(studentName)
+  if (rn && tn && rn === tn) return true
+  // fallback: jika nama di record mengandung nama query (mis. record "Muhammad Al Fatih " vs query "Muhammad Al-Fatih")
+  if (rn && tn && (rn.includes(tn) || tn.includes(rn)) && tn.length >= 5) return true
+  return false
+}
+
 async function searchStudentsFromFirebase(query: string): Promise<any[]> {
   const all = await rtdbGetList('students')
   const q = query.toLowerCase().trim()
+  const qNorm = normName(query)
   return all.filter((s: any) =>
     (s.name && s.name.toLowerCase().includes(q)) ||
+    (s.name && normName(s.name).includes(qNorm)) ||
     (s.nis && s.nis.toLowerCase().includes(q)) ||
     (s.parentName && s.parentName.toLowerCase().includes(q))
   ).slice(0, 5)
@@ -216,11 +232,18 @@ async function getDiniyahSummary(studentId: string, studentName: string, filter?
     byMonth.set(mid, entry) // override → last wins (latest)
   }
   let matchedMonths = 0
+  // ambil nis untuk matching lebih akurat (hindari miss karena hyphen/case)
+  let studentNis: string | undefined
+  try {
+    const db2 = getDatabase()
+    const sSnap = await db2.ref(`students/${studentId}`).once('value')
+    if (sSnap.exists()) studentNis = sSnap.val()?.nis
+  } catch {}
   for (const entry of byMonth.values()) {
     if (filter && !monthFilterMatches(entry, filter)) continue
     matchedMonths++
     const records = entry.records || []
-    const found = records.find((r: any) => r.studentId === studentId || r.name === studentName)
+    const found = records.find((r: any) => recordMatchesStudent(r, studentId, studentName, studentNis))
     if (!found || !found.marks) continue
     for (const raw of Object.values(found.marks) as string[]) {
       const v = canon(raw)
@@ -255,11 +278,17 @@ async function getPagiMalamSummary(studentId: string, studentName: string, filte
     byMonth.set(mid, entry)
   }
   let matchedMonths = 0
+  let studentNisPM: string | undefined
+  try {
+    const db3 = getDatabase()
+    const sSnap2 = await db3.ref(`students/${studentId}`).once('value')
+    if (sSnap2.exists()) studentNisPM = sSnap2.val()?.nis
+  } catch {}
   for (const entry of byMonth.values()) {
     if (filter && !monthFilterMatches(entry, filter)) continue
     matchedMonths++
     const records = entry.records || []
-    const found = records.find((r: any) => r.studentId === studentId || r.name === studentName)
+    const found = records.find((r: any) => recordMatchesStudent(r, studentId, studentName, studentNisPM))
     if (!found || !found.marks) continue
     for (const raw of Object.values(found.marks) as string[]) {
       const v = canon(raw)

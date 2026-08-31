@@ -56,9 +56,9 @@
         <table class="w-full text-left" style="min-width:2200px">
           <thead class="bg-surface-container-low">
             <tr>
-              <th rowspan="3" class="px-2 py-2 text-label-xs text-on-surface-variant w-8 text-center align-middle">NO</th>
-              <th rowspan="3" class="px-2 py-2 text-label-xs text-on-surface-variant sticky left-0 bg-surface-container-low z-10 align-middle" style="min-width:120px">NAMA</th>
-              <th rowspan="3" class="px-2 py-2 text-label-xs text-on-surface-variant align-middle" style="min-width:44px">KLS</th>
+              <th rowspan="4" class="px-2 py-2 text-label-xs text-on-surface-variant w-8 text-center align-middle">NO</th>
+              <th rowspan="4" class="px-2 py-2 text-label-xs text-on-surface-variant sticky left-0 bg-surface-container-low z-10 align-middle" style="min-width:120px">NAMA</th>
+              <th rowspan="4" class="px-2 py-2 text-label-xs text-on-surface-variant align-middle" style="min-width:44px">KLS</th>
               <th :colspan="totalDays * 2" class="px-0.5 py-1 text-label-xs text-on-surface-variant text-center border-l border-outline-variant/20 font-bold">TANGGAL</th>
             </tr>
             <tr>
@@ -69,6 +69,9 @@
                 <th class="px-0.5 py-1 text-[10px] text-on-surface-variant text-center font-normal border-l border-outline-variant/10">P</th>
                 <th class="px-0.5 py-1 text-[10px] text-on-surface-variant text-center font-normal">M</th>
               </template>
+            </tr>
+            <tr>
+              <th v-for="d in totalDays" :key="'hari' + d" colspan="2" class="px-0.5 py-0.5 text-[9px] text-on-surface-variant text-center font-medium border-l border-outline-variant/10" :class="dayCodeClass(dayCodes[d-1])" :title="dayFullName(d)">{{ dayCodes[d-1] }}</th>
             </tr>
           </thead>
           <tbody class="divide-y divide-outline-variant/10">
@@ -257,6 +260,28 @@ const totalDays = computed(() => {
   const [y, m] = selectedMonth.value.split('-').map(Number)
   return Math.min(new Date(y, m, 0).getDate(), 31)
 })
+
+// Kode hari 2 huruf Indonesia: SN SL RB KM JM SB MG — tidak merusak susunan, hanya baris tambahan
+const DAY_CODE_2 = ['MG', 'SN', 'SL', 'RB', 'KM', 'JM', 'SB'] as const
+const DAY_FULL = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'] as const
+const dayCodes = computed(() => {
+  if (!selectedMonth.value) return Array.from({ length: totalDays.value }, () => '–')
+  const [y, m] = selectedMonth.value.split('-').map(Number)
+  return Array.from({ length: totalDays.value }, (_, i) => {
+    const dow = new Date(y, m - 1, i + 1).getDay()
+    return DAY_CODE_2[dow]
+  })
+})
+function dayFullName(d: number): string {
+  const code = dayCodes.value[d - 1] || ''
+  const idx = (DAY_CODE_2 as readonly string[]).indexOf(code)
+  return idx >= 0 ? DAY_FULL[idx] : ''
+}
+function dayCodeClass(code: string): string {
+  if (code === 'SB' || code === 'MG') return 'bg-amber-50 text-amber-700'
+  if (code === 'JM') return 'bg-green-50 text-green-700'
+  return ''
+}
 
 function dayKey(d: number, session: 'P' | 'M') {
   return `${d}${session}`
@@ -548,10 +573,13 @@ function exportExcel() {
   const symbolOf: Record<string, string> = {}
   for (const s of STATUS_OPTIONS) symbolOf[s.value] = s.symbol
   const days = Array.from({ length: totalDays.value }, (_, i) => i + 1)
-  let html = '<table border="1"><tr><th rowspan="3">NO</th><th rowspan="3">NAMA</th><th rowspan="3">KLS</th><th colspan="' + (days.length * 2) + '">TANGGAL</th></tr><tr>'
+  const codes = dayCodes.value
+  let html = '<table border="1"><tr><th rowspan="4">NO</th><th rowspan="4">NAMA</th><th rowspan="4">KLS</th><th colspan="' + (days.length * 2) + '">TANGGAL</th></tr><tr>'
   for (const d of days) html += `<th colspan="2">${d}</th>`
   html += '</tr><tr>'
   for (const _ of days) html += '<th>P</th><th>M</th>'
+  html += '</tr><tr>'
+  for (let i = 0; i < days.length; i++) html += `<th colspan="2" style="font-size:8px">${codes[i] || ''}</th>`
   html += '</tr>'
   students.value.slice().sort((a, b) => {
     const ca = String(a.class || '').toLowerCase()
@@ -667,9 +695,9 @@ function printAttendance() {
 <table>
   <thead>
     <tr>
-      <th class="th-no" rowspan="3">NO</th>
-      <th class="th-nama" rowspan="3">NAMA</th>
-      <th class="th-kelas" rowspan="3">KLS</th>
+      <th class="th-no" rowspan="4">NO</th>
+      <th class="th-nama" rowspan="4">NAMA</th>
+      <th class="th-kelas" rowspan="4">KLS</th>
       <th class="th-tanggal" colspan="${days.length * 2}">TANGGAL</th>
     </tr>
     <tr>
@@ -677,6 +705,18 @@ function printAttendance() {
     </tr>
     <tr>
       ${days.map(() => `<th class="th-pm">P</th><th class="th-pm">M</th>`).join('')}
+    </tr>
+    <tr>
+      ${(() => {
+        const codes = ['MG','SN','SL','RB','KM','JM','SB']
+        const [yy, mm] = (selectedMonth.value || '').split('-').map(Number)
+        return days.map(d => {
+          const dow = selectedMonth.value ? new Date(yy, mm - 1, d).getDay() : 0
+          const c = codes[dow] || ''
+          const bg = c==='SB'||c==='MG' ? 'background:#fef3c7;' : c==='JM' ? 'background:#dcfce7;' : ''
+          return `<th class="th-pm" style="font-size:5.5pt;${bg}">${c}</th><th class="th-pm" style="font-size:5.5pt;${bg}">${c}</th>`
+        }).join('')
+      })()}
     </tr>
   </thead>
   <tbody>${dataRows}</tbody>
