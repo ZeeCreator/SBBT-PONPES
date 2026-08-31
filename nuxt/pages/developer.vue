@@ -253,6 +253,59 @@
       </div>
     </div>
 
+    <!-- ── OCR Settings ──────────────────────────────────────────── -->
+    <div class="glass-card rounded-2xl p-stack-md shadow-sm mb-stack-lg">
+      <div class="flex items-center justify-between mb-4">
+        <h4 class="font-display text-title-lg text-primary flex items-center gap-2"><span class="material-symbols-outlined">document_scanner</span> OCR Provider Settings</h4>
+        <button class="p-2 text-on-surface-variant hover:text-primary transition-colors" @click="fetchOcrConfig" title="Refresh"><span class="material-symbols-outlined">refresh</span></button>
+      </div>
+      <p class="text-label-sm text-on-surface-variant mb-4">Konfigurasi API key OCR disimpan di RTDB <code class="bg-surface-container-low px-1 py-0.5 rounded">config/ocr</code>. Prioritas: RTDB → env (<code>NUXT_GEMINI_API_KEY</code> dll) → 502 jika kosong. Mendukung Gemini, OpenRouter, OCR.space. Prompt bisa di-custom per kebutuhan pondok.</p>
+      <div v-if="ocrConfigLoading" class="text-label-sm text-on-surface-variant py-4 text-center"><span class="material-symbols-outlined animate-spin text-sm mr-2">refresh</span>Memuat...</div>
+      <div v-else class="space-y-4">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label class="text-label-sm font-medium text-on-surface-variant block mb-1">Gemini API Key <span v-if="ocrConfig.hasGemini" class="text-green-600 text-label-xs">● terisi ({{ ocrConfig.geminiApiKeyMasked }})</span></label>
+            <input v-model="ocrForm.geminiApiKey" type="password" placeholder="AIza... (kosongkan jika tidak diganti)" class="w-full px-4 py-2.5 bg-surface-container-low border border-outline-variant rounded-xl text-label-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all" />
+            <input v-model="ocrForm.geminiModel" type="text" placeholder="gemini-1.5-flash" class="w-full mt-2 px-4 py-2 bg-surface-container-low border border-outline-variant rounded-xl text-label-sm focus:outline-none focus:ring-1 focus:ring-primary" />
+            <p class="text-label-xs text-on-surface-variant mt-1">Model gemini (default: gemini-1.5-flash)</p>
+          </div>
+          <div>
+            <label class="text-label-sm font-medium text-on-surface-variant block mb-1">OpenRouter API Key <span v-if="ocrConfig.hasOpenrouter" class="text-green-600 text-label-xs">● terisi ({{ ocrConfig.openrouterApiKeyMasked }})</span></label>
+            <input v-model="ocrForm.openrouterApiKey" type="password" placeholder="sk-or-... (kosongkan jika tidak diganti)" class="w-full px-4 py-2.5 bg-surface-container-low border border-outline-variant rounded-xl text-label-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all" />
+            <input v-model="ocrForm.openrouterModel" type="text" placeholder="google/gemma-3-27b-it:free" class="w-full mt-2 px-4 py-2 bg-surface-container-low border border-outline-variant rounded-xl text-label-sm focus:outline-none focus:ring-1 focus:ring-primary" />
+            <p class="text-label-xs text-on-surface-variant mt-1">Model OpenRouter</p>
+          </div>
+        </div>
+        <div>
+          <label class="text-label-sm font-medium text-on-surface-variant block mb-1">OCR.space API Key <span v-if="ocrConfig.hasOcrSpace" class="text-green-600 text-label-xs">● terisi ({{ ocrConfig.ocrSpaceApiKeyMasked }})</span></label>
+          <input v-model="ocrForm.ocrSpaceApiKey" type="password" placeholder="helloworld / apikey (kosongkan jika tidak diganti)" class="w-full px-4 py-2.5 bg-surface-container-low border border-outline-variant rounded-xl text-label-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all" />
+        </div>
+        <div>
+          <label class="text-label-sm font-medium text-on-surface-variant block mb-1">Provider Order (drag / urutan prioritas)</label>
+          <div class="flex gap-2 flex-wrap">
+            <label v-for="p in ['gemini','openrouter','ocrspace']" :key="p" class="flex items-center gap-2 px-3 py-2 bg-surface-container-low rounded-xl border border-outline-variant cursor-pointer">
+              <input type="checkbox" :value="p" v-model="ocrForm.providerOrder" class="accent-primary" />
+              <span class="text-label-sm capitalize">{{ p }}</span>
+            </label>
+          </div>
+          <p class="text-label-xs text-on-surface-variant mt-1">Centang & urutan sesuai prioritas fallback saat OCR analyze</p>
+        </div>
+        <div>
+          <label class="text-label-sm font-medium text-on-surface-variant block mb-1">Custom OCR Prompt (opsional)</label>
+          <textarea v-model="ocrForm.ocrPrompt" rows="7" placeholder="Kosongkan untuk memakai prompt default. Prompt dikirim ke Gemini/OpenRouter." class="w-full px-4 py-2.5 bg-surface-container-low border border-outline-variant rounded-xl text-label-sm font-mono focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"></textarea>
+          <p class="text-label-xs text-on-surface-variant mt-1">Sudah mencakup simbol B/P/I/S/A/✓/• . Ubah hanya jika format kertas berbeda.</p>
+        </div>
+        <div class="flex items-center gap-3">
+          <button class="flex items-center gap-1 px-4 py-2 bg-primary text-on-primary rounded-xl text-label-md hover:brightness-110 active:scale-95 transition-all" @click="saveOcrConfig">
+            <span class="material-symbols-outlined text-sm">save</span> Simpan OCR Config
+          </button>
+          <button class="px-4 py-2 border border-outline-variant rounded-xl text-label-md hover:bg-surface-container-high transition-all" @click="testOcrProvider">Test Provider</button>
+          <span v-if="ocrMessage" class="text-label-sm" :class="ocrMessage.includes('✅') ? 'text-green-600' : ocrMessage.includes('…') ? 'text-on-surface-variant' : 'text-red-600'">{{ ocrMessage }}</span>
+        </div>
+        <p class="text-label-xs text-on-surface-variant">RTDB path: <code>config/ocr</code> — API: <code>/api/ocr/config</code> (GET/PUT) & <code>/api/ocr/analyze</code> (POST). Setelah simpan, coba upload gambar di halaman Absensi untuk verifikasi.</p>
+      </div>
+    </div>
+
     <!-- ── Activity Logs Preview ──────────────────────────────────── -->
     <div class="glass-card rounded-2xl p-stack-md shadow-sm">
       <div class="flex items-center justify-between mb-4">
@@ -544,6 +597,56 @@ async function testLog() {
   } catch {}
 }
 
+// ── OCR Settings ───────────────────────────────────────────
+const ocrConfig = ref<any>({ hasGemini: false, hasOpenrouter: false, hasOcrSpace: false, geminiModel: 'gemini-1.5-flash', openrouterModel: 'google/gemma-3-27b-it:free', providerOrder: ['gemini','openrouter','ocrspace'] })
+const ocrForm = reactive({ geminiApiKey: '', geminiModel: 'gemini-1.5-flash', openrouterApiKey: '', openrouterModel: 'google/gemma-3-27b-it:free', ocrSpaceApiKey: '', ocrPrompt: '', providerOrder: ['gemini','openrouter','ocrspace'] as string[] })
+const ocrConfigLoading = ref(false)
+const ocrMessage = ref('')
+
+async function fetchOcrConfig() {
+  ocrConfigLoading.value = true
+  try {
+    const token = await getIdToken()
+    const res: any = await $fetch('/api/ocr/config', { headers: { Authorization: `Bearer ${token}` } })
+    ocrConfig.value = res
+    ocrForm.geminiModel = res.geminiModel || 'gemini-1.5-flash'
+    ocrForm.openrouterModel = res.openrouterModel || 'google/gemma-3-27b-it:free'
+    ocrForm.ocrPrompt = res.ocrPrompt || ''
+    ocrForm.providerOrder = res.providerOrder || ['gemini','openrouter','ocrspace']
+    ocrForm.geminiApiKey = ''; ocrForm.openrouterApiKey = ''; ocrForm.ocrSpaceApiKey = ''
+  } catch (e: any) { ocrMessage.value = `❌ Gagal load: ${e.data?.statusMessage || e.message}`; setTimeout(() => ocrMessage.value='',4000) }
+  finally { ocrConfigLoading.value = false }
+}
+async function saveOcrConfig() {
+  ocrMessage.value = 'Menyimpan…'
+  try {
+    const token = await getIdToken()
+    const body: any = { geminiModel: ocrForm.geminiModel, openrouterModel: ocrForm.openrouterModel, ocrPrompt: ocrForm.ocrPrompt, providerOrder: ocrForm.providerOrder }
+    if (ocrForm.geminiApiKey.trim()) body.geminiApiKey = ocrForm.geminiApiKey.trim()
+    if (ocrForm.openrouterApiKey.trim()) body.openrouterApiKey = ocrForm.openrouterApiKey.trim()
+    if (ocrForm.ocrSpaceApiKey.trim()) body.ocrSpaceApiKey = ocrForm.ocrSpaceApiKey.trim()
+    // jika kosong tapi ingin hapus: user harus kirim string kosong explicit -> handle via checkbox? Untuk sekarang hanya update jika ada input
+    // Untuk menghapus key, isi dengan '-' lalu kami interpretasikan sebagai hapus (tidak implement, butuh explicit '')
+    await $fetch('/api/ocr/config', { method: 'PUT', headers: { Authorization: `Bearer ${token}` }, body })
+    ocrMessage.value = '✅ OCR config berhasil disimpan'
+    await fetchOcrConfig()
+  } catch (e: any) { ocrMessage.value = `❌ Gagal simpan: ${e.data?.statusMessage || e.message}` }
+  setTimeout(() => ocrMessage.value='',5000)
+}
+async function testOcrProvider() {
+  ocrMessage.value = 'Mengecek provider…'
+  try {
+    const token = await getIdToken()
+    const res: any = await $fetch('/api/ocr/config', { headers: { Authorization: `Bearer ${token}` } })
+    const providers = []
+    if (res.hasGemini) providers.push('Gemini ✓')
+    if (res.hasOpenrouter) providers.push('OpenRouter ✓')
+    if (res.hasOcrSpace) providers.push('OCR.space ✓')
+    ocrMessage.value = providers.length ? `✅ Provider aktif: ${providers.join(', ')}` : '❌ Tidak ada provider terkonfigurasi — isi minimal satu API key'
+  } catch (e: any) { ocrMessage.value = `❌ ${e.message}` }
+  setTimeout(() => ocrMessage.value='',5000)
+}
+
 onMounted(() => {
   checkHealth()
   fetchSystemInfo()
@@ -551,5 +654,6 @@ onMounted(() => {
   fetchLogs()
   fetchBackups()
   fetchMagicLinkConfig()
+  fetchOcrConfig()
 })
 </script>

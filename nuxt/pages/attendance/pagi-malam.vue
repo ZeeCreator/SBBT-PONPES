@@ -38,7 +38,7 @@
         </h3>
       </div>
       <div class="p-stack-md">
-        <div class="grid grid-cols-2 md:grid-cols-6 gap-3">
+        <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
           <div v-for="s in summary" :key="s.label" class="p-3 rounded-xl" :class="s.bg">
             <p class="text-[10px] uppercase font-semibold" :class="s.labelColor">{{ s.label }}</p>
             <p class="text-title-lg font-bold" :class="s.valueColor">{{ s.count }} <span class="text-label-sm font-normal">/ {{ s.total }}</span></p>
@@ -96,6 +96,10 @@
         <button class="bg-surface-container-high text-on-surface px-4 py-2.5 rounded-xl text-label-sm hover:brightness-110 transition-all flex items-center gap-2" @click="exportExcel">
           <span class="material-symbols-outlined text-sm">table_chart</span> Excel
         </button>
+        <button class="bg-surface-container-high text-on-surface px-4 py-2.5 rounded-xl text-label-sm hover:brightness-110 transition-all flex items-center gap-2" @click="triggerOcrUpload">
+          <span class="material-symbols-outlined text-sm">image</span> OCR
+        </button>
+        <input ref="ocrInput" type="file" accept="image/*" class="hidden" @change="uploadOcrImage" />
         <button class="bg-surface-container-high text-on-surface px-4 py-2.5 rounded-xl text-label-sm" @click="resetForm">Reset</button>
         <button class="bg-secondary-container text-on-secondary-container px-4 py-2.5 rounded-xl text-label-sm font-bold hover:brightness-110 transition-all flex items-center gap-2" @click="printAttendance">
           <span class="material-symbols-outlined text-sm">print</span> Cetak
@@ -117,7 +121,55 @@
       <p class="text-label-sm text-on-surface-variant mt-2">Memuat data...</p>
     </div>
 
+    <div v-if="ocrLoading" class="glass-card rounded-xl shadow-sm p-6 mb-stack-lg text-center mt-4">
+      <span class="material-symbols-outlined animate-spin text-primary text-3xl mb-3">image</span>
+      <p class="text-label-md text-primary font-semibold">Memproses OCR...</p>
+      <div class="w-full max-w-md mx-auto bg-surface-container-low rounded-full h-2 mt-3 overflow-hidden">
+        <div class="h-full bg-primary rounded-full transition-all" :style="{ width: ocrProgress + '%' }"></div>
+      </div>
+      <p class="text-label-sm text-on-surface-variant mt-2">{{ ocrProgress }}%</p>
+    </div>
+
     <Teleport to="body">
+      <div v-if="showOcrModal" class="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4" @click.self="showOcrModal = false">
+        <div class="bg-surface rounded-2xl p-6 w-full max-w-2xl shadow-2xl max-h-[90vh] overflow-y-auto">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="font-display text-title-lg text-primary">Hasil OCR Pagi-Malam</h3>
+            <button class="text-on-surface-variant hover:text-primary" @click="showOcrModal = false"><span class="material-symbols-outlined">close</span></button>
+          </div>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+            <div>
+              <p class="text-label-xs text-on-surface-variant mb-1">Gambar Asli</p>
+              <img :src="ocrImageBase64" alt="Original" class="w-full rounded-lg border border-outline-variant/30" />
+            </div>
+            <div>
+              <p class="text-label-xs text-on-surface-variant mb-1">Gambar Diproses</p>
+              <img :src="ocrProcessedBase64 || ocrImageBase64" alt="Processed" class="w-full rounded-lg border border-outline-variant/30" />
+            </div>
+            <div>
+              <p class="text-label-xs text-on-surface-variant mb-1">Teks Terdeteksi</p>
+              <pre class="w-full h-48 overflow-y-auto bg-surface-container-low rounded-lg p-3 text-label-sm font-mono whitespace-pre-wrap border border-outline-variant/30">{{ ocrResult || 'Tidak ada teks terdeteksi' }}</pre>
+            </div>
+          </div>
+          <div v-if="ocrParsedRows.length > 0" class="mb-4">
+            <p class="text-label-xs text-on-surface-variant mb-2">Hasil Parsing ({{ ocrParsedRows.length }} santri):</p>
+            <div class="max-h-32 overflow-y-auto bg-surface-container-low rounded-lg border border-outline-variant/30 divide-y divide-outline-variant/10">
+              <div v-for="row in ocrParsedRows" :key="row.name" class="flex items-center justify-between px-3 py-1.5 text-label-sm">
+                <span class="font-medium truncate mr-2">{{ row.name }}</span>
+                <span class="text-label-xs text-on-surface-variant">{{ row.markSummary }}</span>
+              </div>
+            </div>
+          </div>
+          <div v-else-if="ocrResult && !ocrLoading" class="mb-4 p-3 bg-amber-50 border border-amber-200 rounded-lg text-amber-700 text-label-sm">
+            Teks OCR tidak dapat dicocokkan dengan data santri. Periksa format tabel atau coba gambar lain.
+          </div>
+          <div class="flex justify-end gap-3">
+            <button class="bg-surface-container-high text-on-surface px-4 py-2 rounded-xl text-label-sm" @click="showOcrModal = false">Tutup</button>
+            <button class="bg-primary text-on-primary px-4 py-2 rounded-xl text-label-sm font-bold" :disabled="ocrParsedRows.length === 0" @click="applyOcrResult">Terapkan ke Absensi</button>
+          </div>
+        </div>
+      </div>
+
       <div v-if="showDeleteConfirm" class="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4" @click.self="showDeleteConfirm = false">
         <div class="bg-surface rounded-2xl p-8 w-full max-w-sm shadow-2xl text-center">
           <div class="w-16 h-16 bg-error-container rounded-full flex items-center justify-center mx-auto mb-4">
@@ -138,6 +190,8 @@
 <script setup lang="ts">
 definePageMeta({ layout: 'super-admin', requiredRole: 'super_admin' })
 
+import { parseOcrAttendancePM } from '~/composables/useOcrParser'
+
 const { getIdToken } = useAuth()
 
 const route = useRoute()
@@ -148,8 +202,9 @@ const STATUS_OPTIONS = [
   { value: 'datang', symbol: '•', label: 'Datang' },
   { value: 'bolos', symbol: 'B', label: 'Bolos' },
   { value: 'alpa', symbol: 'A', label: 'Alpa' },
-  { value: 'izin', symbol: 'I', label: 'Izin' },
   { value: 'sakit', symbol: 'S', label: 'Sakit' },
+  { value: 'izin', symbol: 'I', label: 'Izin' },
+  { value: 'pulang', symbol: 'P', label: 'Pulang' },
 ]
 const SELECT_OPTIONS = [{ value: '', symbol: '–', label: '' }, ...STATUS_OPTIONS]
 
@@ -160,6 +215,7 @@ const SUMMARY_CONFIG = [
   { key: 'alpa', label: 'Alpa', bg: 'bg-red-50', labelColor: 'text-red-700', valueColor: 'text-red-600', barColor: 'bg-red-500' },
   { key: 'izin', label: 'Izin', bg: 'bg-blue-50', labelColor: 'text-blue-700', valueColor: 'text-blue-600', barColor: 'bg-blue-500' },
   { key: 'sakit', label: 'Sakit', bg: 'bg-amber-50', labelColor: 'text-amber-700', valueColor: 'text-amber-600', barColor: 'bg-amber-500' },
+  { key: 'pulang', label: 'Pulang', bg: 'bg-purple-50', labelColor: 'text-purple-700', valueColor: 'text-purple-600', barColor: 'bg-purple-500' },
 ]
 
 const now = new Date()
@@ -174,6 +230,25 @@ const success = ref('')
 const showDeleteConfirm = ref(false)
 const attendanceData = ref<Record<string, Record<string, string>>>({})
 const skipWatchReload = ref(false)
+const ocrInput = ref<HTMLInputElement | null>(null)
+const ocrLoading = ref(false)
+const ocrResult = ref('')
+const ocrProgress = ref(0)
+const showOcrModal = ref(false)
+const ocrImageBase64 = ref('')
+const ocrProcessedBase64 = ref('')
+
+const ocrParsedRows = computed(() => {
+  if (!ocrResult.value || students.value.length === 0) return []
+  const parsed = parseOcrAttendancePM(ocrResult.value, students.value)
+  if (!parsed) return []
+  return Object.entries(parsed).map(([id, marks]) => {
+    const student = students.value.find(s => s.id === id)
+    const total = Object.keys(marks).length
+    const filled = Object.values(marks).filter(v => v).length
+    return { id, name: student?.name || id, markSummary: `${filled}/${total} sesi terisi`, marks }
+  })
+})
 
 const API_BASE = '/api/attendance/program-pm'
 
@@ -371,8 +446,101 @@ function statusClass(val: string) {
     alpa: 'border-red-300 text-red-700',
     izin: 'border-blue-300 text-blue-700',
     sakit: 'border-amber-300 text-amber-700',
+    pulang: 'border-purple-300 text-purple-700',
   }
   return map[val] || 'border-outline-variant/30 text-on-surface-variant'
+}
+
+function triggerOcrUpload() { ocrInput.value?.click() }
+function fileToBase64(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onload = () => resolve(reader.result as string)
+    reader.onerror = reject
+    reader.readAsDataURL(file)
+  })
+}
+function preprocessImage(base64: string): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const img = new Image()
+    img.onload = () => {
+      const maxDim = 1200
+      const scale = Math.min(maxDim / img.width, maxDim / img.height, 1)
+      const w = Math.round(img.width * scale), h = Math.round(img.height * scale)
+      const canvas = document.createElement('canvas')
+      canvas.width = w; canvas.height = h
+      const ctx = canvas.getContext('2d')
+      if (!ctx) return reject(new Error('Canvas 2D context not available'))
+      ctx.imageSmoothingEnabled = true
+      ctx.imageSmoothingQuality = 'high'
+      ctx.drawImage(img, 0, 0, w, h)
+      resolve(canvas.toDataURL('image/jpeg', 0.85))
+    }
+    img.onerror = reject
+    img.src = base64
+  })
+}
+async function ocrSpace(base64: string): Promise<string> {
+  const token = await getIdToken()
+  if (!token) throw new Error('Sesi login habis, silakan login ulang')
+  const controller = new AbortController()
+  const timeout = setTimeout(() => controller.abort(), 60000)
+  try {
+    const res = await fetch('/api/ocr/analyze', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ image: base64 }),
+      signal: controller.signal,
+    })
+    if (!res.ok) {
+      const errText = await res.text().catch(() => '')
+      throw new Error(errText || `Server error ${res.status}`)
+    }
+    const json = await res.json()
+    return json.text || ''
+  } finally { clearTimeout(timeout) }
+}
+async function uploadOcrImage(e: Event) {
+  const input = e.target as HTMLInputElement
+  if (!input.files || !input.files[0]) return
+  const file = input.files[0]
+  error.value = ''; success.value = ''; ocrResult.value = ''; ocrProgress.value = 0; ocrLoading.value = true; ocrProcessedBase64.value = ''
+  try {
+    const rawBase64 = await fileToBase64(file)
+    ocrImageBase64.value = rawBase64
+    ocrProgress.value = 20
+    const processed = await preprocessImage(rawBase64)
+    ocrProcessedBase64.value = processed
+    ocrProgress.value = 40
+    ocrResult.value = await ocrSpace(processed)
+    ocrProgress.value = 80
+    const token = await getIdToken()
+    await fetch('/api/attendance/ocr', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ image: processed, ocrText: ocrResult.value, month: selectedMonth.value, class: 'Pagi-Malam' }),
+    }).catch(() => {})
+    ocrProgress.value = 100
+    showOcrModal.value = true
+    success.value = 'OCR berhasil — tinjau dan Terapkan'
+  } catch (e: any) {
+    error.value = e.message || 'Gagal proses OCR'; console.error(e)
+  } finally { ocrLoading.value = false }
+  input.value = ''
+  setTimeout(() => { success.value = '' }, 3000)
+}
+function applyOcrResult() {
+  showOcrModal.value = false
+  if (!ocrResult.value || students.value.length === 0) { success.value = 'Tidak ada data OCR'; setTimeout(() => success.value = '', 3000); return }
+  const parsed = parseOcrAttendancePM(ocrResult.value, students.value)
+  if (parsed && Object.keys(parsed).length > 0) {
+    const fresh = { ...attendanceData.value }
+    let applied = 0
+    for (const sid of Object.keys(parsed)) if (fresh[sid]) { fresh[sid] = { ...fresh[sid], ...parsed[sid] }; applied++ }
+    attendanceData.value = fresh
+    success.value = `${applied} santri terisi dari OCR (Pagi-Malam)`
+  } else success.value = 'Tidak dapat mencocokkan OCR dengan santri'
+  setTimeout(() => success.value = '', 3000)
 }
 
 function exportExcel() {
@@ -516,7 +684,7 @@ function printAttendance() {
 </div>
 <div class="legend">
   <table>
-    <tr><th>Keterangan</th><td>&#10003; Hadir</td><td>&#8226; Datang</td><td>B Bolos</td><td>A Alpa</td><td>I Izin</td><td>S Sakit</td></tr>
+    <tr><th>Keterangan</th><td>&#10003; Hadir</td><td>&#8226; Datang</td><td>B Bolos</td><td>A Alpa</td><td>I Izin</td><td>S Sakit</td><td>P Pulang</td></tr>
   </table>
 </div>
 <div class="signature">

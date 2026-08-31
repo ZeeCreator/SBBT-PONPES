@@ -25,6 +25,12 @@
             <option v-for="cls in classes" :key="cls.id" :value="cls.name">{{ cls.name }}</option>
           </select>
         </div>
+        <div class="space-y-1 hidden md:block">
+          <label class="text-label-xs text-on-surface-variant">Legenda</label>
+          <div class="flex gap-1.5 text-label-xs flex-wrap">
+            <span v-for="s in STATUS_OPTIONS" :key="s.value" class="px-1.5 py-0.5 rounded bg-surface-container-low">{{ s.symbol }} {{ s.label }}</span>
+          </div>
+        </div>
         <button class="bg-primary text-on-primary px-5 py-2 rounded-xl text-label-sm hover:brightness-110 transition-all flex items-center gap-2" @click="loadSession">
           <span class="material-symbols-outlined text-sm">search</span> Cari
         </button>
@@ -39,7 +45,7 @@
         </h3>
       </div>
       <div class="p-stack-md">
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+        <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3 mb-4">
           <div v-for="s in summary" :key="s.label" class="p-3 rounded-xl" :class="s.bg">
             <p class="text-[10px] uppercase font-semibold" :class="s.labelColor">{{ s.label }}</p>
             <p class="text-title-lg font-bold" :class="s.valueColor">{{ s.count }} <span class="text-label-sm font-normal">/ {{ s.total }}</span></p>
@@ -70,10 +76,7 @@
               <td class="px-2 py-1 text-label-xs text-on-surface-variant">{{ student.city || '-' }}</td>
               <td v-for="d in 31" :key="d" class="px-0.5 py-1 text-center">
                 <select v-model="attendanceData[student.id][String(d)]" class="bg-surface-container-low border rounded text-[10px] py-1 px-0.5 focus:ring-primary outline-none w-full" :class="statusClass(attendanceData[student.id][String(d)])">
-                  <option value="present">✓</option>
-                  <option value="sick">S</option>
-                  <option value="permit">I</option>
-                  <option value="absent">A</option>
+                  <option v-for="opt in SELECT_OPTIONS" :key="opt.value" :value="opt.value">{{ opt.symbol }}</option>
                 </select>
               </td>
             </tr>
@@ -182,6 +185,30 @@ import { parseOcrAttendance } from '~/composables/useOcrParser'
 
 const { getIdToken } = useAuth()
 
+// Status canonical: hadir, datang, bolos, alpa, sakit, izin, pulang (plus legacy present/sick etc)
+const STATUS_OPTIONS = [
+  { value: 'hadir', symbol: '✓', label: 'Hadir' },
+  { value: 'datang', symbol: '•', label: 'Datang' },
+  { value: 'bolos', symbol: 'B', label: 'Bolos' },
+  { value: 'alpa', symbol: 'A', label: 'Alpa' },
+  { value: 'sakit', symbol: 'S', label: 'Sakit' },
+  { value: 'izin', symbol: 'I', label: 'Izin' },
+  { value: 'pulang', symbol: 'P', label: 'Pulang' },
+]
+const SELECT_OPTIONS = STATUS_OPTIONS
+const LEGACY_MAP: Record<string, string> = { present: 'hadir', absent: 'alpa', sick: 'sakit', permit: 'izin' }
+function normalizeStatus(s: string) { return LEGACY_MAP[s] || s || 'hadir' }
+
+const SUMMARY_CONFIG = [
+  { key: 'hadir', label: 'Hadir', bg: 'bg-green-50', labelColor: 'text-green-700', valueColor: 'text-green-600', barColor: 'bg-green-500' },
+  { key: 'datang', label: 'Datang', bg: 'bg-teal-50', labelColor: 'text-teal-700', valueColor: 'text-teal-600', barColor: 'bg-teal-500' },
+  { key: 'bolos', label: 'Bolos', bg: 'bg-orange-50', labelColor: 'text-orange-700', valueColor: 'text-orange-600', barColor: 'bg-orange-500' },
+  { key: 'alpa', label: 'Alpa', bg: 'bg-red-50', labelColor: 'text-red-700', valueColor: 'text-red-600', barColor: 'bg-red-500' },
+  { key: 'sakit', label: 'Sakit', bg: 'bg-amber-50', labelColor: 'text-amber-700', valueColor: 'text-amber-600', barColor: 'bg-amber-500' },
+  { key: 'izin', label: 'Izin', bg: 'bg-blue-50', labelColor: 'text-blue-700', valueColor: 'text-blue-600', barColor: 'bg-blue-500' },
+  { key: 'pulang', label: 'Pulang', bg: 'bg-purple-50', labelColor: 'text-purple-700', valueColor: 'text-purple-600', barColor: 'bg-purple-500' },
+]
+
 const route = useRoute()
 const router = useRouter()
 
@@ -212,45 +239,29 @@ const ocrParsedRows = computed(() => {
   if (!ocrResult.value || students.value.length === 0) return []
   const parsed = parseOcrAttendance(ocrResult.value, students.value)
   if (!parsed) return []
-  const labelMap: Record<string, string> = { present: '✓', sick: 'S', permit: 'I', absent: 'A' }
   return Object.entries(parsed).map(([id, marks]) => {
     const student = students.value.find(s => s.id === id)
     const total = Object.keys(marks).length
-    const marked = Object.values(marks).filter(v => v !== 'present').length
-    return {
-      id,
-      name: student?.name || id,
-      markSummary: marked > 0 ? `${marked}/${total} tanggal terisi` : 'Semua Hadir',
-      marks,
-    }
+    const marked = Object.values(marks).filter(v => normalizeStatus(v) !== 'hadir').length
+    return { id, name: student?.name || id, markSummary: marked > 0 ? `${marked}/${total} tanggal terisi` : 'Semua Hadir', marks }
   })
 })
 
 const summary = computed(() => {
   const daysInMonth = new Date(selectedMonth.value + '-01').getMonth() + 1 === parseInt(selectedMonth.value.split('-')[1])
-    ? new Date(parseInt(selectedMonth.value.split('-')[0]), parseInt(selectedMonth.value.split('-')[1]), 0).getDate()
-    : 30
+    ? new Date(parseInt(selectedMonth.value.split('-')[0]), parseInt(selectedMonth.value.split('-')[1]), 0).getDate() : 30
   const totalDays = Math.min(daysInMonth, 31)
   const total = students.value.length * totalDays
-  let hadir = 0, sakit = 0, izin = 0, alpa = 0
+  const counts: Record<string, number> = {}
   for (const s of students.value) {
     const d = attendanceData.value[s.id]
     if (!d) continue
     for (let day = 1; day <= totalDays; day++) {
-      const key = String(day)
-      if (d[key] === 'present') hadir++
-      else if (d[key] === 'sick') sakit++
-      else if (d[key] === 'permit') izin++
-      else if (d[key] === 'absent') alpa++
+      const v = normalizeStatus(d[String(day)] || 'hadir')
+      counts[v] = (counts[v] || 0) + 1
     }
   }
-  const pct = (v: number) => total ? Math.round(v / total * 100) : 0
-  return [
-    { label: 'Hadir', count: hadir, total, percent: pct(hadir), bg: 'bg-green-50', labelColor: 'text-green-700', valueColor: 'text-green-600', barColor: 'bg-green-500' },
-    { label: 'Sakit', count: sakit, total, percent: pct(sakit), bg: 'bg-amber-50', labelColor: 'text-amber-700', valueColor: 'text-amber-600', barColor: 'bg-amber-500' },
-    { label: 'Izin', count: izin, total, percent: pct(izin), bg: 'bg-blue-50', labelColor: 'text-blue-700', valueColor: 'text-blue-600', barColor: 'bg-blue-500' },
-    { label: 'Alpa', count: alpa, total, percent: pct(alpa), bg: 'bg-red-50', labelColor: 'text-red-700', valueColor: 'text-red-600', barColor: 'bg-red-500' },
-  ]
+  return SUMMARY_CONFIG.map(c => ({ ...c, count: counts[c.key] || 0, total, percent: total ? Math.round((counts[c.key] || 0) / total * 100) : 0 }))
 })
 
 async function fetchClasses() {
@@ -288,7 +299,7 @@ function initAttendanceData() {
   const data: Record<string, Record<string, string>> = {}
   for (const s of students.value) {
     const marks: Record<string, string> = {}
-    for (let d = 1; d <= 31; d++) marks[String(d)] = 'present'
+    for (let d = 1; d <= 31; d++) marks[String(d)] = 'hadir'
     data[s.id] = marks
   }
   attendanceData.value = data
@@ -319,7 +330,7 @@ async function loadSession() {
       for (const s of students.value) {
         const found = recordMap.find((r: any) => r.studentId === s.id)
         const marks: Record<string, string> = {}
-        for (let d = 1; d <= 31; d++) marks[String(d)] = found?.marks?.[String(d)] || 'present'
+        for (let d = 1; d <= 31; d++) marks[String(d)] = normalizeStatus(found?.marks?.[String(d)] || 'hadir')
         merged[s.id] = marks
       }
       attendanceData.value = merged
@@ -533,13 +544,12 @@ function applyOcrResult() {
 
 function exportExcel() {
   if (students.value.length === 0) return
-  const statusLabel: Record<string, string> = { present: '✓', sick: 'S', permit: 'I', absent: 'A' }
+  const symbolOf: Record<string, string> = {}; for (const o of STATUS_OPTIONS) symbolOf[o.value] = o.symbol
   const cols = Array.from({ length: 31 }, (_, i) => i + 1)
   let html = `<table border="1"><tr><th>No</th><th>Nama</th><th>Alamat</th>${cols.map(d => `<th>${d}</th>`).join('')}</tr>`
   students.value.forEach((s, i) => {
     const d = attendanceData.value[s.id] || {}
-    const cells = cols.map(dd => statusLabel[d[String(dd)]] || '✓').join('')
-    html += `<tr><td>${i + 1}</td><td>${s.name}</td><td>${s.city || ''}</td>${cols.map(dd => `<td style="text-align:center">${statusLabel[d[String(dd)]] || '✓'}</td>`).join('')}</tr>`
+    html += `<tr><td>${i + 1}</td><td>${s.name}</td><td>${s.city || ''}</td>${cols.map(dd => `<td style="text-align:center">${symbolOf[normalizeStatus(d[String(dd)])] || '✓'}</td>`).join('')}</tr>`
   })
   html += '</table>'
   const blob = new Blob([html], { type: 'application/vnd.ms-excel' })
@@ -552,13 +562,17 @@ function exportExcel() {
 }
 
 function statusClass(val: string) {
+  const v = normalizeStatus(val)
   const map: Record<string, string> = {
-    present: 'border-green-300 text-green-700',
-    sick: 'border-amber-300 text-amber-700',
-    permit: 'border-blue-300 text-blue-700',
-    absent: 'border-red-300 text-red-700',
+    hadir: 'border-green-300 text-green-700',
+    datang: 'border-teal-300 text-teal-700',
+    bolos: 'border-orange-300 text-orange-700',
+    alpa: 'border-red-300 text-red-700',
+    sakit: 'border-amber-300 text-amber-700',
+    izin: 'border-blue-300 text-blue-700',
+    pulang: 'border-purple-300 text-purple-700',
   }
-  return map[val] || ''
+  return map[v] || 'border-outline-variant/30 text-on-surface-variant'
 }
 
 function printAttendance() {
@@ -572,14 +586,18 @@ function printAttendance() {
   const colAlamat = 130
   const tableWidth = colNo + colNama + colAlamat + dayCols.length * dateColWidth
   const rowHeight = 20
+  const symbolOfPrint: Record<string, string> = {}; for (const o of STATUS_OPTIONS) symbolOfPrint[o.value] = o.symbol
   const dataRows = students.value.map((s, idx) => {
     const d = attendanceData.value[s.id] || {}
-    const statusLabel: Record<string, string> = { present: '', sick: 'S', permit: 'I', absent: 'A' }
     return `<tr style="height:${rowHeight}px">
       <td style="padding:1px 3px;border:1px solid #000;text-align:center;font-size:8pt;font-family:'Times New Roman',serif;width:${colNo}px">${idx + 1}</td>
       <td style="padding:1px 3px;border:1px solid #000;font-size:8pt;font-family:'Times New Roman',serif">${s.name}</td>
       <td style="padding:1px 3px;border:1px solid #000;font-size:8pt;font-family:'Times New Roman',serif">${s.city || ''}</td>
-      ${dayCols.map(dd => `<td style="padding:1px 2px;border:1px solid #000;text-align:center;font-size:7pt;font-family:'Times New Roman',serif;width:${dateColWidth}px;height:${rowHeight}px">${statusLabel[d[String(dd)]] || ''}</td>`).join('')}
+      ${dayCols.map(dd => {
+        const sym = symbolOfPrint[normalizeStatus(d[String(dd)])] || ''
+        const display = sym === '✓' ? '' : sym // kosong untuk hadir agar kertas bersih seperti sebelumnya
+        return `<td style="padding:1px 2px;border:1px solid #000;text-align:center;font-size:7pt;font-family:'Times New Roman',serif;width:${dateColWidth}px;height:${rowHeight}px">${display}</td>`
+      }).join('')}
     </tr>`
   }).join('')
   const totalHeaderHeight = 100
