@@ -19,7 +19,7 @@ export default defineEventHandler(async (event) => {
     nis: string
     class: string
     months: any[]
-    total: { hadir: number; sakit: number; izin: number; alpa: number; total: number }
+    total: { hadir: number; datang: number; bolos: number; alpa: number; sakit: number; izin: number; pulang: number; total: number }
   }> = {}
 
   for (const month of months) {
@@ -35,34 +35,42 @@ export default defineEventHandler(async (event) => {
           nis: record.nis || '',
           class: month.class,
           months: [],
-          total: { hadir: 0, sakit: 0, izin: 0, alpa: 0, total: 0 },
+          total: { hadir: 0, datang: 0, bolos: 0, alpa: 0, sakit: 0, izin: 0, pulang: 0, total: 0 },
         }
       }
 
+      const canon = (s: string) => {
+        const m: Record<string, string> = { present: 'hadir', absent: 'alpa', sick: 'sakit', permit: 'izin', hadir: 'hadir', datang: 'datang', bolos: 'bolos', alpa: 'alpa', sakit: 'sakit', izin: 'izin', pulang: 'pulang' }
+        return m[String(s || '').toLowerCase()] || String(s || '').toLowerCase()
+      }
       const marks = record.marks || {}
-      let hadir = 0, sakit = 0, izin = 0, alpa = 0
+      let hadir = 0, datang = 0, bolos = 0, alpa = 0, sakit = 0, izin = 0, pulang = 0
       for (let d = 1; d <= 31; d++) {
-        const v = marks[String(d)]
-        if (v === 'present') hadir++
-        else if (v === 'sick') sakit++
-        else if (v === 'permit') izin++
-        else if (v === 'absent') alpa++
+        const v = canon(marks[String(d)])
+        if (v === 'hadir') hadir++
+        else if (v === 'datang') datang++
+        else if (v === 'bolos') bolos++
+        else if (v === 'alpa') alpa++
+        else if (v === 'sakit') sakit++
+        else if (v === 'izin') izin++
+        else if (v === 'pulang') pulang++
+        else if (v) hadir++ // fallback unknown -> hadir
       }
 
       recapMap[record.studentId].months.push({
         monthId: month.monthId,
-        hadir,
-        sakit,
-        izin,
-        alpa,
-        totalDays: hadir + sakit + izin + alpa,
+        hadir, datang, bolos, alpa, sakit, izin, pulang,
+        totalDays: hadir + datang + bolos + alpa + sakit + izin + pulang,
       })
 
       recapMap[record.studentId].total.hadir += hadir
+      recapMap[record.studentId].total.datang += datang
+      recapMap[record.studentId].total.bolos += bolos
+      recapMap[record.studentId].total.alpa += alpa
       recapMap[record.studentId].total.sakit += sakit
       recapMap[record.studentId].total.izin += izin
-      recapMap[record.studentId].total.alpa += alpa
-      recapMap[record.studentId].total.total += hadir + sakit + izin + alpa
+      recapMap[record.studentId].total.pulang += pulang
+      recapMap[record.studentId].total.total += hadir + datang + bolos + alpa + sakit + izin + pulang
     }
   }
 

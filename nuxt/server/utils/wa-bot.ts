@@ -73,34 +73,105 @@ async function searchStudentsFromFirebase(query: string): Promise<any[]> {
   ).slice(0, 5)
 }
 
-// ── Attendance from attendance_monthly ──
+// ── Attendance — sync dengan halaman Diniyah (attendance_monthly) & Pagi-Malam (attendance_program_pm) ──
+const LEGACY_TO_CANONICAL: Record<string, string> = {
+  present: 'hadir', absent: 'alpa', alpa: 'alpa', sick: 'sakit', permit: 'izin', izin: 'izin',
+  hadir: 'hadir', datang: 'datang', bolos: 'bolos', sakit: 'sakit', pulang: 'pulang',
+}
+function canon(s: string): string {
+  if (!s) return ''
+  const low = String(s).trim().toLowerCase()
+  return LEGACY_TO_CANONICAL[low] || low
+}
 
-async function getAttendanceSummary(studentId: string, studentName: string): Promise<string> {
+async function getDiniyahSummary(studentId: string, studentName: string): Promise<string> {
   const db = getDatabase()
   const snap = await db.ref('attendance_monthly').once('value')
   if (!snap.exists()) return 'Belum ada data absensi.'
 
-  let totalHadir = 0, totalIzin = 0, totalSakit = 0, totalAlpha = 0
+  const totals: Record<string, number> = { hadir: 0, datang: 0, bolos: 0, alpa: 0, sakit: 0, izin: 0, pulang: 0 }
   let totalDays = 0
+  // dedup per month: hanya hitung 1x per monthId, ambil record terbaru jika duplikat
+  const byMonth = new Map<string, any>()
+  for (const entry of Object.values(snap.val()) as any[]) {
+    const mid = entry.monthId || `${entry.year}-${entry.month}-${entry.class}`
+    byMonth.set(mid, entry) // override → last wins (latest)
+  }
+  for (const entry of byMonth.values()) {
+    const records = entry.records || []
+    const found = records.find((r: any) => r.studentId === studentId || r.name === studentName)
+    if (!found || !found.marks) continue
+    for (const raw of Object.values(found.marks) as string[]) {
+      const v = canon(raw)
+      if (!v) continue
+      totalDays++
+      if (v in totals) totals[v]++
+      else totals[v] = (totals[v] || 0) + 1
+    }
+  }
+  if (totalDays === 0) return 'Belum ada data absensi.'
+  // format sama seperti Rekap di pages/attendance/index.vue (7 status)
+  return `Hadir ${totals.hadir}, Datang ${totals.datang}, Bolos ${totals.bolos}, Alpa ${totals.alpa}, Sakit ${totals.sakit}, Izin ${totals.izin}, Pulang ${totals.pulang} (dari ${totalDays} hari)`
+}
 
+// Spam alias lama — tetap support tapi arahkan ke Diniyah
+async function getAttendanceSummary(studentId: string, studentName: string): Promise<string> {
+  return getDiniyahSummary(studentId, studentName)
+}
+
+async function getPagiMalamSummary(studentId: string, studentName: string): Promise<string> {
+  const db = getDatabase()
+  const snap = await db.ref('attendance_program_pm').once('value')
+  if (!snap.exists()) return 'Belum ada data absensi.'
+
+  const totals: Record<string, number> = { hadir: 0, datang: 0, bolos: 0, alpa: 0, sakit: 0, izin: 0, pulang: 0 }
+  let totalSesi = 0
+  const byMonth = new Map<string, any>()
+  for (const entry of Object.values(snap.val()) as any[]) {
+    const mid = entry.monthId || `${entry.year}-${entry.month}`
+    byMonth.set(mid, entry)
+  }
+  for (const entry of byMonth.values()) {
+    const records = entry.records || []
+    const found = records.find((r: any) => r.studentId === studentId || r.name === studentName)
+    if (!found || !found.marks) continue
+    for (const raw of Object.values(found.marks) as string[]) {
+      const v = canon(raw)
+      if (!v) continue // sesi kosong '' tidak dihitung
+      totalSesi++
+      if (v in totals) totals[v]++
+      else totals[v] = (totals[v] || 0) + 1
+    }
+  }
+  if (totalSesi === 0) return 'Belum ada data absensi.'
+  const totalHari = Math.ceil(totalSesi / 2)
+  return `Hadir ${totals.hadir}, Datang ${totals.datang}, Bolos ${totals.bolos}, Alpa ${totals.alpa}, Sakit ${totals.sakit}, Izin ${totals.izin}, Pulang ${totals.pulang} (dari ${totalSesi} sesi / ${totalHari} hari × P/M)`
+}
+
+async function getMutholaahSummary(studentId: string, studentName: string): Promise<string> {
+  // legacy: dulu mutholaah terpisah, sekarang sync ke Pagi-Malam. Fallback ke mutholaah jika program_pm kosong
+  const pm = await getPagiMalamSummary(studentId, studentName)
+  if (pm !== 'Belum ada data absensi.') return pm
+  // fallback legacy attendance_mutholaah (4 status lama)
+  const db = getDatabase()
+  const snap = await db.ref('attendance_mutholaah').once('value')
+  if (!snap.exists()) return 'Belum ada data absensi.'
+  const totals: Record<string, number> = {}
+  let totalDays = 0
   for (const entry of Object.values(snap.val()) as any[]) {
     const records = entry.records || []
     const found = records.find((r: any) => r.studentId === studentId || r.name === studentName)
     if (!found || !found.marks) continue
-    for (const day of Object.values(found.marks) as string[]) {
+    for (const raw of Object.values(found.marks) as string[]) {
+      const v = canon(raw)
+      if (!v) continue
       totalDays++
-      if (day === 'present') totalHadir++
-      else if (day === 'permit') totalIzin++
-      else if (day === 'sick') totalSakit++
-      else if (day === 'absent') totalAlpha++
+      totals[v] = (totals[v] || 0) + 1
     }
   }
-
   if (totalDays === 0) return 'Belum ada data absensi.'
-  return `Hadir ${totalHadir}, Izin ${totalIzin}, Sakit ${totalSakit}, Alpha ${totalAlpha} (dari ${totalDays} hari)`
+  return `Hadir ${totals.hadir || 0}, Sakit ${totals.sakit || 0}, Izin ${totals.izin || 0}, Alpa ${totals.alpa || 0} (dari ${totalDays} hari)`
 }
-
-// ── Attendance from attendance_mutholaah / attendance_tahfidz ──
 
 async function getAttendanceSummaryFrom(
   path: string,
@@ -118,24 +189,17 @@ async function getAttendanceSummaryFrom(
     const records = entry.records || []
     const found = records.find((r: any) => r.studentId === studentId || r.name === studentName)
     if (!found || !found.marks) continue
-    for (const day of Object.values(found.marks) as string[]) {
+    for (const raw of Object.values(found.marks) as string[]) {
+      const v = canon(raw)
+      if (!v) continue
       totalDays++
-      if (day) totals[day] = (totals[day] || 0) + 1
+      totals[v] = (totals[v] || 0) + 1
     }
   }
 
   if (totalDays === 0) return 'Belum ada data absensi.'
-  const parts = labels.map(l => `${l.label} ${totals[l.key] || 0}`)
+  const parts = labels.map(l => `${l.label} ${totals[canon(l.key)] || totals[l.key] || 0}`)
   return `${parts.join(', ')} (dari ${totalDays} hari)`
-}
-
-async function getMutholaahSummary(studentId: string, studentName: string): Promise<string> {
-  return getAttendanceSummaryFrom('attendance_mutholaah', studentId, studentName, [
-    { key: 'present', label: 'Hadir' },
-    { key: 'sick', label: 'Sakit' },
-    { key: 'permit', label: 'Izin' },
-    { key: 'absent', label: 'Alpa' },
-  ])
 }
 
 async function getTahfidzSummary(studentId: string, studentName: string): Promise<string> {
@@ -224,11 +288,11 @@ function buildDirectReply(message: string, students: any[]): string {
   return reply
 }
 
-function buildDetailReply(students: any[], absensi: string, nilai: string, mutholaah?: string, tahfidz?: string): string {
+function buildDetailReply(students: any[], absensiDiniyah: string, nilai: string, pagiMalam?: string, tahfidz?: string): string {
   const s = students[0]
-  let reply = `Assalamu'alaikum Wr. Wb.\n\nBerikut data Ananda *${s.name}* (NIS: ${s.nis}):\n\n📋 *Kelas*: ${s.class || '-'}\n📌 *Status*: ${s.status || 'Active'}\n\n📊 *Rekap Absensi*\n${absensi}\n`
-  if (mutholaah && mutholaah !== 'Belum ada data absensi.') {
-    reply += `\n🕌 *Absensi Muthola'ah*\n${mutholaah}\n`
+  let reply = `Assalamu'alaikum Wr. Wb.\n\nBerikut data Ananda *${s.name}* (NIS: ${s.nis}):\n\n📋 *Kelas*: ${s.class || '-'}\n📌 *Status*: ${s.status || 'Active'}\n\n📚 *Absensi Diniyah (Kelas)*\n${absensiDiniyah}\n`
+  if (pagiMalam && pagiMalam !== 'Belum ada data absensi.') {
+    reply += `\n🕌 *Absensi Pagi & Malam*\n${pagiMalam}\n`
   }
   if (tahfidz && tahfidz !== 'Belum ada data absensi.') {
     reply += `\n📖 *Absensi Tahfidz*\n${tahfidz}\n`
@@ -325,11 +389,11 @@ export async function handleBotMessage(phone: string, message: string): Promise<
 
   if (students.length === 1) {
     const s = students[0]
-    const absensi = await getAttendanceSummary(s.id, s.name)
-    const mutholaah = await getMutholaahSummary(s.id, s.name)
+    const absensiDiniyah = await getDiniyahSummary(s.id, s.name)
+    const pagiMalam = await getPagiMalamSummary(s.id, s.name)
     const tahfidz = await getTahfidzSummary(s.id, s.name)
     const nilai = await getGradesSummary(s.id)
-    const reply = buildDetailReply([s], absensi, nilai, mutholaah, tahfidz)
+    const reply = buildDetailReply([s], absensiDiniyah, nilai, pagiMalam, tahfidz)
     await saveConversation(phone, message, reply)
     return reply
   }
