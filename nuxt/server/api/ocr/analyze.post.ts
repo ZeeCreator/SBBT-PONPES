@@ -1,9 +1,18 @@
 import { verifyFirebaseToken } from '../../utils/firebase'
 import { getDatabase } from 'firebase-admin/database'
 
-const GEMINI_MODEL_DEFAULT = 'gemini-1.5-flash'
+const GEMINI_MODEL_DEFAULT = 'gemini-2.0-flash'
+const GEMINI_MODEL_FALLBACKS = ['gemini-2.0-flash', 'gemini-2.0-flash-lite', 'gemini-flash-latest', 'gemini-2.5-flash']
 const GEMINI_API = 'https://generativelanguage.googleapis.com/v1beta/models'
-const OPENROUTER_MODEL_DEFAULT = 'google/gemma-3-27b-it:free'
+const OPENROUTER_MODEL_DEFAULT = 'qwen/qwen2.5-vl-32b-instruct:free'
+const OPENROUTER_FALLBACKS = [
+  'qwen/qwen2.5-vl-32b-instruct:free',
+  'google/gemma-3-4b-it:free',
+  'google/gemma-3-12b-it:free',
+  'meta-llama/llama-3.2-11b-vision-instruct:free',
+  'google/gemma-4-31b-it:free',
+  'qwen/qwen2.5-vl-72b-instruct:free',
+]
 const OCR_SPACE_API = 'https://api.ocr.space/parse/image'
 
 const DEFAULT_OCR_PROMPT = `Anda adalah OCR untuk tabel absensi pondok pesantren.
@@ -62,6 +71,23 @@ async function callGemini(base64Image: string, apiKey: string, model: string, pr
   return text
 }
 
+async function callGeminiWithFallback(base64Image: string, apiKey: string, primaryModel: string, prompt: string): Promise<string> {
+  const candidates = [primaryModel, ...GEMINI_MODEL_FALLBACKS.filter(m => m !== primaryModel)]
+  let lastErr: string = ''
+  for (const m of candidates) {
+    try {
+      return await callGemini(base64Image, apiKey, m, prompt)
+    } catch (e: any) {
+      lastErr = e.message || String(e)
+      // retry hanya jika 404 NOT_FOUND / model tidak support, selain itu langsung throw
+      const isNotFound = /404|NOT_FOUND|not found|not supported/i.test(lastErr)
+      if (!isNotFound) throw e
+      console.warn(`Gemini model ${m} failed, try fallback:`, lastErr)
+    }
+  }
+  throw new Error(lastErr || 'Gemini: all fallback models failed')
+}
+
 async function callOpenRouter(base64Image: string, apiKey: string, model: string, prompt: string): Promise<string> {
   const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
     method: 'POST',
@@ -84,6 +110,22 @@ async function callOpenRouter(base64Image: string, apiKey: string, model: string
   const text = json.choices?.[0]?.message?.content
   if (!text) throw new Error('OpenRouter: empty response')
   return text
+}
+
+async function callOpenRouterWithFallback(base64Image: string, apiKey: string, primaryModel: string, prompt: string): Promise<string> {
+  const candidates = [primaryModel, ...OPENROUTER_FALLBACKS.filter(m => m !== primaryModel)]
+  let lastErr: string = ''
+  for (const m of candidates) {
+    try {
+      return await callOpenRouter(base64Image, apiKey, m, prompt)
+    } catch (e: any) {
+      lastErr = e.message || String(e)
+      const isNotFound = /404|unavailable for free|not found/i.test(lastErr)
+      if (!isNotFound) throw e
+      console.warn(`OpenRouter model ${m} failed, try fallback:`, lastErr)
+    }
+  }
+  throw new Error(lastErr || 'OpenRouter: all fallback free models failed')
 }
 
 async function callOcrSpace(base64Image: string, apiKey: string): Promise<string> {
@@ -137,10 +179,10 @@ export default defineEventHandler(async (event) => {
 
   for (const p of providerOrder) {
     if (p === 'gemini' && geminiKey) {
-      try { result = await callGemini(image, geminiKey, geminiModel, ocrPrompt); provider = 'gemini'; break } catch (e: any) { errors.push(e.message); console.warn('Gemini failed:', e.message) }
+      try { result = await callGeminiWithFallback(image, geminiKey, geminiModel, ocrPrompt); provider = 'gemini'; break } catch (e: any) { errors.push(e.message); console.warn('Gemini failed:', e.message) }
     }
     if (p === 'openrouter' && openrouterKey) {
-      try { result = await callOpenRouter(image, openrouterKey, openrouterModel, ocrPrompt); provider = 'openrouter'; break } catch (e: any) { errors.push(e.message); console.warn('OpenRouter failed:', e.message) }
+      try { result = await callOpenRouterWithFallback(image, openrouterKey, openrouterModel, ocrPrompt); provider = 'openrouter'; break } catch (e: any) { errors.push(e.message); console.warn('OpenRouter failed:', e.message) }
     }
     if (p === 'ocrspace' && ocrspaceKey) {
       try { result = await callOcrSpace(image, ocrspaceKey); provider = 'ocrspace'; break } catch (e: any) { errors.push(e.message); console.warn('OCR.space failed:', e.message) }
@@ -150,10 +192,10 @@ export default defineEventHandler(async (event) => {
   // fallback if order didn't cover all (e.g. order missing some)
   if (!result) {
     if (!providerOrder.includes('gemini') && geminiKey) {
-      try { result = await callGemini(image, geminiKey, geminiModel, ocrPrompt); provider = 'gemini' } catch (e: any) { errors.push(e.message) }
+      try { result = await callGeminiWithFallback(image, geminiKey, geminiModel, ocrPrompt); provider = 'gemini' } catch (e: any) { errors.push(e.message) }
     }
     if (!result && !providerOrder.includes('openrouter') && openrouterKey) {
-      try { result = await callOpenRouter(image, openrouterKey, openrouterModel, ocrPrompt); provider = 'openrouter' } catch (e: any) { errors.push(e.message) }
+      try { result = await callOpenRouterWithFallback(image, openrouterKey, openrouterModel, ocrPrompt); provider = 'openrouter' } catch (e: any) { errors.push(e.message) }
     }
     if (!result && !providerOrder.includes('ocrspace') && ocrspaceKey) {
       try { result = await callOcrSpace(image, ocrspaceKey); provider = 'ocrspace' } catch (e: any) { errors.push(e.message) }

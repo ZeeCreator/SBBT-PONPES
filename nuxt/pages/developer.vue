@@ -266,14 +266,14 @@
           <div>
             <label class="text-label-sm font-medium text-on-surface-variant block mb-1">Gemini API Key <span v-if="ocrConfig.hasGemini" class="text-green-600 text-label-xs">● terisi ({{ ocrConfig.geminiApiKeyMasked }})</span></label>
             <input v-model="ocrForm.geminiApiKey" type="password" placeholder="AIza... (kosongkan jika tidak diganti)" class="w-full px-4 py-2.5 bg-surface-container-low border border-outline-variant rounded-xl text-label-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all" />
-            <input v-model="ocrForm.geminiModel" type="text" placeholder="gemini-1.5-flash" class="w-full mt-2 px-4 py-2 bg-surface-container-low border border-outline-variant rounded-xl text-label-sm focus:outline-none focus:ring-1 focus:ring-primary" />
-            <p class="text-label-xs text-on-surface-variant mt-1">Model gemini (default: gemini-1.5-flash)</p>
+            <input v-model="ocrForm.geminiModel" type="text" placeholder="gemini-2.0-flash" class="w-full mt-2 px-4 py-2 bg-surface-container-low border border-outline-variant rounded-xl text-label-sm focus:outline-none focus:ring-1 focus:ring-primary" />
+            <p class="text-label-xs text-on-surface-variant mt-1">Model gemini (default: gemini-2.0-flash, fallback otomatis ke lite/flash-latest/2.5). <span class="text-amber-600">gemini-1.5-flash sudah deprecated 404.</span></p>
           </div>
           <div>
             <label class="text-label-sm font-medium text-on-surface-variant block mb-1">OpenRouter API Key <span v-if="ocrConfig.hasOpenrouter" class="text-green-600 text-label-xs">● terisi ({{ ocrConfig.openrouterApiKeyMasked }})</span></label>
             <input v-model="ocrForm.openrouterApiKey" type="password" placeholder="sk-or-... (kosongkan jika tidak diganti)" class="w-full px-4 py-2.5 bg-surface-container-low border border-outline-variant rounded-xl text-label-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all" />
-            <input v-model="ocrForm.openrouterModel" type="text" placeholder="google/gemma-3-27b-it:free" class="w-full mt-2 px-4 py-2 bg-surface-container-low border border-outline-variant rounded-xl text-label-sm focus:outline-none focus:ring-1 focus:ring-primary" />
-            <p class="text-label-xs text-on-surface-variant mt-1">Model OpenRouter</p>
+            <input v-model="ocrForm.openrouterModel" type="text" placeholder="qwen/qwen2.5-vl-32b-instruct:free" class="w-full mt-2 px-4 py-2 bg-surface-container-low border border-outline-variant rounded-xl text-label-sm focus:outline-none focus:ring-1 focus:ring-primary" />
+            <p class="text-label-xs text-on-surface-variant mt-1">Model OpenRouter (gratis vision). Rekomendasi: <code>qwen/qwen2.5-vl-32b-instruct:free</code> atau <code>google/gemma-3-4b-it:free</code>. Fallback otomatis coba 6 model free jika 404.</p>
           </div>
         </div>
         <div>
@@ -598,8 +598,8 @@ async function testLog() {
 }
 
 // ── OCR Settings ───────────────────────────────────────────
-const ocrConfig = ref<any>({ hasGemini: false, hasOpenrouter: false, hasOcrSpace: false, geminiModel: 'gemini-1.5-flash', openrouterModel: 'google/gemma-3-27b-it:free', providerOrder: ['gemini','openrouter','ocrspace'] })
-const ocrForm = reactive({ geminiApiKey: '', geminiModel: 'gemini-1.5-flash', openrouterApiKey: '', openrouterModel: 'google/gemma-3-27b-it:free', ocrSpaceApiKey: '', ocrPrompt: '', providerOrder: ['gemini','openrouter','ocrspace'] as string[] })
+const ocrConfig = ref<any>({ hasGemini: false, hasOpenrouter: false, hasOcrSpace: false, geminiModel: 'gemini-2.0-flash', openrouterModel: 'qwen/qwen2.5-vl-32b-instruct:free', providerOrder: ['gemini','openrouter','ocrspace'] })
+const ocrForm = reactive({ geminiApiKey: '', geminiModel: 'gemini-2.0-flash', openrouterApiKey: '', openrouterModel: 'qwen/qwen2.5-vl-32b-instruct:free', ocrSpaceApiKey: '', ocrPrompt: '', providerOrder: ['gemini','openrouter','ocrspace'] as string[] })
 const ocrConfigLoading = ref(false)
 const ocrMessage = ref('')
 
@@ -609,8 +609,8 @@ async function fetchOcrConfig() {
     const token = await getIdToken()
     const res: any = await $fetch('/api/ocr/config', { headers: { Authorization: `Bearer ${token}` } })
     ocrConfig.value = res
-    ocrForm.geminiModel = res.geminiModel || 'gemini-1.5-flash'
-    ocrForm.openrouterModel = res.openrouterModel || 'google/gemma-3-27b-it:free'
+    ocrForm.geminiModel = res.geminiModel || 'gemini-2.0-flash'
+    ocrForm.openrouterModel = res.openrouterModel || 'qwen/qwen2.5-vl-32b-instruct:free'
     ocrForm.ocrPrompt = res.ocrPrompt || ''
     ocrForm.providerOrder = res.providerOrder || ['gemini','openrouter','ocrspace']
     ocrForm.geminiApiKey = ''; ocrForm.openrouterApiKey = ''; ocrForm.ocrSpaceApiKey = ''

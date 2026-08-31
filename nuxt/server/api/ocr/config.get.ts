@@ -11,10 +11,10 @@ export default defineEventHandler(async (event) => {
   return {
     geminiApiKey: val.geminiApiKey || '',
     geminiApiKeyMasked: mask(val.geminiApiKey || ''),
-    geminiModel: val.geminiModel || 'gemini-1.5-flash',
+    geminiModel: val.geminiModel || 'gemini-2.0-flash',
     openrouterApiKey: val.openrouterApiKey || '',
     openrouterApiKeyMasked: mask(val.openrouterApiKey || ''),
-    openrouterModel: val.openrouterModel || 'google/gemma-3-27b-it:free',
+    openrouterModel: val.openrouterModel || 'qwen/qwen2.5-vl-32b-instruct:free',
     ocrSpaceApiKey: val.ocrSpaceApiKey || '',
     ocrSpaceApiKeyMasked: mask(val.ocrSpaceApiKey || ''),
     ocrPrompt: val.ocrPrompt || val.prompt || '',

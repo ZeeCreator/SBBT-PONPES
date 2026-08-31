@@ -17,9 +17,9 @@ export default defineEventHandler(async (event) => {
   const body = await readBody(event) as Record<string, any>
   const patch: Record<string, any> = {}
   if (body.geminiApiKey !== undefined) patch.geminiApiKey = String(body.geminiApiKey || '').trim()
-  if (body.geminiModel !== undefined) patch.geminiModel = String(body.geminiModel || '').trim() || 'gemini-1.5-flash'
+  if (body.geminiModel !== undefined) patch.geminiModel = String(body.geminiModel || '').trim() || 'gemini-2.0-flash'
   if (body.openrouterApiKey !== undefined) patch.openrouterApiKey = String(body.openrouterApiKey || '').trim()
-  if (body.openrouterModel !== undefined) patch.openrouterModel = String(body.openrouterModel || '').trim() || 'google/gemma-3-27b-it:free'
+  if (body.openrouterModel !== undefined) patch.openrouterModel = String(body.openrouterModel || '').trim() || 'qwen/qwen2.5-vl-32b-instruct:free'
   if (body.ocrSpaceApiKey !== undefined) patch.ocrSpaceApiKey = String(body.ocrSpaceApiKey || '').trim()
   if (body.ocrPrompt !== undefined) patch.ocrPrompt = String(body.ocrPrompt || '').trim()
   if (body.prompt !== undefined) patch.ocrPrompt = String(body.prompt || '').trim()
