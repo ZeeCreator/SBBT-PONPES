@@ -84,7 +84,125 @@ function canon(s: string): string {
   return LEGACY_TO_CANONICAL[low] || low
 }
 
-async function getDiniyahSummary(studentId: string, studentName: string): Promise<string> {
+// ── Per-bulan filter: "MARET" / "4" / "2026-03" / "Maret 2026" ──
+const MONTH_NAMES_ID: string[] = ['', 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember']
+const MONTH_ALIASES: Record<string, number> = {
+  januari: 1, jan: 1,
+  februari: 2, feb: 2, peb: 2,
+  maret: 3, mar: 3,
+  april: 4, apr: 4,
+  mei: 5,
+  juni: 6, jun: 6,
+  juli: 7, jul: 7,
+  agustus: 8, agu: 8, agt: 8, aug: 8,
+  september: 9, sep: 9, sept: 9,
+  oktober: 10, okt: 10, oct: 10,
+  november: 11, nov: 11,
+  desember: 12, des: 12, dec: 12,
+}
+type MonthFilter = { month: number; year: number | null; label: string; raw: string }
+
+function parseMonthFilter(msg: string): MonthFilter | null {
+  const lower = msg.toLowerCase()
+  // 1) YYYY-MM atau YYYY/MM  (2026-03, 2026/3, 2026-3)
+  let m = lower.match(/(19|20)\d{2}\s*[-\/]\s*(0?[1-9]|1[0-2])\b/)
+  if (m) {
+    const year = parseInt(m[0].match(/(19|20)\d{2}/)![0])
+    const mo = parseInt(m[0].match(/(0?[1-9]|1[0-2])\b/)![0])
+    if (mo >= 1 && mo <= 12) return { month: mo, year, label: `${MONTH_NAMES_ID[mo]} ${year}`, raw: m[0] }
+  }
+  // 2) MM-YYYY  (03-2026, 3/2026)
+  m = lower.match(/\b(0?[1-9]|1[0-2])\s*[-\/]\s*(19|20)\d{2}\b/)
+  if (m) {
+    const parts = m[0].split(/[-\/]/)
+    const mo = parseInt(parts[0].trim())
+    const year = parseInt(parts[1].trim())
+    return { month: mo, year, label: `${MONTH_NAMES_ID[mo]} ${year}`, raw: m[0] }
+  }
+  // 3) "maret 2026" / "maret2026" / "2026 maret"
+  m = lower.match(/(januari|februari|maret|april|mei|juni|juli|agustus|september|oktober|november|desember|jan|feb|mar|apr|jun|jul|agu|agt|sep|sept|okt|nov|des)\s*(19|20)\d{2}/i)
+  if (m) {
+    const name = m[1].toLowerCase()
+    const mo = MONTH_ALIASES[name]
+    const year = parseInt(m[0].match(/(19|20)\d{2}/)![0])
+    if (mo) return { month: mo, year, label: `${MONTH_NAMES_ID[mo]} ${year}`, raw: m[0] }
+  }
+  m = lower.match(/(19|20)\d{2}\s+(januari|februari|maret|april|mei|juni|juli|agustus|september|oktober|november|desember|jan|feb|mar|apr|jun|jul|agu|agt|sep|sept|okt|nov|des)/i)
+  if (m) {
+    const year = parseInt(m[0].match(/(19|20)\d{2}/)![0])
+    const name = m[0].replace(/(19|20)\d{2}/, '').trim().toLowerCase()
+    const mo = MONTH_ALIASES[name]
+    if (mo) return { month: mo, year, label: `${MONTH_NAMES_ID[mo]} ${year}`, raw: m[0] }
+  }
+  // 4) bulan <nama/angka>  e.g. "bulan maret", "bulan 3"
+  m = lower.match(/bulan\s+(januari|februari|maret|april|mei|juni|juli|agustus|september|oktober|november|desember|jan|feb|mar|apr|jun|jul|agu|agt|sep|sept|okt|nov|des|0?[1-9]|1[0-2])\b/i)
+  if (m) {
+    const token = m[1].toLowerCase()
+    const mo = MONTH_ALIASES[token] || parseInt(token)
+    if (mo >= 1 && mo <= 12) return { month: mo, year: null, label: MONTH_NAMES_ID[mo], raw: m[0] }
+  }
+  // 5) nama bulan saja (maret, januari)
+  m = lower.match(/\b(januari|februari|maret|april|mei|juni|juli|agustus|september|oktober|november|desember|jan|feb|mar|apr|jun|jul|agu|agt|sep|sept|okt|nov|des)\b/i)
+  if (m) {
+    const mo = MONTH_ALIASES[m[1].toLowerCase()]
+    if (mo) return { month: mo, year: null, label: MONTH_NAMES_ID[mo], raw: m[0] }
+  }
+  // 6) angka bulan standalone 1-12 di akhir pesan: "hafidz 4" / "hafidz 03"
+  //    hindari NIS (8+ digit) — hanya token 1-2 digit terisolasi
+  m = lower.match(/(?:^|\s)(0?[1-9]|1[0-2])(?:\s|$)/)
+  if (m) {
+    // cek tidak ada konteks tahun 4 digit di dekatnya, dan bukan bagian dari NIS panjang
+    const token = m[1]
+    // jika pesan mengandung NIS 8 digit, jangan salah match digit dalam NIS
+    // kita hanya anggap angka bulan jika ada pemisah spasi dan bukan bagian dari kata panjang
+    const hasLongNumber = /\b\d{5,}\b/.test(lower)
+    const isOnlyOneShortNumber = (lower.match(/\b(0?[1-9]|1[0-2])\b/g) || []).length === 1
+    if (isOnlyOneShortNumber || !hasLongNumber) {
+      const mo = parseInt(token)
+      // extra guard: jika lower == token saja (user kirim "4" saja) → anggap bulan
+      // tapi jika lower mengandung nama + angka, itu filter
+      if (lower.trim() !== token) {
+        // ada nama + angka → treat as filter
+        return { month: mo, year: null, label: MONTH_NAMES_ID[mo], raw: token }
+      }
+      if (lower.trim() === token) {
+        return { month: mo, year: null, label: MONTH_NAMES_ID[mo], raw: token }
+      }
+    }
+  }
+  return null
+}
+
+function stripMonthTokens(msg: string, filter: MonthFilter | null): string {
+  if (!filter || !filter.raw) return msg.trim()
+  // hapus raw + optional "bulan" prefix + optional tahun
+  let out = msg
+  // escape regex
+  const esc = filter.raw.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+  out = out.replace(new RegExp(esc, 'i'), ' ')
+  out = out.replace(/bulan\s*$/i, ' ')
+  out = out.replace(/\s+/g, ' ').trim()
+  return out || msg.replace(new RegExp(esc, 'i'), '').trim()
+}
+
+function monthFilterMatches(entry: any, filter: MonthFilter): boolean {
+  const mid: string = entry.monthId || ''
+  let entryMonth: number | null = null
+  let entryYear: number | null = null
+  if (mid && /^\d{4}-\d{2}/.test(mid)) {
+    const [y, mo] = mid.split('-')
+    entryYear = parseInt(y); entryMonth = parseInt(mo)
+  } else {
+    if (entry.month) entryMonth = parseInt(entry.month)
+    if (entry.year) entryYear = parseInt(entry.year)
+  }
+  if (entryMonth === null) return false
+  if (entryMonth !== filter.month) return false
+  if (filter.year !== null && entryYear !== null && entryYear !== filter.year) return false
+  return true
+}
+
+async function getDiniyahSummary(studentId: string, studentName: string, filter?: MonthFilter | null): Promise<string> {
   const db = getDatabase()
   const snap = await db.ref('attendance_monthly').once('value')
   if (!snap.exists()) return 'Belum ada data absensi.'
@@ -97,7 +215,10 @@ async function getDiniyahSummary(studentId: string, studentName: string): Promis
     const mid = entry.monthId || `${entry.year}-${entry.month}-${entry.class}`
     byMonth.set(mid, entry) // override → last wins (latest)
   }
+  let matchedMonths = 0
   for (const entry of byMonth.values()) {
+    if (filter && !monthFilterMatches(entry, filter)) continue
+    matchedMonths++
     const records = entry.records || []
     const found = records.find((r: any) => r.studentId === studentId || r.name === studentName)
     if (!found || !found.marks) continue
@@ -109,17 +230,19 @@ async function getDiniyahSummary(studentId: string, studentName: string): Promis
       else totals[v] = (totals[v] || 0) + 1
     }
   }
+  if (filter && matchedMonths === 0) return `Belum ada data absensi untuk ${filter.label}.`
   if (totalDays === 0) return 'Belum ada data absensi.'
+  const suffix = filter ? ` — ${filter.label}` : ''
   // format sama seperti Rekap di pages/attendance/index.vue (7 status)
-  return `Hadir ${totals.hadir}, Datang ${totals.datang}, Bolos ${totals.bolos}, Alpa ${totals.alpa}, Sakit ${totals.sakit}, Izin ${totals.izin}, Pulang ${totals.pulang} (dari ${totalDays} hari)`
+  return `Hadir ${totals.hadir}, Datang ${totals.datang}, Bolos ${totals.bolos}, Alpa ${totals.alpa}, Sakit ${totals.sakit}, Izin ${totals.izin}, Pulang ${totals.pulang} (dari ${totalDays} hari${suffix})`
 }
 
 // Spam alias lama — tetap support tapi arahkan ke Diniyah
-async function getAttendanceSummary(studentId: string, studentName: string): Promise<string> {
-  return getDiniyahSummary(studentId, studentName)
+async function getAttendanceSummary(studentId: string, studentName: string, filter?: MonthFilter | null): Promise<string> {
+  return getDiniyahSummary(studentId, studentName, filter)
 }
 
-async function getPagiMalamSummary(studentId: string, studentName: string): Promise<string> {
+async function getPagiMalamSummary(studentId: string, studentName: string, filter?: MonthFilter | null): Promise<string> {
   const db = getDatabase()
   const snap = await db.ref('attendance_program_pm').once('value')
   if (!snap.exists()) return 'Belum ada data absensi.'
@@ -131,7 +254,10 @@ async function getPagiMalamSummary(studentId: string, studentName: string): Prom
     const mid = entry.monthId || `${entry.year}-${entry.month}`
     byMonth.set(mid, entry)
   }
+  let matchedMonths = 0
   for (const entry of byMonth.values()) {
+    if (filter && !monthFilterMatches(entry, filter)) continue
+    matchedMonths++
     const records = entry.records || []
     const found = records.find((r: any) => r.studentId === studentId || r.name === studentName)
     if (!found || !found.marks) continue
@@ -143,9 +269,11 @@ async function getPagiMalamSummary(studentId: string, studentName: string): Prom
       else totals[v] = (totals[v] || 0) + 1
     }
   }
+  if (filter && matchedMonths === 0) return `Belum ada data absensi untuk ${filter.label}.`
   if (totalSesi === 0) return 'Belum ada data absensi.'
   const totalHari = Math.ceil(totalSesi / 2)
-  return `Hadir ${totals.hadir}, Datang ${totals.datang}, Bolos ${totals.bolos}, Alpa ${totals.alpa}, Sakit ${totals.sakit}, Izin ${totals.izin}, Pulang ${totals.pulang} (dari ${totalSesi} sesi / ${totalHari} hari × P/M)`
+  const suffix = filter ? ` — ${filter.label}` : ''
+  return `Hadir ${totals.hadir}, Datang ${totals.datang}, Bolos ${totals.bolos}, Alpa ${totals.alpa}, Sakit ${totals.sakit}, Izin ${totals.izin}, Pulang ${totals.pulang} (dari ${totalSesi} sesi / ${totalHari} hari × P/M${suffix})`
 }
 
 async function getMutholaahSummary(studentId: string, studentName: string): Promise<string> {
@@ -288,10 +416,14 @@ function buildDirectReply(message: string, students: any[]): string {
   return reply
 }
 
-function buildDetailReply(students: any[], absensiDiniyah: string, nilai: string, pagiMalam?: string, tahfidz?: string): string {
+function buildDetailReply(students: any[], absensiDiniyah: string, nilai: string, pagiMalam?: string, tahfidz?: string, monthFilter?: MonthFilter | null): string {
   const s = students[0]
-  let reply = `Assalamu'alaikum Wr. Wb.\n\nBerikut data Ananda *${s.name}* (NIS: ${s.nis}):\n\n📋 *Kelas*: ${s.class || '-'}\n📌 *Status*: ${s.status || 'Active'}\n\n📚 *Absensi Diniyah (Kelas)*\n${absensiDiniyah}\n`
-  if (pagiMalam && pagiMalam !== 'Belum ada data absensi.') {
+  const periodeLabel = monthFilter ? ` — Periode: *${monthFilter.label}*` : ' — Rekap Total (semua bulan)'
+  const hint = !monthFilter ? `\n💡 *Tips:* ketik \`${s.name} MARET\` atau \`${s.name} 3\` untuk rekap per-bulan. Contoh: \`${s.name.split(' ')[0]} 4\` = April.\n` : ''
+  let reply = `Assalamu'alaikum Wr. Wb.\n\nBerikut data Ananda *${s.name}* (NIS: ${s.nis}):\n\n📋 *Kelas*: ${s.class || '-'}\n📌 *Status*: ${s.status || 'Active'}${periodeLabel}\n\n📚 *Absensi Diniyah (Kelas)*\n${absensiDiniyah}\n`
+  if (pagiMalam && pagiMalam !== 'Belum ada data absensi.' && !pagiMalam.startsWith('Belum ada data absensi untuk')) {
+    reply += `\n🕌 *Absensi Pagi & Malam*\n${pagiMalam}\n`
+  } else if (pagiMalam && pagiMalam.startsWith('Belum ada data absensi untuk')) {
     reply += `\n🕌 *Absensi Pagi & Malam*\n${pagiMalam}\n`
   }
   if (tahfidz && tahfidz !== 'Belum ada data absensi.') {
@@ -300,6 +432,7 @@ function buildDetailReply(students: any[], absensiDiniyah: string, nilai: string
   if (nilai && nilai !== 'Belum ada data nilai.') {
     reply += `\n📝 *Nilai*\n${nilai}\n`
   }
+  reply += hint
   reply += '\nSemoga informasi ini bermanfaat. Jika ada pertanyaan lain, silakan sampaikan.\nJazakumullah khairan. 🙏'
   return reply
 }
@@ -375,25 +508,33 @@ export async function callAI(message: string, context: string, botSettings?: { s
   }
 }
 
-// ── Bot Handler ──
+// ── Bot Handler — support "NAMA MARET" / "NAMA 4" untuk per-bulan ──
 
 export async function handleBotMessage(phone: string, message: string): Promise<string> {
   const botSettings = await getBotSettings()
   if (!botSettings.enabled) return ''
 
-  const students = await searchStudentsFromFirebase(message)
+  const monthFilter = parseMonthFilter(message)
+  const nameQuery = monthFilter ? stripMonthTokens(message, monthFilter) : message
+  const effectiveQuery = nameQuery.trim() || message.trim()
+
+  const students = await searchStudentsFromFirebase(effectiveQuery)
 
   if (students.length === 0) {
+    // jika filter bikin query kosong (misal user kirim "maret" saja), coba tanpa filter
+    if (monthFilter && nameQuery.trim() === '') {
+      return `Ketik nama santri + bulan. Contoh: \`MUHAMAD HAFIDZ MARET\` atau \`MUHAMAD HAFIDZ 3\` untuk bulan Maret.\nBulan valid: Januari-Desember atau angka 1-12, bisa juga \`2026-03\`.`
+    }
     return 'Assalamu\'alaikum Wr. Wb.\n\nMaaf, tidak ditemukan data santri dengan nama/NIS tersebut. Silakan ketik nama lengkap atau NIS untuk mencari.\n\nJazakumullah khairan. 🙏'
   }
 
   if (students.length === 1) {
     const s = students[0]
-    const absensiDiniyah = await getDiniyahSummary(s.id, s.name)
-    const pagiMalam = await getPagiMalamSummary(s.id, s.name)
-    const tahfidz = await getTahfidzSummary(s.id, s.name)
+    const absensiDiniyah = await getDiniyahSummary(s.id, s.name, monthFilter)
+    const pagiMalam = await getPagiMalamSummary(s.id, s.name, monthFilter)
+    const tahfidz = monthFilter ? 'Belum ada data absensi.' : await getTahfidzSummary(s.id, s.name)
     const nilai = await getGradesSummary(s.id)
-    const reply = buildDetailReply([s], absensiDiniyah, nilai, pagiMalam, tahfidz)
+    const reply = buildDetailReply([s], absensiDiniyah, nilai, pagiMalam, tahfidz, monthFilter)
     await saveConversation(phone, message, reply)
     return reply
   }
