@@ -232,10 +232,10 @@ async function getDiniyahSummary(studentId: string, studentName: string, filter?
 
   const totals: Record<string, number> = { hadir: 0, datang: 0, bolos: 0, alpa: 0, sakit: 0, izin: 0, pulang: 0 }
   let totalDays = 0
-  // dedup per month: hanya hitung 1x per monthId, ambil record terbaru jika duplikat
+  // dedup per month+class: jika monthId sama tapi kelas beda (KELAS 4 vs KELAS 5) jangan tabrakan
   const byMonth = new Map<string, any>()
   for (const entry of Object.values(snap.val()) as any[]) {
-    const mid = entry.monthId || `${entry.year}-${entry.month}-${entry.class}`
+    const mid = entry.monthId ? `${entry.monthId}__${entry.class || ''}` : `${entry.year}-${entry.month}-${entry.class}`
     byMonth.set(mid, entry) // override → last wins (latest)
   }
   let matchedMonths = 0
@@ -281,7 +281,7 @@ async function getPagiMalamSummary(studentId: string, studentName: string, filte
   let totalSesi = 0
   const byMonth = new Map<string, any>()
   for (const entry of Object.values(snap.val()) as any[]) {
-    const mid = entry.monthId || `${entry.year}-${entry.month}`
+    const mid = entry.monthId ? `${entry.monthId}__${entry.class || ''}` : `${entry.year}-${entry.month}-${entry.class || ''}`
     byMonth.set(mid, entry)
   }
   let matchedMonths = 0
@@ -452,16 +452,13 @@ function buildDirectReply(message: string, students: any[]): string {
   return reply
 }
 
-function buildDetailReply(students: any[], absensiDiniyah: string, nilai: string, pagiMalam?: string, tahfidz?: string, monthFilter?: MonthFilter | null): string {
+function buildDetailReply(students: any[], absensiDiniyah: string, nilai: string, pagiMalam?: string, monthFilter?: MonthFilter | null): string {
   const s = students[0]
   const periodeLabel = monthFilter ? ` — Periode: *${monthFilter.label}*` : ' — Rekap Total (semua bulan)'
   const hint = !monthFilter ? `\n💡 *Tips:* ketik \`${s.name} MARET\` atau \`${s.name} 3\` untuk rekap per-bulan. Contoh: \`${s.name.split(' ')[0]} 4\` = April.\n` : ''
   let reply = `Assalamu'alaikum Wr. Wb.\n\nBerikut data Ananda *${s.name}* (NIS: ${s.nis}):\n\n📋 *Kelas*: ${s.class || '-'}\n📌 *Status*: ${s.status || 'Active'}${periodeLabel}\n\n📚 *Absensi Diniyah (Kelas)*\n${absensiDiniyah}\n`
-  // selalu tampilkan Pagi & Malam agar sinkron terlihat, bahkan jika "Belum ada data"
+  // selalu tampilkan Pagi & Malam agar sinkron terlihat, bahkan jika "Belum ada data" — Tahfidz tidak dipakai
   reply += `\n🕌 *Absensi Pagi & Malam*\n${pagiMalam || 'Belum ada data absensi.'}\n`
-  if (tahfidz && tahfidz !== 'Belum ada data absensi.') {
-    reply += `\n📖 *Absensi Tahfidz*\n${tahfidz}\n`
-  }
   if (nilai && nilai !== 'Belum ada data nilai.') {
     reply += `\n📝 *Nilai*\n${nilai}\n`
   }
@@ -565,9 +562,8 @@ export async function handleBotMessage(phone: string, message: string): Promise<
     const s = students[0]
     const absensiDiniyah = await getDiniyahSummary(s.id, s.name, monthFilter)
     const pagiMalam = await getPagiMalamSummary(s.id, s.name, monthFilter)
-    const tahfidz = monthFilter ? 'Belum ada data absensi.' : await getTahfidzSummary(s.id, s.name)
     const nilai = await getGradesSummary(s.id)
-    const reply = buildDetailReply([s], absensiDiniyah, nilai, pagiMalam, tahfidz, monthFilter)
+    const reply = buildDetailReply([s], absensiDiniyah, nilai, pagiMalam, monthFilter)
     await saveConversation(phone, message, reply)
     return reply
   }
