@@ -66,14 +66,21 @@ export async function syncStudentsToQdrant(): Promise<number> {
 function normName(s: string): string {
   return String(s || '').toLowerCase().replace(/[-_']/g, ' ').replace(/\s+/g, ' ').trim()
 }
+function compactName(s: string): string {
+  return String(s || '').toLowerCase().replace(/[^a-z0-9]/g, '')
+}
 function recordMatchesStudent(r: any, studentId: string, studentName: string, studentNis?: string): boolean {
   if (String(r.studentId || '') === String(studentId)) return true
   if (studentNis && String(r.nis || '') === String(studentNis)) return true
   const rn = normName(r.name)
   const tn = normName(studentName)
   if (rn && tn && rn === tn) return true
+  const rc = compactName(r.name)
+  const tc = compactName(studentName)
+  if (rc && tc && rc === tc) return true
   // fallback: jika nama di record mengandung nama query (mis. record "Muhammad Al Fatih " vs query "Muhammad Al-Fatih")
   if (rn && tn && (rn.includes(tn) || tn.includes(rn)) && tn.length >= 5) return true
+  if (rc && tc && (rc.includes(tc) || tc.includes(rc)) && tc.length >= 6) return true
   return false
 }
 
@@ -450,11 +457,8 @@ function buildDetailReply(students: any[], absensiDiniyah: string, nilai: string
   const periodeLabel = monthFilter ? ` — Periode: *${monthFilter.label}*` : ' — Rekap Total (semua bulan)'
   const hint = !monthFilter ? `\n💡 *Tips:* ketik \`${s.name} MARET\` atau \`${s.name} 3\` untuk rekap per-bulan. Contoh: \`${s.name.split(' ')[0]} 4\` = April.\n` : ''
   let reply = `Assalamu'alaikum Wr. Wb.\n\nBerikut data Ananda *${s.name}* (NIS: ${s.nis}):\n\n📋 *Kelas*: ${s.class || '-'}\n📌 *Status*: ${s.status || 'Active'}${periodeLabel}\n\n📚 *Absensi Diniyah (Kelas)*\n${absensiDiniyah}\n`
-  if (pagiMalam && pagiMalam !== 'Belum ada data absensi.' && !pagiMalam.startsWith('Belum ada data absensi untuk')) {
-    reply += `\n🕌 *Absensi Pagi & Malam*\n${pagiMalam}\n`
-  } else if (pagiMalam && pagiMalam.startsWith('Belum ada data absensi untuk')) {
-    reply += `\n🕌 *Absensi Pagi & Malam*\n${pagiMalam}\n`
-  }
+  // selalu tampilkan Pagi & Malam agar sinkron terlihat, bahkan jika "Belum ada data"
+  reply += `\n🕌 *Absensi Pagi & Malam*\n${pagiMalam || 'Belum ada data absensi.'}\n`
   if (tahfidz && tahfidz !== 'Belum ada data absensi.') {
     reply += `\n📖 *Absensi Tahfidz*\n${tahfidz}\n`
   }
