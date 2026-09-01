@@ -78,7 +78,7 @@ async function callGemini(base64Image: string, apiKey: string, model: string, pr
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       contents: [{ parts: [{ text: prompt }, { inline_data: { mime_type: 'image/jpeg', data: raw } }] }],
-      generationConfig: { maxOutputTokens: 8192 },
+      generationConfig: { maxOutputTokens: 16384, temperature: 0.1, topP: 0.8, topK: 16 },
     }),
   })
   if (!res.ok) {
@@ -119,7 +119,9 @@ async function callOpenRouter(base64Image: string, apiKey: string, model: string
     body: JSON.stringify({
       model,
       messages: [{ role: 'user', content: [{ type: 'text', text: prompt }, { type: 'image_url', image_url: { url: base64Image } }] }],
-      max_tokens: 8192,
+      max_tokens: 16384,
+      temperature: 0.1,
+      top_p: 0.8,
     }),
   })
   if (!res.ok) {
