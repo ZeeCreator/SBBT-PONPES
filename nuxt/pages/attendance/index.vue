@@ -431,7 +431,7 @@ function preprocessImage(base64: string): Promise<string> {
   return new Promise((resolve, reject) => {
     const img = new Image()
     img.onload = () => {
-      const maxDim = 1200
+      const maxDim = 1800
       const scale = Math.min(maxDim / img.width, maxDim / img.height, 1)
       const w = Math.round(img.width * scale), h = Math.round(img.height * scale)
       const canvas = document.createElement('canvas')
@@ -440,8 +440,21 @@ function preprocessImage(base64: string): Promise<string> {
       if (!ctx) return reject(new Error('Canvas 2D context not available'))
       ctx.imageSmoothingEnabled = true
       ctx.imageSmoothingQuality = 'high'
+      ctx.filter = 'contrast(1.35) brightness(1.08) grayscale(1)'
       ctx.drawImage(img, 0, 0, w, h)
-      resolve(canvas.toDataURL('image/jpeg', 0.85))
+      ctx.filter = 'none'
+      try {
+        const imgData = ctx.getImageData(0, 0, w, h)
+        const data = imgData.data
+        const factor = 1.25
+        for (let i = 0; i < data.length; i += 4) {
+          const lum = 0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2]
+          const val = Math.max(0, Math.min(255, (lum - 128) * factor + 128))
+          data[i] = data[i + 1] = data[i + 2] = val
+        }
+        ctx.putImageData(imgData, 0, 0)
+      } catch {}
+      resolve(canvas.toDataURL('image/jpeg', 0.92))
     }
     img.onerror = reject
     img.src = base64

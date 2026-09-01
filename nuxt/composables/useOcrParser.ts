@@ -1,9 +1,11 @@
 // Mapping lengkap: B=Bolos, P=Pulang, I=Izin, S=Sakit, A/X=Alpa, ✓=Hadir, •=Datang
+// PENTING: titik kecil hitam bulat "•" / "·" / "." / "o" SELALU = datang, BUKAN hadir.
+// Sistem membedakan: ✓ (centang miring) = hadir, sedangkan • (titik bulat kecil) = datang (telat).
 const MARK_MAP: Record<string, string> = {
-  // Hadir
+  // Hadir — hanya centang
   '✓': 'hadir', '✔': 'hadir', 'v': 'hadir', 'V': 'hadir', 'R': 'hadir', 'r': 'hadir',
-  // Datang (hadir telat)
-  '•': 'datang', '·': 'datang',
+  // Datang (hadir telat) — SEMUA varian titik bulat kecil
+  '•': 'datang', '·': 'datang', '.': 'datang', '∙': 'datang', '●': 'datang', 'o': 'datang', 'O': 'datang', '0': 'datang', '°': 'datang', ',': 'datang',
   // Bolos
   'B': 'bolos', 'b': 'bolos',
   // Alpa
@@ -11,11 +13,9 @@ const MARK_MAP: Record<string, string> = {
   // Sakit
   'S': 'sakit', 's': 'sakit',
   // Izin
-  'I': 'izin', 'i': 'izin',
+  'I': 'izin', 'i': 'izin', 'l': 'izin', '|': 'izin',
   // Pulang
   'P': 'pulang', 'p': 'pulang',
-  // dot tetap dianggap hadir (noise -> hadir) biar tidak hilang
-  '.': 'hadir',
 }
 
 // alias untuk backward compat per-kelas lama (present/absent etc -> canonical)
@@ -87,9 +87,9 @@ function tokenToStatus(token: string): string | null {
 }
 
 function extractDateMarksExplicit(line: string): Record<string, string> | null {
-  // pattern like "1: ✓" or "1P: B" or "1M:S" or "12: A"
+  // pattern like "1: ✓" or "1P: B" or "1M:S" or "12: •" atau "30P:." (titik = datang)
   const marks: Record<string, string> = {}
-  const re = /(\d{1,2})\s*(P|M)?\s*[:=]\s*([A-Za-z✓✔•·.])/gi
+  const re = /(\d{1,2})\s*(P|M)?\s*[:=]\s*([A-Za-z✓✔•·.∙●°oO0,|])/gi
   let m: RegExpExecArray | null
   while ((m = re.exec(line)) !== null) {
     const day = m[1]
@@ -118,7 +118,8 @@ function extractAllMarksSequence(line: string): string[] {
   const seq: string[] = []
   // match each mark char as separate token (including ✓ etc)
   // we need to avoid letters inside names -> segment already excludes name part
-  const re2 = /[A-Za-z✓✔•·.]/g
+  // regex diperluas: tangkap semua varian titik + centang + huruf status
+  const re2 = /[A-Za-z✓✔•·.∙●°oO0,|]/g
   let mm: RegExpExecArray | null
   while ((mm = re2.exec(segment)) !== null) {
     const ch = mm[0]

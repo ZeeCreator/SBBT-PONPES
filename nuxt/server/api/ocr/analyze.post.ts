@@ -15,26 +15,46 @@ const OPENROUTER_FALLBACKS = [
 ]
 const OCR_SPACE_API = 'https://api.ocr.space/parse/image'
 
-const DEFAULT_OCR_PROMPT = `Anda adalah OCR untuk tabel absensi pondok pesantren.
-Ekstrak teks dari gambar tabel absensi berikut.
-Tabel memiliki kolom: NO, NAMA, ALAMAT/KLS, dan kolom tanggal (1-31).
-Untuk absensi per-kelas: tiap tanggal 1 kolom.
-Untuk absensi Pagi-Malam: tiap tanggal ada 2 kolom (P = Pagi, M = Malam).
+const DEFAULT_OCR_PROMPT = `Anda adalah OCR SUPER TELITI untuk tabel absensi pondok pesantren AL-FATAH PANEKAN.
 
-Di dalam kolom tanggal terdapat MARK tulisan tangan berupa satu karakter:
-- ✓ atau v atau R atau • hadir Hadir (present)
-- • atau · = Datang (hadir tapi telat / coming)
-- B = Bolos (kabur)
-- A atau X = Alpa (absent tanpa keterangan)
-- S = Sakit (sick)
-- I = Izin (permit umum)
-- P = Pulang (izin pulang)
+TUGAS UTAMA: Baca SETIAP SEL tabel dengan ZOOM dan jangan sampai ada yang terlewat. Hasil akan dipakai untuk rekap WA wali santri — kesalahan 1 sel = laporan salah.
 
-Keluarkan hasilnya dalam format tabel markdown seperti ini:
-| NO | NAMA | KLS/ALAMAT | TANGGAL |
-| 1 | Nama Santri | ... | 1P:✓ 1M:✓ 2P:B 2M:✓ ... atau 1:✓ 2:S ... |
+STRUKTUR TABEL:
+- Kolom: NO | NAMA | KLS | TANGGAL (1 s/d 31)
+- Untuk "Program Pagi & Malam" → SETIAP TANGGAL ada 2 sub-kolom: P = Pagi (kiri), M = Malam (kanan). Jadi total 31×2 = 62 sel per santri.
+- Untuk "Diniyah/Kelas" → tiap tanggal 1 kolom saja (31 sel).
+- Tentukan jenis dari judul di atas: jika tertulis "PAGI & MALAM" gunakan format P/M, jika tidak gunakan single.
 
-Tulis SEMUA data yang terbaca, jangan ada yang dilewatkan. Pertahankan simbol asli B,P,S,I,A,✓,• apa adanya.`
+DAFTAR SIMBOL (WAJIB HAFAL — JANGAN TERTUKAR):
+- ✓  = Hadir (centang miring tangan, biasanya terlihat seperti "v" atau "✓" miring, kadang terbaca OCR sebagai "v"/"R")
+- •  = Datang / Terlambat (TITIK HITAM BULAT KECIL di tengah kotak — SANGAT PENTING: sering terlihat seperti titik kecil ".", "·", "o", "°" atau ","). JANGAN anggap kosong, JANGAN anggap noda. Jika ada titik bulat kecil = • = Datang.
+- B/b = Bolos
+- A/a/X/x = Alpa
+- S/s = Sakit
+- I/i/l/| = Izin
+- P/p = Pulang (HATI-HATI: "P" sebagai STATUS Pulang berbeda dengan "P" sebagai HEADER Pagi. Bedakan dari posisi kolom. Jika di baris header tertulis P/M, itu BUKAN data.)
+- Kosong/blank = tidak ada tanda (biarkan kosong, jangan isi ✓)
+
+ATURAN KETELITIAN:
+1. Perbesar (zoom) tiap kotak sebelum memutuskan. Titik datang "•" ukurannya kecil (1-2px) — sering terlewat tapi HARUS dicatat. Contoh di foto: pada tanggal 28-31 banyak "•" untuk AKMAL, IQBAL, dll.
+2. Bedakan ✓ vs • dengan tegas: ✓ = garis miring memanjang, • = bulat titik. JANGAN samakan. Jika OCR ragu antara "." dan "•", pilih "•" jika ada bulatan.
+3. Jika tulisan "v" miring di kotak = itu "✓" (Hadir), bukan "v" huruf.
+4. "A" dan "i" kecil harus dibaca sebagai status, bukan angka "1".
+5. Jangan campur kolom P dan M. Urutan selalu P dulu baru M untuk tiap tanggal: 1P 1M 2P 2M ... 31P 31M.
+6. Tulis SEMUA 62 sel per santri meski kosong — jangan potong di tengah. Jika tanggal 14-25 kosong (libur), tetap tulis "14P: 14M: " (kosong) jangan lompat ke 26.
+7. Validasi ulang: hitung jumlah Hadir vs Datang — jika hasilnya semua Hadir tanpa Datang sama sekali padahal di foto ada banyak titik, berarti Anda melewatkan titik.
+
+FORMAT OUTPUT WAJIB MARKDOWN TABLE:
+| NO | NAMA | KLS | TANGGAL |
+| 1 | AHMAD KHOLID | 1 | 1P:✓ 1M:✓ 2P:✓ 2M:✓ 3P:✓ 3M:✓ ... 30P:✓ 30M:✓ 31P:✓ 31M:✓ |
+| 25 | AKMAL | 5 | 1P:✓ 1M:✓ 2P:✓ 2M:✓ ... 28P:• 28M:✓ 29P:✓ 29M:• ... |
+... dst untuk SEMUA baris (39 baris pada contoh).
+
+CONTOH BENAR (perhatikan titik •):
+- Jika di foto baris AKMAL tanggal 30 terlihat "•" di P dan "✓" di M → tulis "30P:• 30M:✓"
+- Jika tanggal 14 kosong keduanya → tulis "14P: 14M:"
+
+JANGAN ringkas, JANGAN tulis "dst". PERTAHANKAN simbol asli ✓ dan • apa adanya (gunakan • untuk Datang, jangan pakai "." atau "o"). Keluarkan SEMUA baris dari NO 1 sampai 39.`
 
 function stripBase64Prefix(data: string): string {
   return data.replace(/^data:image\/\w+;base64,/, '')
